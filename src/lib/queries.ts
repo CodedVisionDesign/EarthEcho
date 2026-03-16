@@ -288,16 +288,19 @@ export async function getUserBadgesWithProgress(userId: string) {
 // ==========================================
 
 export async function getActiveChallenges() {
-  // Auto-deactivate expired challenges (check-on-read)
-  await db.challenge.updateMany({
-    where: { isActive: true, endDate: { lt: new Date() } },
-    data: { isActive: false },
-  });
+  // Auto-deactivate expired challenges (check-on-read, best-effort)
+  try {
+    await db.challenge.updateMany({
+      where: { isActive: true, endDate: { lt: new Date() } },
+      data: { isActive: false },
+    });
+  } catch {
+    // Neon HTTP adapter may not support updateMany — skip deactivation
+  }
 
   return db.challenge.findMany({
     where: { isActive: true },
     include: {
-      participants: true,
       _count: { select: { participants: true } },
     },
     orderBy: { startDate: "desc" },
