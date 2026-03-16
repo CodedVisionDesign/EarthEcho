@@ -338,10 +338,21 @@ export async function getUserChallengeProgress(userId: string) {
 // Leaderboard Queries
 // ==========================================
 
+type LeaderboardEntry = {
+  id: string;
+  name: string | null;
+  displayName: string | null;
+  image: string | null;
+  customImage: string | null;
+  totalPoints: number;
+  streakDays: number;
+  _count: { userBadges: number };
+};
+
 export async function getLeaderboard(
   limit: number = 50,
   period: "all-time" | "monthly" | "weekly" = "all-time"
-) {
+): Promise<LeaderboardEntry[]> {
   if (period === "all-time") {
     return db.user.findMany({
       where: { isPublic: true },
