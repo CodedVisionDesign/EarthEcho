@@ -27,7 +27,7 @@ export function WeeklyTrendChart({ data }: { data: WeeklyTrendData[] }) {
         Your daily savings across categories
       </p>
       <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
           <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
             <XAxis
