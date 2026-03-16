@@ -1,7 +1,9 @@
+import { PrismaNeonHttp } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaNeonHttp(process.env.DATABASE_URL!, {});
+const prisma = new PrismaClient({ adapter } as never);
 
 function daysAgo(n: number): Date {
   const d = new Date();
@@ -192,7 +194,7 @@ async function main() {
   // ==========================================
   // Activities for Demo User
   // ==========================================
-  await prisma.activity.deleteMany({ where: { userId: demoUser.id } });
+  // Skip deleteMany on fresh DB (HTTP adapter doesn't support transactions)
 
   const activities: Array<{
     userId: string;
@@ -313,7 +315,7 @@ async function main() {
 
   // Activities for other users
   for (const u of [user2, user3, user4]) {
-    await prisma.activity.deleteMany({ where: { userId: u.id } });
+    // Skip deleteMany on fresh DB
     const cats = ["WATER", "CARBON", "PLASTIC", "TRANSPORT", "RECYCLING", "FASHION"];
     const units = ["litres", "kg_co2", "items", "km", "kg", "items"];
     for (let i = 0; i < 8; i++) {
@@ -356,14 +358,16 @@ async function main() {
     });
   }
 
-  await prisma.activity.createMany({ data: activities });
+  // Create activities individually (HTTP adapter doesn't support createMany transactions)
+  for (const activity of activities) {
+    await prisma.activity.create({ data: activity });
+  }
   console.log(`  Seeded ${activities.length} activities`);
 
   // ==========================================
   // Challenges
   // ==========================================
-  await prisma.challengeParticipant.deleteMany();
-  await prisma.challenge.deleteMany();
+  // Skip deleteMany on fresh DB
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -433,7 +437,7 @@ async function main() {
   // ==========================================
   // Award badges
   // ==========================================
-  await prisma.userBadge.deleteMany();
+  // Skip deleteMany on fresh DB
 
   const badgeNames = ["First Step", "Week Warrior", "Water Watcher", "Pedal Power", "Plastic Reducer", "Challenger"];
   for (let i = 0; i < badgeNames.length; i++) {
@@ -462,7 +466,7 @@ async function main() {
   // ==========================================
   // Point Transactions
   // ==========================================
-  await prisma.pointTransaction.deleteMany();
+  // Skip deleteMany on fresh DB
 
   const pointReasons = [
     "Logged water activity", "Logged carbon activity", "Logged plastic activity",
@@ -485,9 +489,7 @@ async function main() {
   // ==========================================
   // Forum Threads & Replies
   // ==========================================
-  await prisma.reaction.deleteMany();
-  await prisma.reply.deleteMany();
-  await prisma.thread.deleteMany();
+  // Skip deleteMany on fresh DB
 
   const thread1 = await prisma.thread.create({
     data: {
