@@ -4,6 +4,7 @@ import { faTrophy, faMedal, faFire } from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { FadeIn } from "@/components/ui/FadeIn";
 import { getCurrentUser, getLeaderboard, getUserRank } from "@/lib/queries";
 
 const RANK_STYLES: Record<number, { color: string; label: string }> = {
@@ -86,6 +87,7 @@ export default async function LeaderboardPage({
         ))}
       </div>
 
+      <FadeIn>
       <Card variant="default" className="overflow-hidden">
         <table className="w-full">
           <thead>
@@ -127,7 +129,7 @@ export default async function LeaderboardPage({
                   className={
                     isCurrentUser
                       ? "border-l-2 border-l-forest bg-forest/5"
-                      : "hover:bg-gray-50/50"
+                      : "transition-colors duration-150 hover:bg-gray-50/80"
                   }
                 >
                   {/* Rank */}
@@ -234,6 +236,7 @@ export default async function LeaderboardPage({
           </div>
         )}
       </Card>
+      </FadeIn>
 
       {/* User rank indicator when not in top 50 */}
       {!userInBoard && userRank && (

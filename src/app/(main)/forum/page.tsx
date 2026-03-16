@@ -4,6 +4,7 @@ import { faComments, faArrowRight, faChevronLeft, faChevronRight } from "@/lib/f
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
 import { getForumThreads } from "@/lib/queries";
 import { ForumNewThreadToggle } from "@/components/forum/ForumNewThreadToggle";
 import { ForumSearchBar } from "@/components/forum/ForumSearchBar";
@@ -137,14 +138,14 @@ export default async function ForumPage({
         </Card>
       ) : (
         <>
-          <div className="space-y-3">
+          <StaggerGroup className="space-y-3" stagger={0.04}>
             {threads.map((thread) => {
               const badgeVariant =
                 CATEGORY_BADGE_VARIANT[thread.category] ?? "neutral";
 
               return (
+                <StaggerItem key={thread.id}>
                 <Link
-                  key={thread.id}
                   href={`/forum/${thread.id}`}
                   className="block"
                 >
@@ -202,9 +203,10 @@ export default async function ForumPage({
                     </div>
                   </Card>
                 </Link>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerGroup>
 
           {/* Pagination */}
           {totalPages > 1 && (

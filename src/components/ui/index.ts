@@ -7,3 +7,4 @@ export { ProgressBar } from "./ProgressBar";
 export { AnimatedCounter } from "./AnimatedCounter";
 export { Tooltip } from "./Tooltip";
 export { ToastProvider, useToast } from "./ToastProvider";
+export { FadeIn, StaggerGroup, StaggerItem } from "./FadeIn";

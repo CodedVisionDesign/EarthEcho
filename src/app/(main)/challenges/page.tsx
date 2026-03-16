@@ -17,6 +17,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
 import {
   getCurrentUser,
   getActiveChallenges,
@@ -92,7 +93,7 @@ export default async function ChallengesPage() {
           </p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <StaggerGroup className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
           {challenges.map((challenge) => {
             const participation = joinedMap.get(challenge.id);
             const hasJoined = !!participation;
@@ -107,8 +108,8 @@ export default async function ChallengesPage() {
               CATEGORY_ICONS[challenge.category] ?? faBullseye;
 
             return (
+              <StaggerItem key={challenge.id}>
               <Link
-                key={challenge.id}
                 href={`/challenges/${challenge.id}`}
                 className="block"
               >
@@ -205,9 +206,10 @@ export default async function ChallengesPage() {
                   </div>
                 </Card>
               </Link>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerGroup>
       )}
     </div>
   );

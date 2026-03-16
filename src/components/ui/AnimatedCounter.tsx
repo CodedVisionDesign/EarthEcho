@@ -1,65 +1,108 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useInView, useMotionValue, useSpring } from "motion/react";
+import { useCallback, useEffect, useRef } from "react";
 
 interface AnimatedCounterProps {
   value: number;
+  from?: number;
+  /** Duration in ms (converted to spring params internally) */
   duration?: number;
   prefix?: string;
   suffix?: string;
+  separator?: string;
   className?: string;
-}
-
-function easeOutExpo(t: number): number {
-  return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+  direction?: "up" | "down";
+  delay?: number;
+  onStart?: () => void;
+  onEnd?: () => void;
 }
 
 export function AnimatedCounter({
   value,
+  from = 0,
   duration = 1500,
   prefix = "",
   suffix = "",
+  separator = ",",
   className = "",
+  direction = "up",
+  delay = 0,
+  onStart,
+  onEnd,
 }: AnimatedCounterProps) {
-  const [displayValue, setDisplayValue] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
-  const hasAnimated = useRef(false);
 
-  useEffect(() => {
-    if (hasAnimated.current) return;
+  // Convert ms duration to spring params
+  const durationSec = duration / 1000;
+  const damping = 20 + 40 * (1 / durationSec);
+  const stiffness = 100 * (1 / durationSec);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          hasAnimated.current = true;
-          observer.disconnect();
+  const motionValue = useMotionValue(direction === "down" ? value : from);
+  const springValue = useSpring(motionValue, { damping, stiffness });
+  const isInView = useInView(ref, { once: true, margin: "0px" });
 
-          const start = performance.now();
-          const animate = (now: number) => {
-            const elapsed = now - start;
-            const progress = Math.min(elapsed / duration, 1);
-            const eased = easeOutExpo(progress);
-            setDisplayValue(Math.round(eased * value));
+  const getDecimalPlaces = (num: number) => {
+    const str = num.toString();
+    if (str.includes(".")) {
+      const decimals = str.split(".")[1];
+      if (parseInt(decimals) !== 0) return decimals.length;
+    }
+    return 0;
+  };
 
-            if (progress < 1) {
-              requestAnimationFrame(animate);
-            }
-          };
-          requestAnimationFrame(animate);
-        }
-      },
-      { threshold: 0.3 }
-    );
+  const maxDecimals = Math.max(getDecimalPlaces(from), getDecimalPlaces(value));
 
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [value, duration]);
-
-  return (
-    <span ref={ref} className={`tabular-nums ${className}`}>
-      {prefix}
-      {displayValue}
-      {suffix}
-    </span>
+  const formatValue = useCallback(
+    (latest: number) => {
+      const hasDecimals = maxDecimals > 0;
+      const options: Intl.NumberFormatOptions = {
+        useGrouping: !!separator,
+        minimumFractionDigits: hasDecimals ? maxDecimals : 0,
+        maximumFractionDigits: hasDecimals ? maxDecimals : 0,
+      };
+      const formatted = Intl.NumberFormat("en-US", options).format(latest);
+      return separator ? formatted.replace(/,/g, separator) : formatted;
+    },
+    [maxDecimals, separator],
   );
+
+  // Set initial text content
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.textContent = `${prefix}${formatValue(direction === "down" ? value : from)}${suffix}`;
+    }
+  }, [from, value, direction, formatValue, prefix, suffix]);
+
+  // Trigger animation when in view
+  useEffect(() => {
+    if (isInView) {
+      onStart?.();
+
+      const timeoutId = setTimeout(() => {
+        motionValue.set(direction === "down" ? from : value);
+      }, delay);
+
+      const endTimeoutId = setTimeout(() => {
+        onEnd?.();
+      }, delay + duration);
+
+      return () => {
+        clearTimeout(timeoutId);
+        clearTimeout(endTimeoutId);
+      };
+    }
+  }, [isInView, motionValue, direction, from, value, delay, onStart, onEnd, duration]);
+
+  // Subscribe to spring changes and update text
+  useEffect(() => {
+    const unsubscribe = springValue.on("change", (latest) => {
+      if (ref.current) {
+        ref.current.textContent = `${prefix}${formatValue(latest)}${suffix}`;
+      }
+    });
+    return () => unsubscribe();
+  }, [springValue, formatValue, prefix, suffix]);
+
+  return <span className={`tabular-nums ${className}`} ref={ref} />;
 }

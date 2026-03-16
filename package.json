@@ -27,6 +27,7 @@
     "bcryptjs": "^3.0.3",
     "gsap": "^3.14.2",
     "lucide-react": "^0.577.0",
+    "motion": "^12.37.0",
     "next": "16.1.6",
     "next-auth": "^5.0.0-beta.30",
     "react": "19.2.3",

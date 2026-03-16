@@ -18,6 +18,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
 import { getCurrentUser, getUserBadgesWithProgress } from "@/lib/queries";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
@@ -105,7 +106,7 @@ export default async function BadgesPage() {
               <h2 className="mb-4 text-lg font-semibold text-charcoal">
                 {CATEGORY_LABELS[cat] ?? cat}
               </h2>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <StaggerGroup className="grid grid-cols-1 gap-4 md:grid-cols-2" stagger={0.05}>
                 {items.map((badge) => {
                   const iconStyle = BADGE_ICON_MAP[badge.icon] ?? {
                     icon: faMedal,
@@ -114,10 +115,10 @@ export default async function BadgesPage() {
                   const rarity = RARITY_STYLES[badge.rarity] ?? RARITY_STYLES.common;
 
                   return (
+                    <StaggerItem key={badge.id}>
                     <Card
-                      key={badge.id}
                       variant="default"
-                      className={`p-5 ${!badge.earned ? "opacity-70" : ""}`}
+                      className={`p-5 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${!badge.earned ? "opacity-70" : ""}`}
                     >
                       <div className="flex items-start gap-4">
                         {/* Icon */}
@@ -172,9 +173,11 @@ export default async function BadgesPage() {
                         </div>
                       </div>
                     </Card>
+                    </StaggerItem>
+
                   );
                 })}
-              </div>
+              </StaggerGroup>
             </section>
           );
         })}

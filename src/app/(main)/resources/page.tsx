@@ -10,6 +10,7 @@ import {
 } from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
 import { getResources } from "@/lib/queries";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
@@ -130,11 +131,13 @@ export default async function ResourcesPage({
         </Card>
       ) : activeCategory ? (
         /* Single category view */
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <StaggerGroup className="grid grid-cols-1 gap-4 md:grid-cols-2" stagger={0.05}>
           {resources.map((resource) => (
-            <ResourceCard key={resource.id} resource={resource} />
+            <StaggerItem key={resource.id}>
+              <ResourceCard resource={resource} />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerGroup>
       ) : (
         /* All categories grouped */
         <div className="space-y-10">
@@ -158,11 +161,13 @@ export default async function ResourcesPage({
                     {config?.label ?? cat}
                   </h2>
                 </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <StaggerGroup className="grid grid-cols-1 gap-4 md:grid-cols-2" stagger={0.05}>
                   {items.map((resource) => (
-                    <ResourceCard key={resource.id} resource={resource} />
+                    <StaggerItem key={resource.id}>
+                      <ResourceCard resource={resource} />
+                    </StaggerItem>
                   ))}
-                </div>
+                </StaggerGroup>
               </section>
             );
           })}

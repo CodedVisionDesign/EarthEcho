@@ -23,6 +23,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/Button";
+import { FadeIn, StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
   getCurrentUser,
@@ -192,20 +193,22 @@ export default async function DashboardPage() {
       </div>
 
       {/* Impact Cards Grid */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <StaggerGroup className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" stagger={0.07}>
         {impactCards.map((card) => (
-          <ImpactSummaryCard key={card.label} {...card} />
+          <StaggerItem key={card.label}>
+            <ImpactSummaryCard {...card} />
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerGroup>
 
       {/* Charts Row */}
-      <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <FadeIn className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2" delay={0.15}>
         <WeeklyTrendChart data={weeklyTrend} />
         <TransportComparisonChart />
-      </div>
+      </FadeIn>
 
       {/* Bottom Row: Badges + Active Challenge */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <StaggerGroup className="grid grid-cols-1 gap-6 lg:grid-cols-2" stagger={0.1}>
         {/* Recent Badges */}
         <Card variant="default" className="p-6">
           <div className="mb-4 flex items-center gap-3">
@@ -330,7 +333,7 @@ export default async function DashboardPage() {
             </div>
           )}
         </Card>
-      </div>
+      </StaggerGroup>
     </div>
   );
 }
