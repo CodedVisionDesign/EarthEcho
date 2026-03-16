@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// Auth.js (NextAuth) Required Models
+// ==========================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String? // For credentials provider (bcrypt hashed)
+
+  // Profile fields
+  displayName String?
+  bio         String?
+  isPublic    Boolean @default(true)
+
+  // Gamification
+  totalPoints  Int       @default(0)
+  streakDays   Int       @default(0)
+  lastActiveAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  accounts              Account[]
+  sessions              Session[]
+  activities            Activity[]
+  userBadges            UserBadge[]
+  challengeParticipants ChallengeParticipant[]
+  pointTransactions     PointTransaction[]
+  threads               Thread[]
+  replies               Reply[]
+  reactions             Reaction[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ==========================================
+// Activity Tracking
+// ==========================================
+
+enum ActivityCategory {
+  WATER
+  CARBON
+  PLASTIC
+  RECYCLING
+  TRANSPORT
+  FASHION
+}
+
+model Activity {
+  id       String           @id @default(cuid())
+  userId   String
+  category ActivityCategory
+  type     String // e.g., "reusable_bottle", "bus_journey", "charity_shop_purchase"
+  value    Float // Raw value in base units (litres, kg CO2, items)
+  unit     String // Base unit: "litres", "kg_co2", "items", "kg"
+  note     String? // Optional user note
+  date     DateTime @default(now()) // When the activity occurred
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, category])
+  @@index([userId, date])
+  @@map("activities")
+}
+
+// ==========================================
+// Gamification
+// ==========================================
+
+model Badge {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String
+  icon        String // Icon identifier or URL
+  category    String // "starter", "streak", "impact", "community", "challenge"
+  criteria    String // JSON describing unlock criteria
+  rarity      String @default("common") // common, uncommon, rare, epic, legendary
+
+  userBadges UserBadge[]
+
+  createdAt DateTime @default(now())
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id      String @id @default(cuid())
+  userId  String
+  badgeId String
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  earnedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model Challenge {
+  id          String           @id @default(cuid())
+  title       String
+  description String
+  category    ActivityCategory
+  targetValue Float // Community target in base units
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean          @default(false)
+
+  participants ChallengeParticipant[]
+
+  createdAt DateTime @default(now())
+
+  @@map("challenges")
+}
+
+model ChallengeParticipant {
+  id          String @id @default(cuid())
+  userId      String
+  challengeId String
+  progress    Float  @default(0) // User's contribution in base units
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, challengeId])
+  @@map("challenge_participants")
+}
+
+model PointTransaction {
+  id     String @id @default(cuid())
+  userId String
+  points Int
+  reason String // e.g., "daily_log", "weekly_streak", "challenge_complete"
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("point_transactions")
+}
+
+// ==========================================
+// Forum
+// ==========================================
+
+model Thread {
+  id       String  @id @default(cuid())
+  userId   String
+  title    String
+  content  String  @db.Text
+  category String // "tips", "challenges", "wins", "questions"
+  isPinned Boolean @default(false)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replies Reply[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@map("threads")
+}
+
+model Reply {
+  id       String @id @default(cuid())
+  threadId String
+  userId   String
+  content  String @db.Text
+
+  thread    Thread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("replies")
+}
+
+model Reaction {
+  id      String @id @default(cuid())
+  replyId String
+  userId  String
+  type    String @default("cheer") // "cheer", "helpful", "inspiring"
+
+  reply Reply @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([replyId, userId, type])
+  @@map("reactions")
+}
+
+// ==========================================
+// Resources
+// ==========================================
+
+model Resource {
+  id          String  @id @default(cuid())
+  name        String
+  description String
+  url         String
+  category    String // "energy", "water", "recycling", "transport", "shopping", "food_waste"
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("resources")
+}
