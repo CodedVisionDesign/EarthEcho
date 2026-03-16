@@ -300,7 +300,7 @@ model Reaction {
 
 model Resource {
   id          String  @id @default(cuid())
-  name        String
+  name        String  @unique
   description String  @db.Text
   url         String  @db.Text
   category    String // "energy", "water", "recycling", "transport", "shopping", "food_waste"

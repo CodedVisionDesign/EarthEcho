@@ -118,7 +118,8 @@ async function main() {
 
   for (const r of resources) {
     await query(`INSERT INTO resources (id, name, description, url, category, "isActive", "createdAt", "updatedAt")
-      VALUES (${esc(cuid())}, ${esc(r.name)}, ${esc(r.description)}, ${esc(r.url)}, ${esc(r.category)}, true, NOW(), NOW())`);
+      VALUES (${esc(cuid())}, ${esc(r.name)}, ${esc(r.description)}, ${esc(r.url)}, ${esc(r.category)}, true, NOW(), NOW())
+      ON CONFLICT (name) DO UPDATE SET description = ${esc(r.description)}, url = ${esc(r.url)}`);
   }
   console.log(`  Seeded ${resources.length} resources`);
 
