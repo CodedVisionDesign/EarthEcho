@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -16,14 +16,14 @@ model User {
   name          String?
   email         String?   @unique
   emailVerified DateTime?
-  image         String?
-  customImage   String? // Path to user-uploaded avatar
-  password      String? // For credentials provider (bcrypt hashed)
+  image         String?   @db.Text
+  customImage   String?   @db.Text
+  password      String?
 
   // Profile fields
   displayName String?
-  bio         String?
-  isPublic    Boolean @default(true)
+  bio         String?  @db.Text
+  isPublic    Boolean  @default(true)
 
   // Gamification
   totalPoints  Int       @default(0)
@@ -54,12 +54,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
-  scope             String?
-  id_token          String?
+  scope             String? @db.Text
+  id_token          String? @db.Text
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -87,7 +87,7 @@ model Session {
 
 model VerificationToken {
   identifier String
-  token      String
+  token      String   @db.VarChar(512)
   expires    DateTime
 
   @@unique([identifier, token])
@@ -97,8 +97,6 @@ model VerificationToken {
 // ==========================================
 // Activity Tracking
 // ==========================================
-// Note: SQLite doesn't support enums. Category values are enforced at app level.
-// Valid categories: WATER, CARBON, PLASTIC, RECYCLING, TRANSPORT, FASHION
 
 model Activity {
   id       String @id @default(cuid())
@@ -107,7 +105,7 @@ model Activity {
   type     String // e.g., "reusable_bottle", "bus_journey", "ev_commute", "cycling"
   value    Float // Raw value in base units (litres, kg CO2, items, km)
   unit     String // Base unit: "litres", "kg_co2", "items", "kg", "km"
-  note     String?
+  note     String? @db.Text
   date     DateTime @default(now())
 
   // Transport-specific fields
@@ -131,10 +129,10 @@ model Activity {
 
 model TransportMode {
   id            String @id @default(cuid())
-  slug          String @unique // "petrol_car", "ev", "cycling", etc.
-  name          String // "Petrol Car", "Electric Vehicle", "Cycling"
-  co2PerKm      Float // kg CO2 per km
-  icon          String // Icon identifier
+  slug          String @unique
+  name          String
+  co2PerKm      Float
+  icon          String
   category      String // "car", "public", "active", "flight"
   isZeroEmission Boolean @default(false)
 
@@ -150,9 +148,9 @@ model TransportMode {
 model SavedCommute {
   id          String @id @default(cuid())
   userId      String
-  name        String // "Work commute", "School run"
+  name        String
   distanceKm  Float
-  isReturn    Boolean @default(true) // round trip?
+  isReturn    Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -168,10 +166,10 @@ model SavedCommute {
 model Badge {
   id          String @id @default(cuid())
   name        String @unique
-  description String
+  description String @db.Text
   icon        String
   category    String // "starter", "streak", "impact", "community", "challenge", "transport"
-  criteria    String // JSON describing unlock criteria
+  criteria    String @db.Text // JSON describing unlock criteria
   rarity      String @default("common") // common, uncommon, rare, epic, legendary
 
   userBadges UserBadge[]
@@ -198,7 +196,7 @@ model UserBadge {
 model Challenge {
   id          String @id @default(cuid())
   title       String
-  description String
+  description String @db.Text
   category    String // WATER, CARBON, PLASTIC, RECYCLING, TRANSPORT, FASHION
   targetValue Float
   startDate   DateTime
@@ -250,7 +248,7 @@ model Thread {
   id       String  @id @default(cuid())
   userId   String
   title    String
-  content  String
+  content  String  @db.Text
   category String // "tips", "challenges", "wins", "questions"
   isPinned Boolean @default(false)
 
@@ -268,7 +266,7 @@ model Reply {
   id       String @id @default(cuid())
   threadId String
   userId   String
-  content  String
+  content  String @db.Text
 
   thread    Thread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -302,8 +300,8 @@ model Reaction {
 model Resource {
   id          String  @id @default(cuid())
   name        String
-  description String
-  url         String
+  description String  @db.Text
+  url         String  @db.Text
   category    String // "energy", "water", "recycling", "transport", "shopping", "food_waste"
   isActive    Boolean @default(true)
 
@@ -321,7 +319,7 @@ model GuideComment {
   id        String @id @default(cuid())
   guideSlug String
   userId    String
-  content   String
+  content   String @db.Text
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

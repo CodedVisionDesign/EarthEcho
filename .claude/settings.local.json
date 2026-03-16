@@ -64,7 +64,14 @@
       "Bash(npx prisma migrate dev --name add-custom-image)",
       "Bash(npx prisma db push)",
       "Bash(npx prisma migrate dev --name add-custom-image --create-only)",
-      "Bash(npx prisma generate --no-engine)"
+      "Bash(npx prisma generate --no-engine)",
+      "Bash(node check-users.js)",
+      "Bash(node check-accounts.js)",
+      "Bash(rm check-accounts.js)",
+      "Bash(npm ls next-auth)",
+      "Bash(npx prisma db seed)",
+      "Bash(npx tsx ../prisma/seed.ts)",
+      "Bash(DATABASE_URL=\"file:./dev.db\" npx tsx prisma/seed.ts)"
     ]
   }
 }

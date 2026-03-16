@@ -395,10 +395,14 @@ export async function getLeaderboard(
   const userMap = new Map(users.map((u) => [u.id, u]));
   return pointsByUser
     .filter((p) => userMap.has(p.userId))
-    .map((p) => ({
-      ...userMap.get(p.userId)!,
-      totalPoints: p._sum.points ?? 0,
-    }));
+    .map((p) => {
+      const u = userMap.get(p.userId)!;
+      return {
+        ...u,
+        totalPoints: p._sum.points ?? 0,
+        _count: u._count,
+      };
+    });
 }
 
 export async function getUserRank(userId: string): Promise<number | null> {

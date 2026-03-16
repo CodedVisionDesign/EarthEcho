@@ -174,6 +174,21 @@ async function main() {
 
   console.log("  Seeded 4 demo users");
 
+  // Create credential accounts for each user (required by PrismaAdapter)
+  for (const user of [demoUser, user2, user3, user4]) {
+    await prisma.account.upsert({
+      where: { provider_providerAccountId: { provider: "credentials", providerAccountId: user.id } },
+      update: {},
+      create: {
+        userId: user.id,
+        type: "credentials",
+        provider: "credentials",
+        providerAccountId: user.id,
+      },
+    });
+  }
+  console.log("  Seeded credential accounts for demo users");
+
   // ==========================================
   // Activities for Demo User
   // ==========================================

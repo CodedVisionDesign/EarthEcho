@@ -104,7 +104,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
-    async jwt({ token }) {
+    async jwt({ token, user }) {
+      // On initial sign-in, user object is available — persist the id
+      if (user) {
+        token.sub = user.id;
+      }
       if (token.sub) {
         const dbUser = await db.user.findUnique({
           where: { id: token.sub },
