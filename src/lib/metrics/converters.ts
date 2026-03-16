@@ -1,6 +1,7 @@
 import { waterToHuman } from "./water";
 import { carbonToHuman } from "./carbon";
 import { plasticToHuman } from "./plastic";
+import { transportToHuman } from "./transport";
 
 export type MetricCategory = "WATER" | "CARBON" | "PLASTIC" | "RECYCLING" | "TRANSPORT" | "FASHION";
 
@@ -22,8 +23,9 @@ export function toHumanReadable(
     case "WATER":
       return waterToHuman(rawValue);
     case "CARBON":
-    case "TRANSPORT":
       return carbonToHuman(rawValue);
+    case "TRANSPORT":
+      return transportToHuman(rawValue);
     case "PLASTIC":
       return plasticToHuman(rawValue);
     case "RECYCLING":

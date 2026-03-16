@@ -1,10 +1,9 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -53,12 +52,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -96,25 +95,23 @@ model VerificationToken {
 // ==========================================
 // Activity Tracking
 // ==========================================
-
-enum ActivityCategory {
-  WATER
-  CARBON
-  PLASTIC
-  RECYCLING
-  TRANSPORT
-  FASHION
-}
+// Note: SQLite doesn't support enums. Category values are enforced at app level.
+// Valid categories: WATER, CARBON, PLASTIC, RECYCLING, TRANSPORT, FASHION
 
 model Activity {
-  id       String           @id @default(cuid())
+  id       String @id @default(cuid())
   userId   String
-  category ActivityCategory
-  type     String // e.g., "reusable_bottle", "bus_journey", "charity_shop_purchase"
-  value    Float // Raw value in base units (litres, kg CO2, items)
-  unit     String // Base unit: "litres", "kg_co2", "items", "kg"
-  note     String? // Optional user note
-  date     DateTime @default(now()) // When the activity occurred
+  category String // WATER, CARBON, PLASTIC, RECYCLING, TRANSPORT, FASHION
+  type     String // e.g., "reusable_bottle", "bus_journey", "ev_commute", "cycling"
+  value    Float // Raw value in base units (litres, kg CO2, items, km)
+  unit     String // Base unit: "litres", "kg_co2", "items", "kg", "km"
+  note     String?
+  date     DateTime @default(now())
+
+  // Transport-specific fields
+  transportMode String? // petrol_car, diesel_car, hybrid, ev, bus, train, plane, cycling, walking, e_scooter
+  distanceKm    Float? // Distance in km (for transport activities)
+  co2Saved      Float? // kg CO2 saved vs driving a petrol car
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -127,6 +124,42 @@ model Activity {
 }
 
 // ==========================================
+// Transport Reference Data
+// ==========================================
+
+model TransportMode {
+  id            String @id @default(cuid())
+  slug          String @unique // "petrol_car", "ev", "cycling", etc.
+  name          String // "Petrol Car", "Electric Vehicle", "Cycling"
+  co2PerKm      Float // kg CO2 per km
+  icon          String // Icon identifier
+  category      String // "car", "public", "active", "flight"
+  isZeroEmission Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@map("transport_modes")
+}
+
+// ==========================================
+// User Commute (saved regular journeys)
+// ==========================================
+
+model SavedCommute {
+  id          String @id @default(cuid())
+  userId      String
+  name        String // "Work commute", "School run"
+  distanceKm  Float
+  isReturn    Boolean @default(true) // round trip?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("saved_commutes")
+}
+
+// ==========================================
 // Gamification
 // ==========================================
 
@@ -134,8 +167,8 @@ model Badge {
   id          String @id @default(cuid())
   name        String @unique
   description String
-  icon        String // Icon identifier or URL
-  category    String // "starter", "streak", "impact", "community", "challenge"
+  icon        String
+  category    String // "starter", "streak", "impact", "community", "challenge", "transport"
   criteria    String // JSON describing unlock criteria
   rarity      String @default("common") // common, uncommon, rare, epic, legendary
 
@@ -161,14 +194,14 @@ model UserBadge {
 }
 
 model Challenge {
-  id          String           @id @default(cuid())
+  id          String @id @default(cuid())
   title       String
   description String
-  category    ActivityCategory
-  targetValue Float // Community target in base units
+  category    String // WATER, CARBON, PLASTIC, RECYCLING, TRANSPORT, FASHION
+  targetValue Float
   startDate   DateTime
   endDate     DateTime
-  isActive    Boolean          @default(false)
+  isActive    Boolean @default(false)
 
   participants ChallengeParticipant[]
 
@@ -181,7 +214,7 @@ model ChallengeParticipant {
   id          String @id @default(cuid())
   userId      String
   challengeId String
-  progress    Float  @default(0) // User's contribution in base units
+  progress    Float  @default(0)
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
@@ -197,7 +230,7 @@ model PointTransaction {
   id     String @id @default(cuid())
   userId String
   points Int
-  reason String // e.g., "daily_log", "weekly_streak", "challenge_complete"
+  reason String
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -215,7 +248,7 @@ model Thread {
   id       String  @id @default(cuid())
   userId   String
   title    String
-  content  String  @db.Text
+  content  String
   category String // "tips", "challenges", "wins", "questions"
   isPinned Boolean @default(false)
 
@@ -233,7 +266,7 @@ model Reply {
   id       String @id @default(cuid())
   threadId String
   userId   String
-  content  String @db.Text
+  content  String
 
   thread    Thread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)

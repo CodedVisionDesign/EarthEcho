@@ -1,4 +1,14 @@
-import type { ActivityCategory } from "@/generated/prisma";
+// Activity categories (SQLite doesn't support enums, so we define them here)
+export const ACTIVITY_CATEGORIES = [
+  "WATER",
+  "CARBON",
+  "PLASTIC",
+  "RECYCLING",
+  "TRANSPORT",
+  "FASHION",
+] as const;
+
+export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number];
 
 export interface HumanMetric {
   value: string;
@@ -34,4 +44,20 @@ export interface ChallengeProgress {
   userProgress: number; // percentage
   daysRemaining: number;
   participantCount: number;
+}
+
+export interface TransportJourney {
+  mode: string;
+  distanceKm: number;
+  co2Kg: number;
+  co2SavedKg: number;
+  date: Date;
+}
+
+export interface JourneyComparison {
+  mode: string;
+  modeName: string;
+  co2Kg: number;
+  savingsVsCar: number;
+  icon: string;
 }
