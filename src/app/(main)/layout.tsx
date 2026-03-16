@@ -18,7 +18,7 @@ export default async function MainLayout({
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8">
+        <div className="mx-auto max-w-6xl px-4 pt-16 pb-6 md:px-8 md:pt-8 md:pb-8">
           <ToastProvider>
             {children}
           </ToastProvider>

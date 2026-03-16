@@ -154,9 +154,9 @@ export default async function DashboardPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-charcoal">
+      <div className="mb-8 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight text-charcoal sm:text-2xl">
             Welcome back, {user.displayName || user.name || "Explorer"}!
           </h1>
           <p className="mt-1 text-sm text-slate">
