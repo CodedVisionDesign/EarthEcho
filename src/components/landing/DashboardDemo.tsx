@@ -491,8 +491,8 @@ function DashboardPage({ state, onLog, compact }: { state: DemoState; onLog: (c:
       {!compact && (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <ChartCard title="This Week's Impact" subtitle="Your daily savings across categories">
-            <div className="h-36">
-              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+            <div>
+              <ResponsiveContainer width="100%" height={144}>
                 <AreaChart data={weeklyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                   <XAxis dataKey="day" tick={{ fontSize: 9, fill: "#6C757D" }} axisLine={false} tickLine={false} />
@@ -506,8 +506,8 @@ function DashboardPage({ state, onLog, compact }: { state: DemoState; onLog: (c:
             </div>
           </ChartCard>
           <ChartCard title="Transport CO2 Comparison" subtitle="kg CO2 per 10km journey">
-            <div className="h-36">
-              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+            <div>
+              <ResponsiveContainer width="100%" height={144}>
                 <BarChart data={TRANSPORT_DATA} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
                   <XAxis type="number" tick={{ fontSize: 9, fill: "#6C757D" }} axisLine={false} tickLine={false} unit=" kg" />
@@ -527,8 +527,8 @@ function DashboardPage({ state, onLog, compact }: { state: DemoState; onLog: (c:
       {compact && (
         <div className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
           <h3 className="mb-1 text-[8px] font-semibold text-charcoal">Weekly Impact</h3>
-          <div className="h-24">
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+          <div>
+            <ResponsiveContainer width="100%" height={96}>
               <AreaChart data={weeklyData}>
                 <XAxis dataKey="day" tick={{ fontSize: 7, fill: "#6C757D" }} axisLine={false} tickLine={false} />
                 <Area type="monotone" dataKey="water" stroke="#1B4965" fill="#1B4965" fillOpacity={0.1} strokeWidth={1.5} animationDuration={400} />

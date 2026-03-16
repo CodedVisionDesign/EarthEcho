@@ -29,8 +29,8 @@ export function CategoryChart({ data, color, label }: CategoryChartProps) {
     <Card variant="default" className="p-6">
       <h3 className="mb-1 text-lg font-semibold text-charcoal">{label}</h3>
       <p className="mb-4 text-xs text-slate">Daily values over time</p>
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+      <div>
+        <ResponsiveContainer width="100%" height={256}>
           <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
             <XAxis

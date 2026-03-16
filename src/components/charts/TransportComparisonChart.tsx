@@ -41,8 +41,8 @@ export function TransportComparisonChart({ data }: { data?: TransportData[] }) {
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
       <h3 className="mb-1 text-lg font-semibold text-charcoal">{title}</h3>
       <p className="mb-4 text-xs text-slate">{subtitle}</p>
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+      <div>
+        <ResponsiveContainer width="100%" height={256}>
           <BarChart data={chartData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
             <XAxis
