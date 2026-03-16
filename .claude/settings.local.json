@@ -71,7 +71,28 @@
       "Bash(npm ls next-auth)",
       "Bash(npx prisma db seed)",
       "Bash(npx tsx ../prisma/seed.ts)",
-      "Bash(DATABASE_URL=\"file:./dev.db\" npx tsx prisma/seed.ts)"
+      "Bash(DATABASE_URL=\"file:./dev.db\" npx tsx prisma/seed.ts)",
+      "Bash(node check-fix.js)",
+      "Bash(rm check-fix.js)",
+      "Bash(DATABASE_URL=\"file:./prisma/dev.db\" node check-fix.js)",
+      "Bash(DATABASE_URL=\"file:./dev.db\" node -e \"const{PrismaClient}=require\\(''@prisma/client''\\);const p=new PrismaClient\\(\\);\\(async\\(\\)=>{const a=await p.account.findMany\\({select:{userId:true,provider:true,type:true}}\\);console.log\\(''Accounts:'',a.length\\);a.forEach\\(x=>console.log\\(x\\)\\);await p.$disconnect\\(\\);}\\)\\(\\)\")",
+      "Bash(npx prisma migrate dev --name init-postgres)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" --connect-timeout 10 https://ep-round-morning-adah2ktm-pooler.c-2.us-east-1.aws.neon.tech)",
+      "Bash(bash -c \"echo > /dev/tcp/ep-round-morning-adah2ktm-pooler.c-2.us-east-1.aws.neon.tech/5432\")",
+      "Bash(npm install @neondatabase/serverless @prisma/adapter-neon ws)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script)",
+      "Read(//tmp/**)",
+      "Bash(cp /tmp/init-postgres.sql ./init-postgres.sql)",
+      "Bash(node scripts/push-schema.mjs)",
+      "Bash(node -e \"require\\(''dotenv''\\).config\\(\\); console.log\\(process.env.DATABASE_URL?.slice\\(0,30\\)\\)\")",
+      "Bash(node --env-file=.env node_modules/.bin/tsx prisma/seed.ts)",
+      "Bash(npx tsx --env-file=.env prisma/seed.ts)",
+      "Bash(npx tsx -e \"console.log\\(JSON.stringify\\(process.env.DATABASE_URL\\)\\)\" --env-file=.env)",
+      "Bash(npx tsx --env-file=.env -e \":*)",
+      "Bash(node -e \"const m = require\\(''@prisma/adapter-neon''\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node scripts/seed-neon.mjs)",
+      "Bash(node -e \"const m = require\\(''@prisma/adapter-neon''\\); console.log\\(m.PrismaNeonHttp.length\\)\")"
     ]
   }
 }
