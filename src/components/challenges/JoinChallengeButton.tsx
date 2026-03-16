@@ -14,7 +14,9 @@ export function JoinChallengeButton({ challengeId }: JoinChallengeButtonProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  function handleJoin() {
+  function handleJoin(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
     startTransition(async () => {
       const result = await joinChallenge(challengeId);
       if (result?.error) {

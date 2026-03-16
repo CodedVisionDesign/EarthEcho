@@ -158,7 +158,7 @@ export default async function ChallengesPage() {
                   </div>
 
                   {/* Progress or Join */}
-                  <div className="mt-auto" onClick={(e) => e.preventDefault()}>
+                  <div className="mt-auto">
                     {hasJoined ? (
                       isCompleted ? (
                         <div className="flex items-center gap-2 rounded-lg bg-forest/5 p-3">

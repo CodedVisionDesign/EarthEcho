@@ -64,12 +64,15 @@ import {
   faCircleCheck,
   faChevronLeft,
   faChevronRight,
+  faArrowUpRightFromSquare,
 } from "@fortawesome/free-solid-svg-icons";
 
 // Brand icons
 import {
   faGoogle,
   faFacebook,
+  faApple,
+  faGooglePlay,
 } from "@fortawesome/free-brands-svg-icons";
 
 // Register all icons
@@ -85,8 +88,9 @@ library.add(
   faTrain, faBus, faPlane, faRightFromBracket, faCamera,
   faBookOpen, faSun, faShower, faCarrot, faLightbulb, faCircleInfo,
   faSearch, faPen, faCircleCheck, faChevronLeft, faChevronRight,
+  faArrowUpRightFromSquare,
   // Brands
-  faGoogle, faFacebook
+  faGoogle, faFacebook, faApple, faGooglePlay
 );
 
 // Re-export commonly used icons for convenient importing
@@ -101,5 +105,6 @@ export {
   faTrain, faBus, faPlane, faRightFromBracket, faCamera,
   faBookOpen, faSun, faShower, faCarrot, faLightbulb, faCircleInfo,
   faSearch, faPen, faCircleCheck, faChevronLeft, faChevronRight,
-  faGoogle, faFacebook,
+  faArrowUpRightFromSquare,
+  faGoogle, faFacebook, faApple, faGooglePlay,
 };
