@@ -10,18 +10,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// Demo data — will be replaced with real data from the database
-const DEMO_DATA = [
-  { day: "Mon", water: 30, carbon: 2.5, plastic: 4 },
-  { day: "Tue", water: 45, carbon: 1.8, plastic: 6 },
-  { day: "Wed", water: 20, carbon: 3.2, plastic: 3 },
-  { day: "Thu", water: 55, carbon: 2.1, plastic: 8 },
-  { day: "Fri", water: 40, carbon: 1.5, plastic: 5 },
-  { day: "Sat", water: 60, carbon: 0.8, plastic: 7 },
-  { day: "Sun", water: 35, carbon: 1.2, plastic: 4 },
-];
+interface WeeklyTrendData {
+  day: string;
+  water: number;
+  carbon: number;
+  plastic: number;
+}
 
-export function WeeklyTrendChart() {
+export function WeeklyTrendChart({ data }: { data: WeeklyTrendData[] }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
       <h3 className="mb-1 text-lg font-semibold text-charcoal">
@@ -32,7 +28,7 @@ export function WeeklyTrendChart() {
       </p>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={DEMO_DATA}>
+          <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
             <XAxis
               dataKey="day"

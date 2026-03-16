@@ -17,6 +17,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  customImage   String? // Path to user-uploaded avatar
   password      String? // For credentials provider (bcrypt hashed)
 
   // Profile fields
@@ -42,6 +43,7 @@ model User {
   threads               Thread[]
   replies               Reply[]
   reactions             Reaction[]
+  guideComments         GuideComment[]
 
   @@map("users")
 }
@@ -309,4 +311,23 @@ model Resource {
   updatedAt DateTime @updatedAt
 
   @@map("resources")
+}
+
+// ==========================================
+// Guide Comments
+// ==========================================
+
+model GuideComment {
+  id        String @id @default(cuid())
+  guideSlug String
+  userId    String
+  content   String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([guideSlug, createdAt])
+  @@map("guide_comments")
 }

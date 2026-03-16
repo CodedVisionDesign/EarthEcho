@@ -46,7 +46,7 @@ export function plasticToHuman(items: number): HumanMetric {
 
   return {
     value: `${items} item${items !== 1 ? "s" : ""}`,
-    comparison: `Every item counts — ${items} less in the ocean`,
+    comparison: `Every item counts. ${items} fewer in the ocean`,
     icon: "leaf",
   };
 }

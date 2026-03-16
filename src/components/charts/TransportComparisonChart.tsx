@@ -11,8 +11,7 @@ import {
   Cell,
 } from "recharts";
 
-// Demo data showing CO2 per 10km journey across transport modes
-const TRANSPORT_DATA = [
+const REFERENCE_DATA = [
   { mode: "Walk", co2: 0, color: "#52B788" },
   { mode: "Cycle", co2: 0, color: "#52B788" },
   { mode: "E-Scoot", co2: 0.05, color: "#74C69D" },
@@ -25,23 +24,27 @@ const TRANSPORT_DATA = [
   { mode: "Flight", co2: 2.55, color: "#C1121F" },
 ];
 
-export function TransportComparisonChart() {
+interface TransportData {
+  mode: string;
+  co2: number;
+  color: string;
+}
+
+export function TransportComparisonChart({ data }: { data?: TransportData[] }) {
+  const chartData = data && data.length > 0 ? data : REFERENCE_DATA;
+  const title = data && data.length > 0 ? "Your Transport CO2" : "Transport CO2 Comparison";
+  const subtitle = data && data.length > 0
+    ? "CO2 emissions from your logged journeys"
+    : "kg CO2 per 10km journey. See the difference your choice makes";
+
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-      <h3 className="mb-1 text-lg font-semibold text-charcoal">
-        Transport CO2 Comparison
-      </h3>
-      <p className="mb-4 text-xs text-slate">
-        kg CO2 per 10km journey — see the difference your choice makes
-      </p>
+      <h3 className="mb-1 text-lg font-semibold text-charcoal">{title}</h3>
+      <p className="mb-4 text-xs text-slate">{subtitle}</p>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={TRANSPORT_DATA} layout="vertical">
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="#E5E7EB"
-              horizontal={false}
-            />
+          <BarChart data={chartData} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
             <XAxis
               type="number"
               tick={{ fontSize: 11, fill: "#6C757D" }}
@@ -63,10 +66,10 @@ export function TransportComparisonChart() {
                 border: "1px solid #E5E7EB",
                 fontSize: "12px",
               }}
-              formatter={(value: number) => [`${value} kg CO2`, "Emissions"]}
+              formatter={(value) => [`${value} kg CO2`, "Emissions"]}
             />
             <Bar dataKey="co2" radius={[0, 4, 4, 0]} barSize={18}>
-              {TRANSPORT_DATA.map((entry) => (
+              {chartData.map((entry) => (
                 <Cell key={entry.mode} fill={entry.color} />
               ))}
             </Bar>

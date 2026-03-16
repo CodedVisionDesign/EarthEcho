@@ -3,7 +3,7 @@
  * Base unit: km travelled
  *
  * CO2 emission factors (kg CO2 per km) from UK Government GHG Conversion Factors.
- * These are averages — real values vary by vehicle model, occupancy, etc.
+ * These are averages. Real values vary by vehicle model, occupancy, etc.
  */
 
 interface HumanMetric {
@@ -206,7 +206,7 @@ export function transportToHuman(co2SavedKg: number): HumanMetric {
 
   return {
     value: `${co2SavedKg.toFixed(2)} kg CO2 saved`,
-    comparison: `Every kilometre counts — ${co2SavedKg.toFixed(2)} kg CO2 kept out of the atmosphere`,
+    comparison: `Every kilometre counts. ${co2SavedKg.toFixed(2)} kg CO2 kept out of the atmosphere`,
     icon: "sparkle",
   };
 }
@@ -227,9 +227,9 @@ export function activeTransportToHuman(
 
   const healthBenefit =
     calories >= 500
-      ? `Burned about ${calories} calories — that's a full meal's worth!`
+      ? `Burned about ${calories} calories. That's a full meal's worth!`
       : calories >= 100
-        ? `Burned about ${calories} calories — keep it up!`
+        ? `Burned about ${calories} calories. Keep it up!`
         : `Burned about ${calories} calories`;
 
   return { ...metric, healthBenefit };
