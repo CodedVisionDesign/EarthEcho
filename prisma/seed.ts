@@ -607,8 +607,34 @@ async function main() {
 
   console.log("  Seeded 4 threads, 8 replies, 5 reactions");
 
+  // ==========================================
+  // Super Admin User
+  // ==========================================
+  const superAdminEmail = "contact@codedvisiondesign.co.uk";
+  const existingSuperAdmin = await prisma.user.findUnique({ where: { email: superAdminEmail } });
+  if (existingSuperAdmin) {
+    await prisma.user.update({
+      where: { email: superAdminEmail },
+      data: { role: "superadmin" },
+    });
+    console.log("  Updated existing super admin: " + superAdminEmail);
+  } else {
+    const superAdminPassword = await bcrypt.hash("EarthEchoAdmin2024!", 12);
+    await prisma.user.create({
+      data: {
+        name: "Super Admin",
+        email: superAdminEmail,
+        password: superAdminPassword,
+        role: "superadmin",
+        displayName: "Super Admin",
+      },
+    });
+    console.log("  Created super admin: " + superAdminEmail);
+  }
+
   console.log("\nSeeding complete!");
   console.log("\n  Demo login: demo@example.com / demo1234");
+  console.log("  Super admin: " + superAdminEmail + " / EarthEchoAdmin2024!");
 }
 
 main()

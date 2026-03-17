@@ -26,11 +26,13 @@ import {
   faBars,
   faXmark,
   faRightFromBracket,
+  faShieldHalved,
 } from "@/lib/fontawesome";
 
 interface SidebarProps {
   userName?: string;
   userImage?: string;
+  userRole?: string;
 }
 
 interface NavItem {
@@ -111,9 +113,11 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-export function Sidebar({ userName, userImage }: SidebarProps) {
+export function Sidebar({ userName, userImage, userRole }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isAdmin = userRole === "admin" || userRole === "superadmin";
 
   const sidebarContent = (
     <>
@@ -142,6 +146,21 @@ export function Sidebar({ userName, userImage }: SidebarProps) {
             </ul>
           </div>
         ))}
+
+        {/* Admin link */}
+        {isAdmin && (
+          <div className="mb-5">
+            <h3 className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-charcoal/35">
+              Admin
+            </h3>
+            <ul className="space-y-0.5">
+              <NavLink
+                item={{ href: "/admin", label: "Admin Panel", icon: faShieldHalved }}
+                pathname={pathname}
+              />
+            </ul>
+          </div>
+        )}
       </nav>
 
       {/* User section */}

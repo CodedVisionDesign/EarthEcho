@@ -75,6 +75,7 @@ import {
   faArrowLeft,
   faUserShield,
   faEye,
+  faEyeSlash,
   faFilter,
   faChevronUp,
   faPaperPlane,
@@ -106,7 +107,7 @@ library.add(
   faCode,
   faSquareCheck, faSquare,
   faShieldHalved, faClipboardList, faGauge, faBan, faArrowLeft,
-  faUserShield, faEye, faFilter, faChevronUp,
+  faUserShield, faEye, faEyeSlash, faFilter, faChevronUp,
   faPaperPlane, faKey,
   // Brands
   faGoogle, faFacebook, faApple, faGooglePlay
@@ -128,7 +129,7 @@ export {
   faCode,
   faSquareCheck, faSquare,
   faShieldHalved, faClipboardList, faGauge, faBan, faArrowLeft,
-  faUserShield, faEye, faFilter, faChevronUp,
+  faUserShield, faEye, faEyeSlash, faFilter, faChevronUp,
   faPaperPlane, faKey,
   faGoogle, faFacebook, faApple, faGooglePlay,
 };

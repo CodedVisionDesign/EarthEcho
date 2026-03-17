@@ -1,8 +1,8 @@
 "use client";
 
-import type { InputHTMLAttributes } from "react";
+import { useState, type InputHTMLAttributes } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleExclamation } from "@fortawesome/free-solid-svg-icons";
+import { faCircleExclamation, faEye, faEyeSlash } from "@/lib/fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "className"> {
@@ -18,11 +18,14 @@ export function Input({
   error,
   helperText,
   id,
+  type,
   ...props
 }: InputProps) {
   const inputId = id || label.toLowerCase().replace(/\s+/g, "-");
   const errorId = error ? `${inputId}-error` : undefined;
   const helperId = helperText ? `${inputId}-helper` : undefined;
+  const isPassword = type === "password";
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div>
@@ -44,8 +47,11 @@ export function Input({
         )}
         <input
           id={inputId}
+          type={isPassword && showPassword ? "text" : type}
           className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm outline-none transition-all duration-200 ${
             icon ? "pl-10" : ""
+          } ${
+            isPassword || error ? "pr-10" : ""
           } ${
             error
               ? "border-coral text-coral focus:border-coral focus:ring-1 focus:ring-coral"
@@ -55,6 +61,20 @@ export function Input({
           aria-describedby={errorId || helperId}
           {...props}
         />
+        {isPassword && !error && (
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate hover:text-charcoal transition-colors"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            <FontAwesomeIcon
+              icon={showPassword ? faEyeSlash : faEye}
+              className="h-4 w-4"
+              aria-hidden
+            />
+          </button>
+        )}
         {error && (
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
             <FontAwesomeIcon

@@ -11,17 +11,17 @@ export default function LoginPage() {
       >
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-charcoal">
+            <h1 className="text-2xl font-bold tracking-tight text-white drop-shadow-md">
               Welcome Back
             </h1>
-            <p className="mt-1 text-sm text-slate">
+            <p className="mt-1 text-sm text-white/80 drop-shadow-sm">
               Log in to track your environmental impact
             </p>
           </div>
 
           <LoginForm />
 
-          <p className="mt-6 text-center text-sm text-slate">
+          <p className="mt-6 text-center text-sm text-white/80 drop-shadow-sm">
             Don&apos;t have an account?{" "}
             <Link
               href="/register"

@@ -81,12 +81,19 @@ export default function AuthLayout({
         </div>
 
         {/* Form side — fills exactly the other half */}
-        <div className="relative w-full shrink-0 overflow-hidden md:w-1/2">
-          {/* Background image — fixed behind scrollable content, covers entire panel */}
-          <div
-            className="absolute inset-0 z-0 bg-[url('/assets/auth_bg.png')] bg-cover bg-center bg-no-repeat"
+        <div className="relative w-full shrink-0 overflow-hidden bg-black md:w-1/2">
+          {/* Background video — covers entire panel */}
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 z-0 h-full w-full object-cover"
             style={{ filter: "brightness(0.98) saturate(1.1)" }}
-          />
+          >
+            <source src="/assets/auth_bg.webm" type="video/webm" />
+            <source src="/assets/auth_bg.mp4" type="video/mp4" />
+          </video>
           {/* Soft glass overlay — also fixed */}
           <div className="absolute inset-0 z-[1] bg-gradient-to-b from-white/10 via-transparent to-white/20 backdrop-blur-[1px]" />
 

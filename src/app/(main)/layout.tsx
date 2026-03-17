@@ -21,6 +21,7 @@ export default async function MainLayout({
       <Sidebar
         userName={session?.user?.name ?? undefined}
         userImage={session?.user?.image ?? undefined}
+        userRole={(session?.user as Record<string, unknown>)?.role as string | undefined}
       />
 
       {/* Main content */}
