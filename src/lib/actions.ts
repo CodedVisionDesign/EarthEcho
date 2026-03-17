@@ -571,7 +571,7 @@ export async function createGuideComment(input: {
 // Internal Helpers
 // ==========================================
 
-export function calculatePointsForCategory(category: string, value: number): number {
+function calculatePointsForCategory(category: string, value: number): number {
   switch (category) {
     case "WATER": return Math.max(5, Math.round(value / 10)); // 1pt per 10 litres
     case "CARBON": return Math.max(5, Math.round(value * 10)); // 10pt per kg CO2
