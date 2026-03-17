@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEnvelope,
@@ -111,6 +112,14 @@ export function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-xs font-medium text-forest transition-colors hover:text-forest-dark hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <Button
           type="submit"
           variant="primary"

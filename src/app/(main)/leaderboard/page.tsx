@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrophy, faMedal, faFire } from "@/lib/fontawesome";
+import {
+  faTrophy,
+  faMedal,
+  faFire,
+  faCircleInfo,
+} from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -50,25 +55,27 @@ export default async function LeaderboardPage({
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sunshine/15">
-            <FontAwesomeIcon
-              icon={faTrophy}
-              className="h-5 w-5 text-amber-600"
-              aria-hidden
-            />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-charcoal">
-              Leaderboard
-            </h1>
-            <p className="text-sm text-slate">
-              See how you stack up against the community
-            </p>
+      <FadeIn variant="fade-up">
+        <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-sunshine via-amber-500 to-amber-600 p-6 text-white shadow-lg">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+              <FontAwesomeIcon
+                icon={faTrophy}
+                className="h-5 w-5"
+                aria-hidden
+              />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Leaderboard
+              </h1>
+              <p className="text-sm text-white/70">
+                See how you stack up against the community
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </FadeIn>
 
       {/* Period Filter */}
       <div className="mb-6 flex flex-wrap gap-2">
@@ -262,6 +269,66 @@ export default async function LeaderboardPage({
           </div>
         </Card>
       )}
+      {/* How Scoring Works */}
+      <FadeIn>
+        <Card variant="default" className="mt-8 p-6">
+          <div className="mb-4 flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50">
+              <FontAwesomeIcon
+                icon={faCircleInfo}
+                className="h-4 w-4 text-sky-600"
+                aria-hidden
+              />
+            </div>
+            <h2 className="text-base font-semibold text-charcoal">
+              How Scoring Works
+            </h2>
+          </div>
+
+          <p className="mb-4 text-sm leading-relaxed text-slate">
+            Points are earned every time you log an eco-friendly activity. The
+            amount depends on the category and the size of your contribution:
+          </p>
+
+          <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {[
+              { label: "Carbon", detail: "10 pts / kg CO\u2082 saved" },
+              { label: "Fashion", detail: "5 pts / item reused" },
+              { label: "Plastic", detail: "3 pts / item avoided" },
+              { label: "Recycling", detail: "2 pts / kg recycled" },
+              { label: "Transport", detail: "1 pt / green km" },
+              { label: "Water", detail: "1 pt / 10 litres saved" },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2"
+              >
+                <p className="text-xs font-semibold text-charcoal">
+                  {item.label}
+                </p>
+                <p className="text-[11px] text-slate">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mb-2 text-sm leading-relaxed text-slate">
+            Every activity earns a minimum of <strong className="text-charcoal">5 points</strong>.
+            You also earn <strong className="text-charcoal">100 bonus points</strong> for
+            completing a challenge.
+          </p>
+
+          <div className="mt-4 rounded-lg border border-amber-100 bg-amber-50/60 px-4 py-3">
+            <p className="text-xs leading-relaxed text-amber-800">
+              <strong>Study project notice:</strong> This app is a university
+              study project and is not a commercial product. Leaderboard
+              rankings are based on self-reported activity logs and are not
+              independently verified. The scoring system is designed to
+              encourage engagement and learning, not to provide certified
+              environmental impact data.
+            </p>
+          </div>
+        </Card>
+      </FadeIn>
     </div>
   );
 }

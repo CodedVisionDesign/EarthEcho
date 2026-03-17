@@ -40,8 +40,10 @@ export default async function TransportTrackingPage() {
         label={config.label}
         humanValue={humanMetric.value}
         comparison={humanMetric.comparison}
+        calculationTooltip={humanMetric.tooltip}
         iconBg="bg-ocean/10"
         iconColor="text-ocean"
+        gradient="from-ocean via-ocean/90 to-forest/60"
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ActivityLogForm

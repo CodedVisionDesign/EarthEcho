@@ -37,6 +37,20 @@ const CATEGORY_ICONS: Record<string, IconDefinition> = {
   WALKING: faPersonWalking,
 };
 
+const CHALLENGE_UNITS: Record<string, string> = {
+  WATER: "litres",
+  CARBON: "kg CO\u2082",
+  PLASTIC: "items",
+  RECYCLING: "kg",
+  TRANSPORT: "trips",
+  FASHION: "items",
+};
+
+function formatTarget(value: number, category: string): string {
+  const unit = CHALLENGE_UNITS[category];
+  return unit ? `${value} ${unit}` : String(value);
+}
+
 const RANK_STYLES: Record<number, string> = {
   1: "text-amber-500",
   2: "text-gray-400",
@@ -110,7 +124,7 @@ export default async function ChallengeDetailPage({
           </div>
           <div>
             <p className="text-[11px] font-medium uppercase text-slate">Target</p>
-            <p className="text-sm font-semibold text-charcoal">{challenge.targetValue}</p>
+            <p className="text-sm font-semibold text-charcoal">{formatTarget(challenge.targetValue, challenge.category)}</p>
           </div>
           <div>
             <p className="text-[11px] font-medium uppercase text-slate">Start</p>
@@ -128,7 +142,7 @@ export default async function ChallengeDetailPage({
             <div className="mb-2 flex items-center justify-between text-sm">
               <span className="text-slate">Your progress</span>
               <span className="font-semibold text-charcoal">
-                {Math.round(participation.progress)} / {challenge.targetValue} ({Math.round(progressPct)}%)
+                {formatTarget(Math.round(participation.progress), challenge.category)} / {formatTarget(challenge.targetValue, challenge.category)} ({Math.round(progressPct)}%)
               </span>
             </div>
             <ProgressBar value={progressPct} color="forest" size="lg" />

@@ -18,7 +18,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
+import { FadeIn, StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
 import { getCurrentUser, getUserBadgesWithProgress } from "@/lib/queries";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
@@ -63,6 +63,82 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const CATEGORY_ORDER = ["starter", "streak", "impact", "transport", "challenge", "community"];
 
+const UNIT_LABELS: Record<string, string> = {
+  WATER: "litres",
+  CARBON: "kg CO\u2082",
+  PLASTIC: "items",
+  RECYCLING: "kg",
+  TRANSPORT: "km",
+  FASHION: "items",
+};
+
+const MODE_LABELS: Record<string, string> = {
+  cycling: "cycling",
+  walking: "walking",
+  ev: "EV",
+  train: "train",
+  bus: "bus",
+};
+
+function getNudgeText(criteria: string, progress: number): string | null {
+  if (progress >= 100 || progress <= 0) return null;
+  try {
+    const c = JSON.parse(criteria);
+    const remaining = Math.max(0, 100 - progress);
+    switch (c.type) {
+      case "first_activity":
+        return "Log your first activity to earn this!";
+      case "profile_complete":
+        return "Complete your profile to earn this badge";
+      case "first_post":
+        return "Make your first forum post to earn this!";
+      case "streak": {
+        const daysLeft = Math.ceil((c.days * remaining) / 100);
+        return `${daysLeft} more day${daysLeft !== 1 ? "s" : ""} to go`;
+      }
+      case "total": {
+        const left = Math.ceil((c.value * remaining) / 100);
+        const unit = UNIT_LABELS[c.category] ?? "units";
+        return `${left.toLocaleString()} more ${unit} to go`;
+      }
+      case "transport_distance": {
+        const kmLeft = Math.ceil((c.km * remaining) / 100);
+        const mode = MODE_LABELS[c.mode] ?? c.mode;
+        return `${kmLeft} more km ${mode} to go`;
+      }
+      case "transport_count": {
+        const tripsLeft = Math.ceil((c.count * remaining) / 100);
+        const mode = MODE_LABELS[c.mode] ?? c.mode;
+        return `${tripsLeft} more ${mode} trip${tripsLeft !== 1 ? "s" : ""} to go`;
+      }
+      case "challenges_completed": {
+        const left = Math.ceil((c.count * remaining) / 100);
+        return `Complete ${left} more challenge${left !== 1 ? "s" : ""}`;
+      }
+      case "reactions_received": {
+        const left = Math.ceil((c.count * remaining) / 100);
+        return `${left} more '${c.reaction}' reaction${left !== 1 ? "s" : ""} needed`;
+      }
+      case "posts_count": {
+        const left = Math.ceil((c.count * remaining) / 100);
+        return `${left} more post${left !== 1 ? "s" : ""} to go`;
+      }
+      case "car_free_streak": {
+        const daysLeft = Math.ceil((c.days * remaining) / 100);
+        return `Keep going car-free! ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`;
+      }
+      case "flight_free_streak": {
+        const daysLeft = Math.ceil((c.days * remaining) / 100);
+        return `Stay flight-free! ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`;
+      }
+      default:
+        return null;
+    }
+  } catch {
+    return null;
+  }
+}
+
 export default async function BadgesPage() {
   const user = await getCurrentUser();
   const badges = await getUserBadgesWithProgress(user.id);
@@ -80,20 +156,28 @@ export default async function BadgesPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-charcoal">
-            Badges
-          </h1>
-          <p className="mt-1 text-sm text-slate">
-            Earn badges by tracking activities and reaching milestones
-          </p>
+      <FadeIn variant="fade-up">
+        <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-sunshine/90 via-amber-500 to-amber-600 p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+                <FontAwesomeIcon icon={faAward} className="h-5 w-5" aria-hidden />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight">
+                  Badges
+                </h1>
+                <p className="text-sm text-white/70">
+                  Earn badges by tracking activities and reaching milestones
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0 rounded-full bg-white/15 px-3.5 py-1.5 text-sm font-bold backdrop-blur-sm">
+              {earnedCount} / {badges.length} earned
+            </div>
+          </div>
         </div>
-        <Badge variant="forest" size="md">
-          <FontAwesomeIcon icon={faAward} className="h-3 w-3" aria-hidden />
-          {earnedCount} / {badges.length} earned
-        </Badge>
-      </div>
+      </FadeIn>
 
       {/* Badge Sections */}
       <div className="space-y-10">
@@ -103,8 +187,9 @@ export default async function BadgesPage() {
 
           return (
             <section key={cat}>
-              <h2 className="mb-4 text-lg font-semibold text-charcoal">
+              <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-charcoal">
                 {CATEGORY_LABELS[cat] ?? cat}
+                <span className="h-px flex-1 bg-gray-200" />
               </h2>
               <StaggerGroup className="grid grid-cols-1 gap-4 md:grid-cols-2" stagger={0.05}>
                 {items.map((badge) => {
@@ -157,19 +242,27 @@ export default async function BadgesPage() {
                                 year: "numeric",
                               })}
                             </p>
-                          ) : (
-                            <div className="mt-3">
-                              <div className="mb-1 flex justify-between text-xs text-slate">
-                                <span>Progress</span>
-                                <span className="font-medium">{badge.progress}%</span>
+                          ) : (() => {
+                            const nudge = getNudgeText(badge.criteria, badge.progress);
+                            return (
+                              <div className="mt-3">
+                                <div className="mb-1 flex justify-between text-xs text-slate">
+                                  <span>{nudge ?? "Progress"}</span>
+                                  <span className="font-medium">{badge.progress}%</span>
+                                </div>
+                                <ProgressBar
+                                  value={badge.progress}
+                                  color={badge.progress >= 75 ? "sunshine" : "forest"}
+                                  size="sm"
+                                />
+                                {badge.progress >= 75 && (
+                                  <p className="mt-1 text-[11px] font-medium text-amber-600">
+                                    Almost there!
+                                  </p>
+                                )}
                               </div>
-                              <ProgressBar
-                                value={badge.progress}
-                                color="forest"
-                                size="sm"
-                              />
-                            </div>
-                          )}
+                            );
+                          })()}
                         </div>
                       </div>
                     </Card>

@@ -43,6 +43,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        // Block banned users from signing in
+        if (user.banned) {
+          return null;
+        }
+
         const isValid = await bcrypt.compare(
           credentials.password as string,
           user.password
@@ -66,13 +71,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const isLoggedIn = !!auth?.user;
       const protectedPaths = ["/dashboard", "/track", "/challenges", "/leaderboard", "/badges", "/forum", "/resources", "/profile"];
       const isProtected = protectedPaths.some((path) => nextUrl.pathname.startsWith(path));
+      const isAdminPath = nextUrl.pathname.startsWith("/admin");
 
-      if (isProtected && !isLoggedIn) {
+      if ((isProtected || isAdminPath) && !isLoggedIn) {
         return Response.redirect(new URL("/login", nextUrl));
       }
       return true;
     },
     async signIn({ user, account, profile }) {
+      // Block banned users on OAuth sign-in too
+      if (user.id) {
+        const dbUser = await db.user.findUnique({
+          where: { id: user.id },
+          select: { banned: true },
+        });
+        if (dbUser?.banned) return false;
+      }
+
       // Refresh OAuth profile image on each sign-in
       if (account?.provider === "google" && user.id && profile?.picture) {
         await db.user.update({
@@ -102,6 +117,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.picture) {
         session.user.image = token.picture as string;
       }
+      if (token.role) {
+        (session.user as Record<string, unknown>).role = token.role;
+      }
       return session;
     },
     async jwt({ token, user }) {
@@ -112,10 +130,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.sub) {
         const dbUser = await db.user.findUnique({
           where: { id: token.sub },
-          select: { customImage: true, image: true },
+          select: { customImage: true, image: true, role: true, banned: true },
         });
         if (dbUser) {
           token.picture = dbUser.customImage || dbUser.image || token.picture;
+          token.role = dbUser.role;
+          // If user was banned after login, invalidate session
+          if (dbUser.banned) {
+            token.banned = true;
+          }
         }
       }
       return token;

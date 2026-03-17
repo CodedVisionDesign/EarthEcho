@@ -10,6 +10,7 @@ interface HumanMetric {
   value: string;
   comparison: string;
   icon: string;
+  tooltip: string;
 }
 
 export interface TransportModeData {
@@ -172,42 +173,84 @@ export function transportToHuman(co2SavedKg: number): HumanMetric {
       value: "0 savings",
       comparison: "Try walking, cycling, or public transport to see savings!",
       icon: "info",
+      tooltip: "CO₂ savings are calculated vs driving the same distance in a petrol car (0.17kg/km)",
     };
   }
 
   // Express as equivalent petrol car km avoided
   const carKmAvoided = co2SavedKg / BASELINE_MODE.co2PerKm;
+  const baseTooltip = `${co2SavedKg.toFixed(1)}kg CO₂ saved ÷ 0.17kg/km (petrol car) = ${Math.round(carKmAvoided)}km avoided`;
 
-  if (carKmAvoided >= 1000) {
-    const trips = Math.round(carKmAvoided / 350); // London to Edinburgh ~570km, avg trip ~350km
+  // 5,000+ km → laps around a country
+  if (carKmAvoided >= 5_000) {
+    const laps = (carKmAvoided / 2_500).toFixed(1);
+    return {
+      value: `${laps} laps of the UK coastline`,
+      comparison: `You've offset the emissions of driving ${laps} times around the UK coast`,
+      icon: "globe",
+      tooltip: `${baseTooltip}. UK coastline ≈ 2,500km`,
+    };
+  }
+
+  // 1,000–5,000 km → road trips
+  if (carKmAvoided >= 1_000) {
+    const trips = Math.round(carKmAvoided / 350);
     return {
       value: `${trips} road trip${trips >= 2 ? "s" : ""} worth`,
       comparison: `You've saved the emissions of ${trips} long car journey${trips >= 2 ? "s" : ""}`,
       icon: "map",
+      tooltip: `${baseTooltip}. Average road trip ≈ 350km`,
     };
   }
 
+  // 100–1,000 km → car commutes
   if (carKmAvoided >= 100) {
-    const commutes = Math.round(carKmAvoided / 15); // avg UK commute ~15km
+    const commutes = Math.round(carKmAvoided / 15);
     return {
       value: `${commutes} car commute${commutes >= 2 ? "s" : ""} avoided`,
       comparison: `Like taking ${commutes} car commute${commutes >= 2 ? "s" : ""} off the road`,
       icon: "car-off",
+      tooltip: `${baseTooltip}. Average UK commute ≈ 15km`,
     };
   }
 
+  // 30–100 km → taxi rides
+  if (carKmAvoided >= 30) {
+    const taxis = Math.round(carKmAvoided / 8);
+    return {
+      value: `${taxis} taxi ride${taxis >= 2 ? "s" : ""} avoided`,
+      comparison: `That's ${taxis} taxi ride${taxis >= 2 ? "s" : ""} worth of emissions saved`,
+      icon: "car-off",
+      tooltip: `${baseTooltip}. Average taxi ride ≈ 8km`,
+    };
+  }
+
+  // 10–30 km → car-free km
   if (carKmAvoided >= 10) {
     return {
       value: `${Math.round(carKmAvoided)} car-free km`,
       comparison: `${Math.round(carKmAvoided)} km of driving emissions avoided`,
       icon: "leaf",
+      tooltip: baseTooltip,
+    };
+  }
+
+  // Small amounts → smartphone charges (charging a phone ≈ 0.005 kg CO2)
+  const charges = Math.round(co2SavedKg / 0.005);
+  if (charges >= 2) {
+    return {
+      value: `${charges} phone charge${charges >= 2 ? "s" : ""} worth`,
+      comparison: `You've saved enough CO₂ to charge a phone ${charges} times`,
+      icon: "sparkle",
+      tooltip: `${co2SavedKg.toFixed(2)}kg CO₂ ÷ 0.005kg per phone charge = ${charges} charges`,
     };
   }
 
   return {
-    value: `${co2SavedKg.toFixed(2)} kg CO2 saved`,
-    comparison: `Every kilometre counts. ${co2SavedKg.toFixed(2)} kg CO2 kept out of the atmosphere`,
+    value: `${co2SavedKg.toFixed(2)} kg CO₂ saved`,
+    comparison: `Every kilometre counts — ${co2SavedKg.toFixed(2)} kg CO₂ kept out of the atmosphere`,
     icon: "sparkle",
+    tooltip: `Saved ${co2SavedKg.toFixed(2)}kg CO₂ vs driving a petrol car`,
   };
 }
 

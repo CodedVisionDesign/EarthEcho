@@ -38,8 +38,10 @@ export default async function RecyclingTrackingPage() {
         label={config.label}
         humanValue={humanMetric.value}
         comparison={humanMetric.comparison}
+        calculationTooltip={humanMetric.tooltip}
         iconBg="bg-leaf/10"
         iconColor="text-leaf"
+        gradient="from-leaf via-leaf/90 to-forest"
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ActivityLogForm

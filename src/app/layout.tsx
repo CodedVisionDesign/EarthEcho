@@ -15,9 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CarbonFootprint - Track Your Environmental Impact",
+  title: "Earth Echo - Track Your Environmental Impact",
   description:
-    "Track and reduce your carbon footprint, water usage, plastic consumption, and more. Human-readable metrics, gamification, and community support.",
+    "Track and reduce your environmental impact, water usage, plastic consumption, and more. Human-readable metrics, gamification, and community support.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({

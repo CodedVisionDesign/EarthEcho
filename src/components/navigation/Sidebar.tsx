@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { Logo } from "@/components/ui/Logo";
 import {
-  faSeedling,
   faChartLine,
   faDroplet,
   faEarthAmericas,
@@ -113,17 +113,8 @@ export function Sidebar() {
     <>
       {/* Logo */}
       <div className="border-b border-gray-200/80 px-6 py-4">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-forest">
-            <FontAwesomeIcon
-              icon={faSeedling}
-              className="h-4 w-4 text-white"
-              aria-hidden
-            />
-          </div>
-          <span className="text-[15px] font-bold tracking-tight text-charcoal">
-            CarbonFootprint
-          </span>
+        <Link href="/dashboard" className="inline-flex">
+          <Logo size="md" textClassName="text-charcoal" />
         </Link>
       </div>
 

@@ -4,6 +4,7 @@ import { db } from "./db";
 import { auth } from "./auth";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import {
   activitySchema,
   updateActivitySchema,
@@ -17,6 +18,7 @@ import {
   guideCommentSchema,
 } from "./validations";
 import { calculateCO2Saved } from "./metrics/transport";
+import { sendWelcomeEmail, sendPasswordResetEmail } from "./email";
 
 // ==========================================
 // Activity Actions
@@ -61,7 +63,7 @@ export async function logActivity(input: {
   });
 
   // Award points based on impact
-  const points = calculatePoints(data.category, data.value);
+  const points = calculatePointsForCategory(data.category, data.value);
   await db.pointTransaction.create({
     data: { userId: session.user.id, points, reason: `Logged ${data.category.toLowerCase()} activity` },
   });
@@ -74,9 +76,13 @@ export async function logActivity(input: {
     let newStreak = user.streakDays;
 
     if (lastActive) {
-      const diffDays = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays === 1) newStreak += 1;
-      else if (diffDays > 1) newStreak = 1;
+      // Compare calendar dates (not timestamps) for accurate streak tracking
+      const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const lastDate = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
+      const diffDays = Math.round((nowDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) { /* Same day — keep streak, don't increment */ }
+      else if (diffDays === 1) newStreak += 1;
+      else newStreak = 1; // Streak broken
     } else {
       newStreak = 1;
     }
@@ -158,6 +164,39 @@ export async function deleteActivity(id: string) {
   revalidatePath("/dashboard");
   revalidatePath(`/track/${existing.category.toLowerCase()}`);
   return { success: true };
+}
+
+export async function bulkDeleteActivities(ids: string[]) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+  if (ids.length === 0) return { error: "No activities selected" };
+  if (ids.length > 100) return { error: "Cannot delete more than 100 at once" };
+
+  // Verify all activities belong to user
+  const activities = await db.activity.findMany({
+    where: { id: { in: ids }, userId: session.user.id },
+  });
+  if (activities.length !== ids.length) return { error: "Some activities not found" };
+
+  // Calculate points to deduct
+  const pointsToDeduct = activities.reduce((sum, a) => {
+    return sum + calculatePointsForCategory(a.category, a.value);
+  }, 0);
+
+  // Delete activities and adjust points in transaction
+  await db.$transaction([
+    db.activity.deleteMany({ where: { id: { in: ids }, userId: session.user.id } }),
+    db.pointTransaction.create({
+      data: { userId: session.user.id, points: -pointsToDeduct, reason: `Deleted ${ids.length} activities` },
+    }),
+    db.user.update({
+      where: { id: session.user.id },
+      data: { totalPoints: { decrement: pointsToDeduct } },
+    }),
+  ]);
+
+  revalidatePath("/dashboard");
+  return { success: true, deletedCount: ids.length };
 }
 
 // ==========================================
@@ -408,6 +447,97 @@ export async function registerUser(input: {
     },
   });
 
+  // Send welcome email (best-effort)
+  sendWelcomeEmail(parsed.data.name, parsed.data.email).catch(() => {});
+
+  return { success: true };
+}
+
+// ==========================================
+// Password Reset Actions (OWASP compliant)
+// ==========================================
+
+export async function requestPasswordReset(input: { email: string }) {
+  const email = input.email?.trim().toLowerCase();
+  if (!email) return { error: "Email is required" };
+
+  // Rate limit: max 3 reset requests per email per hour
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const recentRequests = await db.passwordResetToken.count({
+    where: { email, createdAt: { gte: oneHourAgo } },
+  });
+  if (recentRequests >= 3) {
+    // Return success to prevent enumeration — silently rate limit
+    return { success: true };
+  }
+
+  const user = await db.user.findUnique({ where: { email } });
+
+  // Always return success to prevent email enumeration (OWASP)
+  if (!user || !user.password) {
+    return { success: true };
+  }
+
+  // Generate cryptographically secure token
+  const token = crypto.randomBytes(48).toString("hex");
+  const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  // Invalidate previous tokens for this email
+  await db.passwordResetToken.updateMany({
+    where: { email, used: false },
+    data: { used: true },
+  });
+
+  await db.passwordResetToken.create({
+    data: { email, token, expires },
+  });
+
+  // Build reset URL
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3002";
+  const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+
+  // Send email (best-effort)
+  sendPasswordResetEmail(user.name ?? "there", email, resetUrl).catch(() => {});
+
+  return { success: true };
+}
+
+export async function resetPassword(input: { token: string; password: string }) {
+  if (!input.token || !input.password) {
+    return { error: "Invalid request" };
+  }
+
+  if (input.password.length < 8) {
+    return { error: "Password must be at least 8 characters" };
+  }
+
+  const record = await db.passwordResetToken.findUnique({
+    where: { token: input.token },
+  });
+
+  if (!record || record.used || record.expires < new Date()) {
+    return { error: "This reset link has expired or is invalid. Please request a new one." };
+  }
+
+  const user = await db.user.findUnique({ where: { email: record.email } });
+  if (!user) {
+    return { error: "Account not found" };
+  }
+
+  const hashedPassword = await bcrypt.hash(input.password, 12);
+
+  // Update password and mark token as used in transaction
+  await db.$transaction([
+    db.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    }),
+    db.passwordResetToken.update({
+      where: { id: record.id },
+      data: { used: true },
+    }),
+  ]);
+
   return { success: true };
 }
 
@@ -441,7 +571,7 @@ export async function createGuideComment(input: {
 // Internal Helpers
 // ==========================================
 
-function calculatePoints(category: string, value: number): number {
+export function calculatePointsForCategory(category: string, value: number): number {
   switch (category) {
     case "WATER": return Math.max(5, Math.round(value / 10)); // 1pt per 10 litres
     case "CARBON": return Math.max(5, Math.round(value * 10)); // 10pt per kg CO2

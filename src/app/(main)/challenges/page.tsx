@@ -17,10 +17,11 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
+import { FadeIn, StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
 import {
   getCurrentUser,
   getActiveChallenges,
+  getPastChallenges,
   getUserChallengeProgress,
 } from "@/lib/queries";
 import { JoinChallengeButton } from "@/components/challenges/JoinChallengeButton";
@@ -35,6 +36,20 @@ const CATEGORY_ICONS: Record<string, IconDefinition> = {
   WALKING: faPersonWalking,
 };
 
+const CHALLENGE_UNITS: Record<string, string> = {
+  WATER: "litres",
+  CARBON: "kg CO\u2082",
+  PLASTIC: "items",
+  RECYCLING: "kg",
+  TRANSPORT: "trips",
+  FASHION: "items",
+};
+
+function formatTarget(value: number, category: string): string {
+  const unit = CHALLENGE_UNITS[category];
+  return unit ? `${value} ${unit}` : String(value);
+}
+
 function formatDateRange(start: Date, end: Date): string {
   const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
   const startStr = start.toLocaleDateString("en-US", opts);
@@ -48,8 +63,9 @@ function formatDateRange(start: Date, end: Date): string {
 export default async function ChallengesPage() {
   const user = await getCurrentUser();
 
-  const [challenges, userProgress] = await Promise.all([
+  const [challenges, pastChallenges, userProgress] = await Promise.all([
     getActiveChallenges(),
+    getPastChallenges(6),
     getUserChallengeProgress(user.id),
   ]);
 
@@ -60,25 +76,27 @@ export default async function ChallengesPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest/10">
-            <FontAwesomeIcon
-              icon={faBullseye}
-              className="h-5 w-5 text-forest"
-              aria-hidden
-            />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-charcoal">
-              Challenges
-            </h1>
-            <p className="text-sm text-slate">
-              Join community challenges and make a bigger impact together
-            </p>
+      <FadeIn variant="fade-up">
+        <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-forest to-ocean/80 p-6 text-white shadow-lg">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+              <FontAwesomeIcon
+                icon={faBullseye}
+                className="h-5 w-5"
+                aria-hidden
+              />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Challenges
+              </h1>
+              <p className="text-sm text-white/70">
+                Join community challenges and make a bigger impact together
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </FadeIn>
 
       {/* Challenges Grid */}
       {challenges.length === 0 ? (
@@ -170,7 +188,7 @@ export default async function ChallengesPage() {
                           <div>
                             <p className="text-sm font-semibold text-forest">Challenge Complete!</p>
                             <p className="text-[11px] text-slate">
-                              {Math.round(participation.progress)} / {challenge.targetValue} (+100 bonus pts)
+                              {formatTarget(Math.round(participation.progress), challenge.category)} / {formatTarget(challenge.targetValue, challenge.category)} (+100 bonus pts)
                             </p>
                           </div>
                         </div>
@@ -194,9 +212,9 @@ export default async function ChallengesPage() {
                             color="forest"
                             size="md"
                           />
-                          <p className="mt-1.5 text-right text-[11px] text-slate" title={`${Math.round(participation.progress)} out of ${challenge.targetValue}`}>
-                            {Math.round(Math.min(participation.progress, challenge.targetValue))}{" "}
-                            / {challenge.targetValue}
+                          <p className="mt-1.5 text-right text-[11px] text-slate" title={`${formatTarget(Math.round(participation.progress), challenge.category)} out of ${formatTarget(challenge.targetValue, challenge.category)}`}>
+                            {formatTarget(Math.round(Math.min(participation.progress, challenge.targetValue)), challenge.category)}{" "}
+                            / {formatTarget(challenge.targetValue, challenge.category)}
                           </p>
                         </div>
                       )
@@ -210,6 +228,62 @@ export default async function ChallengesPage() {
             );
           })}
         </StaggerGroup>
+      )}
+
+      {/* Past Challenges */}
+      {pastChallenges.length > 0 && (
+        <div className="mt-12">
+          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-charcoal">
+            <span className="h-px flex-1 bg-gray-200" />
+            <span className="px-3">Past Challenges</span>
+            <span className="h-px flex-1 bg-gray-200" />
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {pastChallenges.map((challenge) => {
+              const participation = joinedMap.get(challenge.id);
+              const hasJoined = !!participation;
+              const progressPct = hasJoined
+                ? Math.min(100, (participation.progress / challenge.targetValue) * 100)
+                : 0;
+              const isCompleted = progressPct >= 100;
+              const categoryIcon = CATEGORY_ICONS[challenge.category] ?? faBullseye;
+
+              return (
+                <Link key={challenge.id} href={`/challenges/${challenge.id}`} className="block">
+                  <Card variant="default" className="flex h-full flex-col p-4 opacity-75 transition-opacity hover:opacity-100">
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
+                        <FontAwesomeIcon icon={categoryIcon} className="h-3.5 w-3.5 text-slate" aria-hidden />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {hasJoined && isCompleted && (
+                          <Badge variant="success" size="sm">
+                            <FontAwesomeIcon icon={faCircleCheck} className="h-2.5 w-2.5" aria-hidden />
+                            Completed
+                          </Badge>
+                        )}
+                        {hasJoined && !isCompleted && (
+                          <Badge variant="neutral" size="sm">
+                            {Math.round(progressPct)}%
+                          </Badge>
+                        )}
+                        <Badge variant="neutral" size="sm">
+                          <FontAwesomeIcon icon={faUsers} className="h-2.5 w-2.5" aria-hidden />
+                          {challenge._count.participants}
+                        </Badge>
+                      </div>
+                    </div>
+                    <h3 className="mb-1 text-sm font-semibold text-charcoal">{challenge.title}</h3>
+                    <p className="mb-2 line-clamp-1 text-xs text-slate">{challenge.description}</p>
+                    <div className="mt-auto text-[11px] text-slate">
+                      {formatDateRange(challenge.startDate, challenge.endDate)}
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );

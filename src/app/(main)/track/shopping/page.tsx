@@ -38,8 +38,10 @@ export default async function ShoppingTrackingPage() {
         label={config.label}
         humanValue={humanMetric.value}
         comparison={humanMetric.comparison}
+        calculationTooltip={humanMetric.tooltip}
         iconBg="bg-forest/10"
         iconColor="text-forest"
+        gradient="from-forest via-forest/90 to-leaf"
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ActivityLogForm

@@ -6,11 +6,18 @@ import {
   faLeaf,
   faAward,
   faUsers,
+  faChartLine,
+  faCircleInfo,
+  faMedal,
 } from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { FadeIn } from "@/components/ui/FadeIn";
 import { getCurrentUser, getUserProfile, resolveUserImage } from "@/lib/queries";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
+import { LinkedAccountsCard } from "@/components/profile/LinkedAccountsCard";
+import { ImpactSummaryCard } from "@/components/profile/ImpactSummaryCard";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 interface StatCardProps {
@@ -55,6 +62,11 @@ export default async function ProfilePage() {
     year: "numeric",
   });
 
+  const isProfileIncomplete = !user.displayName || !user.bio;
+
+  // Recent badges (last 3)
+  const recentBadges = currentUser.userBadges.slice(0, 3);
+
   const stats: StatCardProps[] = [
     {
       icon: faTrophy,
@@ -62,6 +74,13 @@ export default async function ProfilePage() {
       iconColor: "text-amber-600",
       label: "Total Points",
       value: user.totalPoints.toLocaleString(),
+    },
+    {
+      icon: faChartLine,
+      iconBg: "bg-ocean/10",
+      iconColor: "text-ocean",
+      label: "Leaderboard Rank",
+      value: profile.rank ? `#${profile.rank}` : "Unranked",
     },
     {
       icon: faFire,
@@ -96,19 +115,51 @@ export default async function ProfilePage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-charcoal">
-          Profile
-        </h1>
-        <p className="mt-1 text-sm text-slate">
-          Manage your account and view your stats
-        </p>
-      </div>
+      <FadeIn variant="fade-up">
+        <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-forest via-forest/90 to-leaf p-6 text-white shadow-lg">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+              <FontAwesomeIcon icon={faUser} className="h-5 w-5" aria-hidden />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Profile
+              </h1>
+              <p className="text-sm text-white/70">
+                Manage your account and view your stats
+              </p>
+            </div>
+          </div>
+        </div>
+      </FadeIn>
+
+      {/* Profile completeness nudge */}
+      {isProfileIncomplete && (
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-forest/20 bg-forest/5 px-4 py-3">
+          <FontAwesomeIcon icon={faCircleInfo} className="h-4 w-4 text-forest" aria-hidden />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-forest">
+              Complete your profile to earn the <span className="font-bold">Profile Complete</span> badge!
+            </p>
+            <p className="text-xs text-forest/70">
+              {!user.displayName && !user.bio
+                ? "Add a display name and bio below."
+                : !user.displayName
+                  ? "Add a display name below."
+                  : "Add a bio below."}
+            </p>
+          </div>
+          <Badge variant="forest" size="sm">
+            <FontAwesomeIcon icon={faMedal} className="h-2.5 w-2.5" aria-hidden />
+            Badge
+          </Badge>
+        </div>
+      )}
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left column - User info */}
-        <div className="lg:col-span-1">
+        {/* Left column - User info + Linked Accounts */}
+        <div className="space-y-6 lg:col-span-1">
           <Card variant="default" className="p-6">
             <div className="flex flex-col items-center text-center">
               {/* Avatar */}
@@ -128,19 +179,59 @@ export default async function ProfilePage() {
                 </p>
               )}
 
-              <div className="mt-4 flex items-center gap-1.5 text-xs text-slate">
-                <FontAwesomeIcon
-                  icon={faUser}
-                  className="h-3 w-3"
-                  aria-hidden
-                />
-                Member since {memberSince}
+              <div className="mt-4 flex flex-col items-center gap-1 text-xs text-slate">
+                <div className="flex items-center gap-1.5">
+                  <FontAwesomeIcon icon={faUser} className="h-3 w-3" aria-hidden />
+                  Member since {memberSince}
+                </div>
+                {user.lastActiveAt && (
+                  <div className="text-slate/60">
+                    Last active{" "}
+                    {user.lastActiveAt.toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </div>
+                )}
               </div>
+
+              {/* Recent badges */}
+              {recentBadges.length > 0 && (
+                <div className="mt-4 w-full border-t border-gray-100 pt-4">
+                  <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-slate/60">
+                    Recent Badges
+                  </p>
+                  <div className="flex justify-center gap-2">
+                    {recentBadges.map((ub) => (
+                      <div
+                        key={ub.badge.id}
+                        className="flex flex-col items-center gap-1"
+                        title={`${ub.badge.name} — ${ub.badge.description}`}
+                      >
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sunshine/15">
+                          <FontAwesomeIcon
+                            icon={faMedal}
+                            className="h-4 w-4 text-amber-600"
+                            aria-hidden
+                          />
+                        </div>
+                        <span className="max-w-[4rem] truncate text-[10px] font-medium text-charcoal">
+                          {ub.badge.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
+
+          {/* Connected Accounts */}
+          <LinkedAccountsCard linkedProviders={profile.linkedProviders} />
         </div>
 
-        {/* Right column - Stats + Edit form */}
+        {/* Right column - Stats + Impact + Edit form */}
         <div className="space-y-6 lg:col-span-2">
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -148,6 +239,9 @@ export default async function ProfilePage() {
               <StatCard key={stat.label} {...stat} />
             ))}
           </div>
+
+          {/* Impact Summary */}
+          <ImpactSummaryCard categoryBreakdown={profile.categoryBreakdown} />
 
           {/* Edit profile form */}
           <Card variant="default" className="p-6">

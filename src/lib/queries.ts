@@ -307,6 +307,17 @@ export async function getActiveChallenges() {
   });
 }
 
+export async function getPastChallenges(limit = 10) {
+  return db.challenge.findMany({
+    where: { isActive: false, endDate: { lt: new Date() } },
+    include: {
+      _count: { select: { participants: true } },
+    },
+    orderBy: { endDate: "desc" },
+    take: limit,
+  });
+}
+
 export async function getChallengeById(challengeId: string) {
   return db.challenge.findUnique({
     where: { id: challengeId },
@@ -458,6 +469,14 @@ export async function getForumThreads(
       include: {
         user: { select: { id: true, name: true, displayName: true, image: true } },
         _count: { select: { replies: true } },
+        replies: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: {
+            createdAt: true,
+            user: { select: { displayName: true, name: true } },
+          },
+        },
       },
       orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
       take: limit,
@@ -517,14 +536,27 @@ export async function getGuideComments(guideSlug: string) {
 // ==========================================
 
 export async function getUserProfile(userId: string) {
-  const [user, activityCount, badgeCount, challengeCount] = await Promise.all([
+  const categories = ["WATER", "CARBON", "PLASTIC", "RECYCLING", "TRANSPORT", "FASHION"] as const;
+
+  const [user, activityCount, badgeCount, challengeCount, linkedAccounts, rank, ...categoryTotals] = await Promise.all([
     db.user.findUnique({ where: { id: userId } }),
     db.activity.count({ where: { userId } }),
     db.userBadge.count({ where: { userId } }),
     db.challengeParticipant.count({ where: { userId } }),
+    db.account.findMany({ where: { userId }, select: { provider: true } }),
+    getUserRank(userId),
+    ...categories.map((cat) => getUserCategoryTotal(userId, cat)),
   ]);
 
-  return { user, activityCount, badgeCount, challengeCount };
+  const linkedProviders = linkedAccounts
+    .map((a) => a.provider)
+    .filter((p) => p !== "credentials");
+
+  const categoryBreakdown = Object.fromEntries(
+    categories.map((cat, i) => [cat, categoryTotals[i]])
+  ) as Record<typeof categories[number], number>;
+
+  return { user, activityCount, badgeCount, challengeCount, linkedProviders, rank, categoryBreakdown };
 }
 
 // ==========================================

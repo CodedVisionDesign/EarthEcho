@@ -7,8 +7,8 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { Logo } from "@/components/ui/Logo";
 import {
-  faSeedling,
   faChartLine,
   faDroplet,
   faEarthAmericas,
@@ -88,20 +88,20 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
         href={item.href}
         className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
           isActive
-            ? "bg-forest/10 text-forest"
-            : "text-slate hover:bg-gray-100 hover:text-charcoal"
+            ? "bg-forest/15 text-forest"
+            : "text-charcoal/70 hover:bg-white/50 hover:text-charcoal"
         }`}
       >
         {/* Active indicator bar */}
         {isActive && (
-          <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-forest" />
+          <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-forest shadow-[0_0_8px_rgba(45,106,79,0.4)]" />
         )}
         <FontAwesomeIcon
           icon={item.icon}
           className={`h-4 w-4 shrink-0 transition-colors duration-200 ${
             isActive
               ? "text-forest"
-              : "text-slate/60 group-hover:text-charcoal"
+              : "text-charcoal/40 group-hover:text-charcoal/70"
           }`}
           aria-hidden
         />
@@ -118,18 +118,9 @@ export function Sidebar({ userName, userImage }: SidebarProps) {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="border-b border-gray-200/80 px-6 py-4">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-forest">
-            <FontAwesomeIcon
-              icon={faSeedling}
-              className="h-4 w-4 text-white"
-              aria-hidden
-            />
-          </div>
-          <span className="text-[15px] font-bold tracking-tight text-charcoal">
-            CarbonFootprint
-          </span>
+      <div className="border-b border-white/30 px-6 py-4">
+        <Link href="/dashboard" className="inline-flex">
+          <Logo size="md" textClassName="text-charcoal" />
         </Link>
       </div>
 
@@ -137,7 +128,7 @@ export function Sidebar({ userName, userImage }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         {NAV_SECTIONS.map((section) => (
           <div key={section.title} className="mb-5">
-            <h3 className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate/50">
+            <h3 className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-charcoal/35">
               {section.title}
             </h3>
             <ul className="space-y-0.5">
@@ -154,10 +145,10 @@ export function Sidebar({ userName, userImage }: SidebarProps) {
       </nav>
 
       {/* User section */}
-      <div className="border-t border-gray-200/80 p-3">
+      <div className="border-t border-white/30 p-3">
         <Link
           href="/profile"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-gray-100"
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-white/40"
         >
           {userImage ? (
             <Image
@@ -165,12 +156,12 @@ export function Sidebar({ userName, userImage }: SidebarProps) {
               alt={userName || "User avatar"}
               width={28}
               height={28}
-              className="h-7 w-7 rounded-full object-cover"
+              className="h-7 w-7 rounded-full object-cover ring-2 ring-white/40"
             />
           ) : (
             <FontAwesomeIcon
               icon={faCircleUser}
-              className="h-7 w-7 text-slate/40"
+              className="h-7 w-7 text-charcoal/30"
               aria-hidden
             />
           )}
@@ -178,11 +169,11 @@ export function Sidebar({ userName, userImage }: SidebarProps) {
             <div className="truncate text-sm font-medium text-charcoal">
               {userName || "My Profile"}
             </div>
-            <div className="text-[11px] text-slate/60">View settings</div>
+            <div className="text-[11px] text-charcoal/40">View settings</div>
           </div>
           <FontAwesomeIcon
             icon={faGear}
-            className="h-3.5 w-3.5 text-slate/30"
+            className="h-3.5 w-3.5 text-charcoal/25"
             aria-hidden
           />
         </Link>
@@ -191,7 +182,7 @@ export function Sidebar({ userName, userImage }: SidebarProps) {
         <button
           type="button"
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate transition-colors duration-200 hover:bg-coral/10 hover:text-coral"
+          className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-charcoal/60 transition-colors duration-200 hover:bg-coral/10 hover:text-coral"
         >
           <FontAwesomeIcon
             icon={faRightFromBracket}
@@ -204,13 +195,31 @@ export function Sidebar({ userName, userImage }: SidebarProps) {
     </>
   );
 
+  /* Shared glass inline styles */
+  const glassStyle: React.CSSProperties = {
+    background: "rgba(255, 255, 255, 0.45)",
+    backdropFilter: "blur(20px) saturate(1.4)",
+    WebkitBackdropFilter: "blur(20px) saturate(1.4)",
+    boxShadow:
+      "inset 0 1px 0 0 rgba(255,255,255,0.6), inset 0 -1px 0 0 rgba(255,255,255,0.2), 8px 0 32px rgba(0,0,0,0.04)",
+    borderRight: "1px solid rgba(255, 255, 255, 0.35)",
+  };
+
   return (
     <>
-      {/* Mobile hamburger button */}
+      {/* Mobile hamburger button - glass pill */}
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-md transition-transform duration-200 hover:scale-105 md:hidden"
+        className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-200 hover:scale-105 md:hidden"
+        style={{
+          background: "rgba(255, 255, 255, 0.55)",
+          backdropFilter: "blur(16px) saturate(1.4)",
+          WebkitBackdropFilter: "blur(16px) saturate(1.4)",
+          boxShadow:
+            "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 0 rgba(255,255,255,0.6)",
+          border: "1px solid rgba(255, 255, 255, 0.4)",
+        }}
         aria-label="Open navigation menu"
       >
         <FontAwesomeIcon icon={faBars} className="h-4 w-4 text-charcoal" />
@@ -219,23 +228,27 @@ export function Sidebar({ userName, userImage }: SidebarProps) {
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden"
           onClick={() => setMobileOpen(false)}
           aria-hidden
         />
       )}
 
-      {/* Mobile sidebar */}
+      {/* Mobile sidebar - glass */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-white shadow-xl transition-transform duration-300 ease-out md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col transition-transform duration-300 ease-out md:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        style={{
+          ...glassStyle,
+          borderRight: "1px solid rgba(255, 255, 255, 0.3)",
+        }}
       >
         {/* Close button */}
         <button
           type="button"
           onClick={() => setMobileOpen(false)}
-          className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-slate/60 transition-colors hover:bg-gray-100 hover:text-charcoal"
+          className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-charcoal/50 transition-colors hover:bg-white/40 hover:text-charcoal"
           aria-label="Close navigation menu"
         >
           <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
@@ -243,8 +256,11 @@ export function Sidebar({ userName, userImage }: SidebarProps) {
         {sidebarContent}
       </aside>
 
-      {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-gray-200/80 bg-white md:flex">
+      {/* Desktop sidebar - glass */}
+      <aside
+        className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col md:flex"
+        style={glassStyle}
+      >
         {sidebarContent}
       </aside>
     </>

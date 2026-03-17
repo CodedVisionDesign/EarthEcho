@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Logo } from "@/components/ui/Logo";
 import {
   faDroplet,
   faEarthAmericas,
@@ -249,11 +250,11 @@ export function DashboardDemo() {
   const [lastAction, setLastAction] = useState<string | null>(null);
   const [challengeProgress, setChallengeProgress] = useState<Record<string, number>>({});
   const [leaderboardPoints, setLeaderboardPoints] = useState(8750);
-  const [urlPath, setUrlPath] = useState("carbonfootprint.app/dashboard");
+  const [urlPath, setUrlPath] = useState("earthecho.app/dashboard");
 
   const navigateTo = useCallback((page: DemoPage) => {
     setActivePage(page);
-    setUrlPath(`carbonfootprint.app/${page}`);
+    setUrlPath(`earthecho.app/${page}`);
   }, []);
 
   const phoneNavigateTo = useCallback((page: DemoPage) => {
@@ -319,12 +320,7 @@ export function DashboardDemo() {
           {/* Sidebar */}
           <div className="hidden w-44 shrink-0 border-r border-gray-200/80 bg-white md:flex md:flex-col">
             <div className="border-b border-gray-200/80 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-forest">
-                  <FontAwesomeIcon icon={faSeedling} className="h-3 w-3 text-white" aria-hidden />
-                </div>
-                <span className="text-[11px] font-bold tracking-tight text-charcoal">CarbonFootprint</span>
-              </div>
+              <Logo size="xs" textClassName="text-charcoal" />
             </div>
             <nav className="flex-1 overflow-y-auto px-2 py-3">
               {Object.entries(sections).map(([section, items]) => (

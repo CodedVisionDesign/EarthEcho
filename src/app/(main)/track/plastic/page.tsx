@@ -38,8 +38,10 @@ export default async function PlasticTrackingPage() {
         label={config.label}
         humanValue={humanMetric.value}
         comparison={humanMetric.comparison}
+        calculationTooltip={humanMetric.tooltip}
         iconBg="bg-sunshine/15"
         iconColor="text-amber-600"
+        gradient="from-sunshine via-amber-500 to-amber-600"
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ActivityLogForm

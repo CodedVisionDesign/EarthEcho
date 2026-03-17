@@ -4,7 +4,7 @@ import { faComments, faArrowRight, faChevronLeft, faChevronRight } from "@/lib/f
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
+import { FadeIn, StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
 import { getForumThreads } from "@/lib/queries";
 import { ForumNewThreadToggle } from "@/components/forum/ForumNewThreadToggle";
 import { ForumSearchBar } from "@/components/forum/ForumSearchBar";
@@ -25,6 +25,16 @@ const CATEGORY_BADGE_VARIANT: Record<string, "forest" | "ocean" | "sunshine" | "
 };
 
 const PAGE_SIZE = 20;
+
+function getInitials(name: string | null): string {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 function timeAgo(date: Date): string {
   const now = new Date();
@@ -71,25 +81,27 @@ export default async function ForumPage({
   return (
     <div>
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-ocean/10">
-            <FontAwesomeIcon
-              icon={faComments}
-              className="h-5 w-5 text-ocean"
-              aria-hidden
-            />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-charcoal">
-              Community Forum
-            </h1>
-            <p className="text-sm text-slate">
-              Share tips, celebrate wins, and connect with fellow eco-warriors
-            </p>
+      <FadeIn variant="fade-up">
+        <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-ocean via-ocean/90 to-forest/70 p-6 text-white shadow-lg">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+              <FontAwesomeIcon
+                icon={faComments}
+                className="h-5 w-5"
+                aria-hidden
+              />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Community Forum
+              </h1>
+              <p className="text-sm text-white/70">
+                Share tips, celebrate wins, and connect with fellow eco-warriors
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </FadeIn>
 
       {/* Search */}
       <div className="mb-4">
@@ -161,6 +173,11 @@ export default async function ForumPage({
                       />
                     )}
 
+                    {/* Author avatar */}
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ocean/10 text-xs font-semibold text-ocean">
+                      {getInitials(thread.user.displayName || thread.user.name)}
+                    </div>
+
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         {thread.isPinned && (
@@ -175,11 +192,17 @@ export default async function ForumPage({
                       <h3 className="mt-1 truncate text-sm font-semibold text-charcoal">
                         {thread.title}
                       </h3>
-                      <div className="mt-1 flex items-center gap-3 text-[11px] text-slate">
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate">
                         <span>
                           {thread.user.displayName || thread.user.name}
                         </span>
                         <span>{timeAgo(thread.createdAt)}</span>
+                        {thread.replies.length > 0 && thread.replies[0] && (
+                          <span className="text-slate/60">
+                            Last reply {timeAgo(thread.replies[0].createdAt)} by{" "}
+                            {thread.replies[0].user.displayName || thread.replies[0].user.name}
+                          </span>
+                        )}
                       </div>
                     </div>
 

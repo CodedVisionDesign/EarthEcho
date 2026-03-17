@@ -1,0 +1,211 @@
+"use server";
+
+import { db } from "./db";
+import { requireAdmin, requireSuperAdmin, createAuditLog } from "./admin";
+import { revalidatePath } from "next/cache";
+import { sendBanNotificationEmail } from "./email";
+
+// ---------------------------------------------------------------------------
+// Ban / Unban
+// ---------------------------------------------------------------------------
+
+export async function banUser(userId: string, reason: string) {
+  const admin = await requireAdmin();
+
+  const target = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true, role: true },
+  });
+
+  if (!target) throw new Error("User not found");
+  if (target.role === "admin" || target.role === "superadmin") {
+    throw new Error("Cannot ban an admin");
+  }
+
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      banned: true,
+      banReason: reason,
+      bannedAt: new Date(),
+      bannedBy: admin.id,
+    },
+  });
+
+  await createAuditLog({
+    adminId: admin.id,
+    action: "ban_user",
+    targetId: userId,
+    targetType: "user",
+    details: { reason, targetEmail: target.email, targetName: target.name },
+  });
+
+  // Send notification email (best-effort, don't block on failure)
+  if (target.email) {
+    sendBanNotificationEmail(
+      target.name ?? "User",
+      target.email,
+      reason,
+    ).catch(() => {
+      /* email delivery failure is non-critical */
+    });
+  }
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin");
+}
+
+export async function unbanUser(userId: string) {
+  const admin = await requireAdmin();
+
+  const target = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true },
+  });
+
+  if (!target) throw new Error("User not found");
+
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      banned: false,
+      banReason: null,
+      bannedAt: null,
+      bannedBy: null,
+    },
+  });
+
+  await createAuditLog({
+    adminId: admin.id,
+    action: "unban_user",
+    targetId: userId,
+    targetType: "user",
+    details: { targetEmail: target.email, targetName: target.name },
+  });
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin");
+}
+
+// ---------------------------------------------------------------------------
+// Forum moderation
+// ---------------------------------------------------------------------------
+
+export async function adminDeleteThread(threadId: string) {
+  const admin = await requireAdmin();
+
+  const thread = await db.thread.findUnique({
+    where: { id: threadId },
+    select: { id: true, title: true, userId: true },
+  });
+
+  if (!thread) throw new Error("Thread not found");
+
+  await db.thread.delete({ where: { id: threadId } });
+
+  await createAuditLog({
+    adminId: admin.id,
+    action: "delete_thread",
+    targetId: threadId,
+    targetType: "thread",
+    details: { title: thread.title, authorId: thread.userId },
+  });
+
+  revalidatePath("/admin/forum");
+  revalidatePath("/forum");
+}
+
+export async function adminDeleteReply(replyId: string) {
+  const admin = await requireAdmin();
+
+  const reply = await db.reply.findUnique({
+    where: { id: replyId },
+    select: { id: true, threadId: true, userId: true, content: true },
+  });
+
+  if (!reply) throw new Error("Reply not found");
+
+  await db.reply.delete({ where: { id: replyId } });
+
+  await createAuditLog({
+    adminId: admin.id,
+    action: "delete_reply",
+    targetId: replyId,
+    targetType: "reply",
+    details: {
+      threadId: reply.threadId,
+      authorId: reply.userId,
+      contentPreview: reply.content.slice(0, 100),
+    },
+  });
+
+  revalidatePath("/admin/forum");
+  revalidatePath(`/forum/${reply.threadId}`);
+}
+
+// ---------------------------------------------------------------------------
+// Role management (superadmin only)
+// ---------------------------------------------------------------------------
+
+export async function promoteToAdmin(userId: string) {
+  const admin = await requireSuperAdmin();
+
+  const target = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true, role: true },
+  });
+
+  if (!target) throw new Error("User not found");
+  if (target.role === "admin" || target.role === "superadmin") {
+    throw new Error("User is already an admin");
+  }
+
+  await db.user.update({
+    where: { id: userId },
+    data: { role: "admin" },
+  });
+
+  await createAuditLog({
+    adminId: admin.id,
+    action: "promote_admin",
+    targetId: userId,
+    targetType: "user",
+    details: { targetEmail: target.email, targetName: target.name },
+  });
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin");
+}
+
+export async function demoteFromAdmin(userId: string) {
+  const admin = await requireSuperAdmin();
+
+  const target = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true, role: true },
+  });
+
+  if (!target) throw new Error("User not found");
+  if (target.role === "superadmin") {
+    throw new Error("Cannot demote a superadmin");
+  }
+  if (target.role !== "admin") {
+    throw new Error("User is not an admin");
+  }
+
+  await db.user.update({
+    where: { id: userId },
+    data: { role: "user" },
+  });
+
+  await createAuditLog({
+    adminId: admin.id,
+    action: "demote_admin",
+    targetId: userId,
+    targetType: "user",
+    details: { targetEmail: target.email, targetName: target.name },
+  });
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin");
+}

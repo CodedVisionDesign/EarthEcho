@@ -1,9 +1,7 @@
-import { PrismaNeonHttp } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const adapter = new PrismaNeonHttp(process.env.DATABASE_URL!, {});
-const prisma = new PrismaClient({ adapter } as never);
+const prisma = new PrismaClient();
 
 function daysAgo(n: number): Date {
   const d = new Date();
@@ -34,11 +32,8 @@ async function main() {
   ];
 
   for (const mode of transportModes) {
-    await prisma.transportMode.upsert({
-      where: { slug: mode.slug },
-      update: mode,
-      create: mode,
-    });
+    const existing = await prisma.transportMode.findUnique({ where: { slug: mode.slug } });
+    if (!existing) await prisma.transportMode.create({ data: mode });
   }
   console.log(`  Seeded ${transportModes.length} transport modes`);
 
@@ -73,11 +68,8 @@ async function main() {
   ];
 
   for (const badge of badges) {
-    await prisma.badge.upsert({
-      where: { name: badge.name },
-      update: badge,
-      create: badge,
-    });
+    const existing = await prisma.badge.findUnique({ where: { name: badge.name } });
+    if (!existing) await prisma.badge.create({ data: badge });
   }
   console.log(`  Seeded ${badges.length} badges`);
 
@@ -194,7 +186,6 @@ async function main() {
   // ==========================================
   // Activities for Demo User
   // ==========================================
-  // Skip deleteMany on fresh DB (HTTP adapter doesn't support transactions)
 
   const activities: Array<{
     userId: string;
@@ -315,7 +306,7 @@ async function main() {
 
   // Activities for other users
   for (const u of [user2, user3, user4]) {
-    // Skip deleteMany on fresh DB
+  
     const cats = ["WATER", "CARBON", "PLASTIC", "TRANSPORT", "RECYCLING", "FASHION"];
     const units = ["litres", "kg_co2", "items", "km", "kg", "items"];
     for (let i = 0; i < 8; i++) {
@@ -358,93 +349,133 @@ async function main() {
     });
   }
 
-  // Create activities individually (HTTP adapter doesn't support createMany transactions)
-  for (const activity of activities) {
-    await prisma.activity.create({ data: activity });
-  }
+  // Batch create activities
+  await prisma.activity.createMany({ data: activities });
   console.log(`  Seeded ${activities.length} activities`);
 
   // ==========================================
   // Challenges
   // ==========================================
-  // Skip deleteMany on fresh DB
+
 
   const now = new Date();
+  const monthName = now.toLocaleString("en-GB", { month: "long" });
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const lastMonthName = new Date(now.getFullYear(), now.getMonth() - 1, 1).toLocaleString("en-GB", { month: "long" });
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+  const nextMonthName = new Date(now.getFullYear(), now.getMonth() + 1, 1).toLocaleString("en-GB", { month: "long" });
   const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const nextMonthEnd = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+  const twoMonthsAgoName = new Date(now.getFullYear(), now.getMonth() - 2, 1).toLocaleString("en-GB", { month: "long" });
+  const twoMonthsAgoStart = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+  const twoMonthsAgoEnd = new Date(now.getFullYear(), now.getMonth() - 1, 0);
 
-  const challenges = await Promise.all([
-    prisma.challenge.create({
-      data: {
-        title: "Car-Free Commute Week",
-        description: "Use alternatives to driving for 5 work days this month. Walk, cycle, or take public transport!",
-        category: "TRANSPORT",
-        targetValue: 5,
-        startDate: monthStart,
-        endDate: monthEnd,
-        isActive: true,
-      },
-    }),
-    prisma.challenge.create({
-      data: {
-        title: "Plastic-Free March",
-        description: "Avoid 100 single-use plastic items this month. Every bag, bottle, and straw counts!",
-        category: "PLASTIC",
-        targetValue: 100,
-        startDate: monthStart,
-        endDate: monthEnd,
-        isActive: true,
-      },
-    }),
-    prisma.challenge.create({
-      data: {
-        title: "Water Saver Sprint",
-        description: "Save 500 litres of water in a month through mindful daily habits.",
-        category: "WATER",
-        targetValue: 500,
-        startDate: lastMonthStart,
-        endDate: lastMonthEnd,
-        isActive: false,
-      },
-    }),
-    prisma.challenge.create({
-      data: {
-        title: "Zero Waste April",
-        description: "Recycle 50 kg of materials next month. Sort, separate, and recycle!",
-        category: "RECYCLING",
-        targetValue: 50,
-        startDate: nextMonthStart,
-        endDate: nextMonthEnd,
-        isActive: false,
-      },
-    }),
-  ]);
+  const challengeData = [
+    // Active this month
+    {
+      title: `Car-Free ${monthName}`,
+      description: `Use alternatives to driving for 5 work days this month. Walk, cycle, or take public transport!`,
+      category: "TRANSPORT",
+      targetValue: 5,
+      startDate: monthStart,
+      endDate: monthEnd,
+      isActive: true,
+    },
+    {
+      title: `Plastic-Free ${monthName}`,
+      description: `Avoid 100 single-use plastic items this month. Every bag, bottle, and straw counts!`,
+      category: "PLASTIC",
+      targetValue: 100,
+      startDate: monthStart,
+      endDate: monthEnd,
+      isActive: true,
+    },
+    {
+      title: `${monthName} Carbon Crunch`,
+      description: `Cut 25 kg of CO\u2082 this month through diet, energy, and lifestyle changes.`,
+      category: "CARBON",
+      targetValue: 25,
+      startDate: monthStart,
+      endDate: monthEnd,
+      isActive: true,
+    },
+    // Past challenges
+    {
+      title: `${lastMonthName} Water Saver Sprint`,
+      description: `Save 500 litres of water through mindful daily habits.`,
+      category: "WATER",
+      targetValue: 500,
+      startDate: lastMonthStart,
+      endDate: lastMonthEnd,
+      isActive: false,
+    },
+    {
+      title: `${lastMonthName} Secondhand Style`,
+      description: `Buy 5 secondhand items instead of new. Swap, thrift, or repair!`,
+      category: "FASHION",
+      targetValue: 5,
+      startDate: lastMonthStart,
+      endDate: lastMonthEnd,
+      isActive: false,
+    },
+    {
+      title: `${twoMonthsAgoName} Recycling Rally`,
+      description: `Recycle 50 kg of materials. Sort, separate, and recycle!`,
+      category: "RECYCLING",
+      targetValue: 50,
+      startDate: twoMonthsAgoStart,
+      endDate: twoMonthsAgoEnd,
+      isActive: false,
+    },
+    // Upcoming
+    {
+      title: `${nextMonthName} Zero Waste`,
+      description: `Recycle 50 kg of materials next month. Sort, separate, and recycle!`,
+      category: "RECYCLING",
+      targetValue: 50,
+      startDate: nextMonthStart,
+      endDate: nextMonthEnd,
+      isActive: false,
+    },
+  ];
 
-  // Participants
+  const challenges = [];
+  for (const data of challengeData) {
+    challenges.push(await prisma.challenge.create({ data }));
+  }
+
+  // Participants — active challenges
   await prisma.challengeParticipant.create({ data: { userId: demoUser.id, challengeId: challenges[0].id, progress: 3 } });
   await prisma.challengeParticipant.create({ data: { userId: demoUser.id, challengeId: challenges[1].id, progress: 42 } });
+  await prisma.challengeParticipant.create({ data: { userId: demoUser.id, challengeId: challenges[2].id, progress: 12 } });
   await prisma.challengeParticipant.create({ data: { userId: user2.id, challengeId: challenges[0].id, progress: 4 } });
+  await prisma.challengeParticipant.create({ data: { userId: user2.id, challengeId: challenges[2].id, progress: 18 } });
   await prisma.challengeParticipant.create({ data: { userId: user3.id, challengeId: challenges[1].id, progress: 25 } });
   await prisma.challengeParticipant.create({ data: { userId: user4.id, challengeId: challenges[0].id, progress: 5 } });
   await prisma.challengeParticipant.create({ data: { userId: user4.id, challengeId: challenges[1].id, progress: 68 } });
+  // Participants — past challenges
+  await prisma.challengeParticipant.create({ data: { userId: demoUser.id, challengeId: challenges[3].id, progress: 500 } });
+  await prisma.challengeParticipant.create({ data: { userId: user2.id, challengeId: challenges[3].id, progress: 320 } });
+  await prisma.challengeParticipant.create({ data: { userId: user4.id, challengeId: challenges[4].id, progress: 5 } });
+  await prisma.challengeParticipant.create({ data: { userId: demoUser.id, challengeId: challenges[5].id, progress: 35 } });
 
-  console.log("  Seeded 4 challenges with participants");
+  console.log(`  Seeded ${challenges.length} challenges with participants`);
 
   // ==========================================
   // Award badges
   // ==========================================
-  // Skip deleteMany on fresh DB
+
 
   const badgeNames = ["First Step", "Week Warrior", "Water Watcher", "Pedal Power", "Plastic Reducer", "Challenger"];
   for (let i = 0; i < badgeNames.length; i++) {
     const badge = await prisma.badge.findUnique({ where: { name: badgeNames[i] } });
     if (badge) {
-      await prisma.userBadge.create({
-        data: { userId: demoUser.id, badgeId: badge.id, earnedAt: daysAgo(i * 7 + 2) },
+      await prisma.userBadge.upsert({
+        where: { userId_badgeId: { userId: demoUser.id, badgeId: badge.id } },
+        update: {},
+        create: { userId: demoUser.id, badgeId: badge.id, earnedAt: daysAgo(i * 7 + 2) },
       });
     }
   }
@@ -452,13 +483,21 @@ async function main() {
   const firstStepBadge = await prisma.badge.findUnique({ where: { name: "First Step" } });
   if (firstStepBadge) {
     for (const u of [user2, user3, user4]) {
-      await prisma.userBadge.create({ data: { userId: u.id, badgeId: firstStepBadge.id } });
+      await prisma.userBadge.upsert({
+        where: { userId_badgeId: { userId: u.id, badgeId: firstStepBadge.id } },
+        update: {},
+        create: { userId: u.id, badgeId: firstStepBadge.id },
+      });
     }
   }
 
   const monthMasterBadge = await prisma.badge.findUnique({ where: { name: "Month Master" } });
   if (monthMasterBadge) {
-    await prisma.userBadge.create({ data: { userId: user2.id, badgeId: monthMasterBadge.id } });
+    await prisma.userBadge.upsert({
+      where: { userId_badgeId: { userId: user2.id, badgeId: monthMasterBadge.id } },
+      update: {},
+      create: { userId: user2.id, badgeId: monthMasterBadge.id },
+    });
   }
 
   console.log("  Seeded badges for demo users");
@@ -466,7 +505,7 @@ async function main() {
   // ==========================================
   // Point Transactions
   // ==========================================
-  // Skip deleteMany on fresh DB
+
 
   const pointReasons = [
     "Logged water activity", "Logged carbon activity", "Logged plastic activity",
@@ -489,7 +528,7 @@ async function main() {
   // ==========================================
   // Forum Threads & Replies
   // ==========================================
-  // Skip deleteMany on fresh DB
+
 
   const thread1 = await prisma.thread.create({
     data: {

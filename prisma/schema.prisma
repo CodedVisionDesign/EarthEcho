@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 // ==========================================
@@ -26,6 +25,15 @@ model User {
   bio         String?  @db.Text
   isPublic    Boolean  @default(true)
 
+  // Role-based access control
+  role      String  @default("user") // "user", "admin", "superadmin"
+
+  // Ban management
+  banned    Boolean   @default(false)
+  banReason String?   @db.Text
+  bannedAt  DateTime?
+  bannedBy  String?   // userId of the admin who banned
+
   // Gamification
   totalPoints  Int       @default(0)
   streakDays   Int       @default(0)
@@ -45,6 +53,7 @@ model User {
   replies               Reply[]
   reactions             Reaction[]
   guideComments         GuideComment[]
+  auditLogs             AuditLog[]
 
   @@map("users")
 }
@@ -329,4 +338,43 @@ model GuideComment {
 
   @@index([guideSlug, createdAt])
   @@map("guide_comments")
+}
+
+// ==========================================
+// Audit Logging
+// ==========================================
+
+model AuditLog {
+  id        String @id @default(cuid())
+  adminId   String
+  action    String // "ban_user", "unban_user", "delete_thread", "delete_reply", "promote_admin", "demote_admin"
+  targetId  String? // ID of the affected entity
+  targetType String? // "user", "thread", "reply"
+  details   String? @db.Text // JSON with extra context
+  ipAddress String?
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([adminId, createdAt])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+// ==========================================
+// Password Reset Tokens
+// ==========================================
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique @db.VarChar(512)
+  expires   DateTime
+  used      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("password_reset_tokens")
 }

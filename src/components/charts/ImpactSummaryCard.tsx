@@ -1,7 +1,7 @@
 "use client";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowTrendUp, faArrowTrendDown } from "@/lib/fontawesome";
+import { faArrowTrendUp, faArrowTrendDown, faCircleInfo } from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -17,6 +17,7 @@ interface ImpactSummaryCardProps {
   accentBorder: string;
   trend?: number;
   tooltip?: string;
+  calculationTooltip?: string;
 }
 
 export function ImpactSummaryCard({
@@ -29,36 +30,44 @@ export function ImpactSummaryCard({
   accentBorder,
   trend,
   tooltip,
+  calculationTooltip,
 }: ImpactSummaryCardProps) {
   return (
-    <Card variant="interactive" className={`relative overflow-hidden p-5`}>
+    <Card variant="interactive" className="group relative overflow-visible p-5">
       {/* Accent left border */}
       <div
-        className={`absolute inset-y-0 left-0 w-[3px] ${accentBorder}`}
+        className={`absolute inset-y-0 left-0 w-[3px] rounded-l-2xl ${accentBorder} transition-all duration-300 group-hover:w-1`}
       />
 
       {/* Trend badge — top right */}
       {trend !== undefined && trend !== 0 && (
         <div className="absolute right-3 top-3">
-          <Badge
-            variant={trend > 0 ? "success" : "danger"}
-            size="sm"
+          <Tooltip
+            content={`${trend > 0 ? "Up" : "Down"} ${Math.abs(trend)}% vs last week`}
+            position="left"
           >
-            <FontAwesomeIcon
-              icon={trend > 0 ? faArrowTrendUp : faArrowTrendDown}
-              className="h-2.5 w-2.5"
-              aria-hidden
-            />
-            {trend > 0 ? "+" : ""}
-            {trend}%
-          </Badge>
+            <Badge
+              variant={trend > 0 ? "success" : "danger"}
+              size="sm"
+            >
+              <FontAwesomeIcon
+                icon={trend > 0 ? faArrowTrendUp : faArrowTrendDown}
+                className="h-2.5 w-2.5"
+                aria-hidden
+              />
+              {trend > 0 ? "+" : ""}
+              {trend}%
+            </Badge>
+          </Tooltip>
         </div>
       )}
       {trend === 0 && (
         <div className="absolute right-3 top-3">
-          <Badge variant="neutral" size="sm">
-            No change
-          </Badge>
+          <Tooltip content="No change compared to last week" position="left">
+            <Badge variant="neutral" size="sm">
+              No change
+            </Badge>
+          </Tooltip>
         </div>
       )}
 
@@ -74,18 +83,26 @@ export function ImpactSummaryCard({
           />
         </div>
         <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-slate/60">
-          {tooltip ? (
-            <Tooltip content={tooltip} position="bottom">
-              <span className="cursor-help border-b border-dashed border-slate/30">{label}</span>
-            </Tooltip>
-          ) : (
-            label
-          )}
+          {label}
         </div>
         <div className="mb-1.5 text-xl font-bold text-charcoal">
           {humanValue}
         </div>
-        <div className="text-xs text-slate">{comparison}</div>
+        <div className="flex items-center justify-center gap-1 text-xs text-slate">
+          <span>{comparison}</span>
+          {(calculationTooltip || tooltip) && (
+            <Tooltip
+              content={[tooltip, calculationTooltip].filter(Boolean).join(" · ")}
+              position="top"
+            >
+              <FontAwesomeIcon
+                icon={faCircleInfo}
+                className="h-2.5 w-2.5 cursor-help text-slate/40 transition-colors hover:text-slate/70"
+                aria-hidden
+              />
+            </Tooltip>
+          )}
+        </div>
       </div>
     </Card>
   );

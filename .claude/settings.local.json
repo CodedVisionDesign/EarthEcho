@@ -92,7 +92,12 @@
       "Bash(npx tsx --env-file=.env -e \":*)",
       "Bash(node -e \"const m = require\\(''@prisma/adapter-neon''\\); console.log\\(Object.keys\\(m\\)\\)\")",
       "Bash(node scripts/seed-neon.mjs)",
-      "Bash(node -e \"const m = require\\(''@prisma/adapter-neon''\\); console.log\\(m.PrismaNeonHttp.length\\)\")"
+      "Bash(node -e \"const m = require\\(''@prisma/adapter-neon''\\); console.log\\(m.PrismaNeonHttp.length\\)\")",
+      "Bash(openssl rand:*)",
+      "WebSearch",
+      "Bash(npm run:*)",
+      "Bash(npx prisma:*)",
+      "Bash(ls -la /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/*.config.* /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/postcss.config.*)"
     ]
   }
 }

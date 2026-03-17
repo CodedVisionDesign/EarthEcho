@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "platform-lookaside.fbsbx.com" },
       { protocol: "https", hostname: "graph.facebook.com" },
       { protocol: "https", hostname: "*.fbsbx.com" },
+      { protocol: "https", hostname: "www.google.com" },
     ],
   },
 };

@@ -15,6 +15,8 @@ import {
   faTrophy,
   faLeaf,
   faBolt,
+  faAward,
+  faBullseye,
 } from "@/lib/fontawesome";
 import { ImpactSummaryCard } from "@/components/charts/ImpactSummaryCard";
 import { WeeklyTrendChart } from "@/components/charts/WeeklyTrendChart";
@@ -31,9 +33,11 @@ import {
   getUserCategoryTrend,
   getUserWeeklyTrend,
   getUserChallengeProgress,
+  getRecentActivities,
+  getUserBadgesWithProgress,
 } from "@/lib/queries";
 import { toHumanReadable, type MetricCategory } from "@/lib/metrics/converters";
-import type { ActivityCategory } from "@/lib/categories";
+import { CATEGORIES as TRACK_CATEGORIES, type ActivityCategory } from "@/lib/categories";
 
 const CATEGORY_ICON_MAP: Record<string, { icon: IconDefinition; iconBg: string; iconColor: string; accentBorder: string }> = {
   WATER: { icon: faDroplet, iconBg: "bg-ocean/10", iconColor: "text-ocean", accentBorder: "bg-ocean" },
@@ -107,7 +111,7 @@ export default async function DashboardPage() {
 
   const categories: ActivityCategory[] = ["WATER", "CARBON", "PLASTIC", "RECYCLING", "TRANSPORT", "FASHION"];
 
-  const [totalsAndTrends, weeklyTrend, challengeProgress] = await Promise.all([
+  const [totalsAndTrends, weeklyTrend, challengeProgress, recentActivities, allBadges] = await Promise.all([
     Promise.all(
       categories.map(async (cat) => {
         const [total, trend] = await Promise.all([
@@ -119,6 +123,8 @@ export default async function DashboardPage() {
     ),
     getUserWeeklyTrend(user.id),
     getUserChallengeProgress(user.id),
+    getRecentActivities(user.id, 5),
+    getUserBadgesWithProgress(user.id),
   ]);
 
   // Build impact cards from real data
@@ -135,6 +141,7 @@ export default async function DashboardPage() {
       accentBorder: icons.accentBorder,
       trend,
       tooltip: CATEGORY_TOOLTIPS[category],
+      calculationTooltip: humanMetric.tooltip,
     };
   });
 
@@ -149,48 +156,59 @@ export default async function DashboardPage() {
     };
   });
 
-  // Active challenge from real data
-  const activeChallenge = challengeProgress.find((cp) => cp.challenge.isActive);
+  // Active challenges from real data (all joined + active)
+  const activeChallenges = challengeProgress.filter(
+    (cp) => cp.challenge.isActive && cp.progress < cp.challenge.targetValue
+  );
+
+  // Next badge to earn (closest to completion, not yet earned)
+  const nextBadge = allBadges
+    .filter((b) => !b.earned && b.progress > 0)
+    .sort((a, b) => b.progress - a.progress)[0] ?? null;
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-8 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight text-charcoal sm:text-2xl">
-            Welcome back, {user.displayName || user.name || "Explorer"}!
-          </h1>
-          <p className="mt-1 text-sm text-slate">
-            Here&apos;s your environmental impact this week
-          </p>
-        </div>
-        {user.streakDays > 0 && (
-          <Badge variant="warning" size="md">
-            <FontAwesomeIcon
-              icon={faFire}
-              className="h-3 w-3 animate-pulse-glow"
-              aria-hidden
-            />
-            {user.streakDays}-day streak
-          </Badge>
-        )}
-      </div>
+      {/* Hero Header */}
+      <FadeIn variant="fade-up">
+        <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-forest via-forest/90 to-ocean p-6 text-white shadow-lg sm:p-8">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+                Welcome back, {user.displayName || user.name || "Explorer"}!
+              </h1>
+              <p className="mt-1 text-sm text-white/70">
+                Here&apos;s your environmental impact this week
+              </p>
+            </div>
+            {user.streakDays > 0 && (
+              <div className="shrink-0 rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold backdrop-blur-sm">
+                <FontAwesomeIcon
+                  icon={faFire}
+                  className="mr-1.5 h-3 w-3 animate-pulse-glow text-sunshine"
+                  aria-hidden
+                />
+                {user.streakDays}-day streak
+              </div>
+            )}
+          </div>
 
-      {/* Quick Actions */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {QUICK_ACTIONS.map((action) => (
-          <Button
-            key={action.label}
-            variant="ghost"
-            size="sm"
-            leftIcon={action.icon}
-            href={action.href}
-            className={action.color}
-          >
-            {action.label}
-          </Button>
-        ))}
-      </div>
+          {/* Quick Actions */}
+          <div className="mt-5 flex flex-wrap gap-2">
+            {QUICK_ACTIONS.map((action) => (
+              <Button
+                key={action.label}
+                variant="ghost"
+                size="sm"
+                leftIcon={action.icon}
+                href={action.href}
+                className="border border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+              >
+                {action.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </FadeIn>
 
       {/* Impact Cards Grid */}
       <StaggerGroup className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" stagger={0.07}>
@@ -202,128 +220,169 @@ export default async function DashboardPage() {
       </StaggerGroup>
 
       {/* Charts Row */}
-      <FadeIn className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2" delay={0.15}>
+      <FadeIn className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2" delay={0.15} cinematic>
         <WeeklyTrendChart data={weeklyTrend} />
         <TransportComparisonChart />
       </FadeIn>
 
-      {/* Bottom Row: Badges + Active Challenge */}
-      <StaggerGroup className="grid grid-cols-1 gap-6 lg:grid-cols-2" stagger={0.1}>
-        {/* Recent Badges */}
+      {/* Recent Activity + Next Badge Row */}
+      <FadeIn className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2" delay={0.2}>
+        {/* Recent Activity */}
         <Card variant="default" className="p-6">
           <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sunshine/15">
-              <FontAwesomeIcon
-                icon={faMedal}
-                className="h-4 w-4 text-amber-600"
-                aria-hidden
-              />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-leaf/10">
+              <FontAwesomeIcon icon={faLeaf} className="h-4 w-4 text-leaf" aria-hidden />
             </div>
-            <h3 className="text-[15px] font-semibold text-charcoal">
-              Recent Badges
-            </h3>
+            <h3 className="text-[15px] font-semibold text-charcoal">Recent Activity</h3>
           </div>
-          {recentBadges.length > 0 ? (
-            <div className="space-y-2.5">
-              {recentBadges.map((badge) => (
-                <div
-                  key={badge.name}
-                  className="flex items-center gap-3 rounded-xl bg-gray-50/80 px-4 py-3 transition-colors hover:bg-gray-100/80"
-                >
-                  <div
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg ${badge.color}`}
-                  >
-                    <FontAwesomeIcon
-                      icon={badge.icon}
-                      className="h-4 w-4"
-                      aria-hidden
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-charcoal">
-                      {badge.name}
+          {recentActivities.length > 0 ? (
+            <div className="space-y-2">
+              {recentActivities.map((activity) => {
+                const catIcons = CATEGORY_ICON_MAP[activity.category];
+                const catConfig = TRACK_CATEGORIES[activity.category as ActivityCategory];
+                return (
+                  <div key={activity.id} className="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-gray-50">
+                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${catIcons?.iconBg ?? "bg-gray-100"}`}>
+                      <FontAwesomeIcon
+                        icon={catIcons?.icon ?? faLeaf}
+                        className={`h-3 w-3 ${catIcons?.iconColor ?? "text-slate"}`}
+                        aria-hidden
+                      />
                     </div>
-                    <div className="text-[11px] text-slate">
-                      Earned {badge.earnedAgo}
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-charcoal">
+                        {catConfig?.activityTypes.find((t) => t.value === activity.type)?.label ?? activity.type}
+                      </div>
+                      <div className="text-[11px] text-slate">
+                        {activity.value} {catConfig?.unitLabel?.toLowerCase() ?? activity.unit} &middot; {timeAgo(activity.date)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="py-4 text-center text-sm text-slate">
-              No badges earned yet. Start logging activities to earn your first badge!
+              No activities logged yet. Start tracking to see your history!
             </p>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            href="/badges"
-            rightIcon={faTrophy}
-            className="mt-4 w-full"
-          >
-            View All Badges
-          </Button>
         </Card>
 
-        {/* Active Challenge */}
+        {/* Next Badge Progress */}
         <Card variant="default" className="p-6">
           <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-forest/8">
-              <FontAwesomeIcon
-                icon={faPersonWalking}
-                className="h-4 w-4 text-forest"
-                aria-hidden
-              />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sunshine/15">
+              <FontAwesomeIcon icon={faAward} className="h-4 w-4 text-amber-600" aria-hidden />
             </div>
-            <h3 className="text-[15px] font-semibold text-charcoal">
-              Active Challenge
-            </h3>
+            <h3 className="text-[15px] font-semibold text-charcoal">Next Badge</h3>
           </div>
-          {activeChallenge ? (
-            <Card
-              variant="gradient"
-              gradient="linear-gradient(135deg, #2D6A4F 0%, #1B4965 100%)"
-              className="p-5"
-            >
-              <Badge variant="ocean" size="sm" className="mb-2">
-                {activeChallenge.challenge.startDate.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
-              </Badge>
-              <div className="mb-1 text-lg font-bold text-white">
-                {activeChallenge.challenge.title}
-              </div>
-              <div className="mb-5 text-sm text-white/70">
-                {activeChallenge.challenge.description}
-              </div>
-
-              <div className="mb-3">
-                <div className="mb-1.5 flex justify-between text-xs text-white/80">
-                  <span className="flex items-center gap-1.5">
-                    <FontAwesomeIcon icon={faPersonWalking} className="h-3 w-3" aria-hidden />
-                    Your progress
-                  </span>
-                  <span className="font-medium">
-                    {Math.min(activeChallenge.progress, activeChallenge.challenge.targetValue)} / {activeChallenge.challenge.targetValue}
-                  </span>
+          {nextBadge ? (
+            <div>
+              <div className="mb-3 flex items-center gap-3 rounded-xl bg-gradient-to-r from-sunshine/5 to-amber-50 px-4 py-3">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${(BADGE_ICON_MAP[nextBadge.icon] ?? { color: "bg-gray-100 text-gray-600" }).color}`}>
+                  <FontAwesomeIcon
+                    icon={(BADGE_ICON_MAP[nextBadge.icon] ?? { icon: faMedal }).icon}
+                    className="h-5 w-5"
+                    aria-hidden
+                  />
                 </div>
-                <ProgressBar
-                  value={Math.min(100, (activeChallenge.progress / activeChallenge.challenge.targetValue) * 100)}
-                  color="sunshine"
-                  size="sm"
-                />
-              </div>
-
-              <div>
-                <div className="mb-1.5 flex justify-between text-xs text-white/80">
-                  <span className="flex items-center gap-1.5">
-                    <FontAwesomeIcon icon={faUsers} className="h-3 w-3" aria-hidden />
-                    Community
-                  </span>
-                  <span className="font-medium">{activeChallenge.challenge._count.participants} participants</span>
+                <div className="flex-1">
+                  <div className="text-sm font-bold text-charcoal">{nextBadge.name}</div>
+                  <div className="text-xs text-slate">{nextBadge.description}</div>
                 </div>
-                <ProgressBar value={45} color="leaf" size="sm" />
               </div>
-            </Card>
+              <div className="mb-1.5 flex justify-between text-xs text-slate">
+                <span>{nextBadge.progress}% complete</span>
+                <span className="font-medium">{nextBadge.progress >= 75 ? "Almost there!" : "Keep going!"}</span>
+              </div>
+              <ProgressBar
+                value={nextBadge.progress}
+                color={nextBadge.progress >= 75 ? "sunshine" : "forest"}
+                size="sm"
+              />
+              <Button variant="ghost" size="sm" href="/badges" rightIcon={faTrophy} className="mt-3 w-full">
+                View All Badges
+              </Button>
+            </div>
+          ) : recentBadges.length > 0 ? (
+            <div className="space-y-2.5">
+              {recentBadges.map((badge) => (
+                <div key={badge.name} className="flex items-center gap-3 rounded-xl bg-gray-50/80 px-4 py-3">
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${badge.color}`}>
+                    <FontAwesomeIcon icon={badge.icon} className="h-4 w-4" aria-hidden />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-charcoal">{badge.name}</div>
+                    <div className="text-[11px] text-slate">Earned {badge.earnedAgo}</div>
+                  </div>
+                </div>
+              ))}
+              <Button variant="ghost" size="sm" href="/badges" rightIcon={faTrophy} className="mt-3 w-full">
+                View All Badges
+              </Button>
+            </div>
+          ) : (
+            <div className="py-4 text-center">
+              <p className="mb-3 text-sm text-slate">Start logging activities to earn your first badge!</p>
+              <Button variant="ghost" size="sm" href="/badges" rightIcon={faTrophy}>
+                Browse Badges
+              </Button>
+            </div>
+          )}
+        </Card>
+      </FadeIn>
+
+      {/* Active Challenges */}
+      <FadeIn delay={0.25}>
+        <Card variant="default" className="p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-forest/8">
+                <FontAwesomeIcon icon={faBullseye} className="h-4 w-4 text-forest" aria-hidden />
+              </div>
+              <h3 className="text-[15px] font-semibold text-charcoal">
+                Active Challenges
+              </h3>
+            </div>
+            <Button variant="ghost" size="sm" href="/challenges">
+              View All
+            </Button>
+          </div>
+          {activeChallenges.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {activeChallenges.map((cp) => {
+                const pct = Math.min(100, (cp.progress / cp.challenge.targetValue) * 100);
+                return (
+                  <Card
+                    key={cp.id}
+                    variant="gradient"
+                    gradient="linear-gradient(135deg, #2D6A4F 0%, #1B4965 100%)"
+                    className="p-4"
+                  >
+                    <span className="mb-2 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+                      {cp.challenge.category}
+                    </span>
+                    <div className="mb-1 text-sm font-bold text-white">
+                      {cp.challenge.title}
+                    </div>
+                    <div className="mb-3 line-clamp-1 text-xs text-white/90">
+                      {cp.challenge.description}
+                    </div>
+                    <div className="mb-1.5 flex justify-between text-[11px] font-medium text-white">
+                      <span>
+                        {Math.min(Math.round(cp.progress), cp.challenge.targetValue)} / {cp.challenge.targetValue}
+                      </span>
+                      <span className="font-bold">{Math.round(pct)}%</span>
+                    </div>
+                    <ProgressBar value={pct} color="sunshine" size="sm" />
+                    <div className="mt-2 flex items-center gap-1 text-[10px] font-medium text-white/90">
+                      <FontAwesomeIcon icon={faUsers} className="h-2.5 w-2.5" aria-hidden />
+                      {cp.challenge._count.participants} participants
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
           ) : (
             <div className="rounded-lg bg-gray-50 p-5 text-center">
               <p className="mb-3 text-sm text-slate">No active challenges joined yet.</p>
@@ -333,7 +392,7 @@ export default async function DashboardPage() {
             </div>
           )}
         </Card>
-      </StaggerGroup>
+      </FadeIn>
     </div>
   );
 }
