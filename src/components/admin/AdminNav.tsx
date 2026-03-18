@@ -17,6 +17,7 @@ import {
   faEnvelopeOpenText,
   faTrophy,
   faChartLine,
+  faAward,
 } from "@/lib/fontawesome";
 import { Logo } from "@/components/ui/Logo";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
@@ -33,6 +34,7 @@ const NAV_LINKS: NavLink[] = [
   { href: "/admin/users", label: "Users", icon: faUsers },
   { href: "/admin/forum", label: "Forum", icon: faComments },
   { href: "/admin/challenges", label: "Challenges", icon: faTrophy },
+  { href: "/admin/badges", label: "Badges", icon: faAward, superadminOnly: true },
   { href: "/admin/analytics", label: "Analytics", icon: faChartLine, superadminOnly: true },
   { href: "/admin/emails", label: "Emails", icon: faEnvelopeOpenText },
   { href: "/admin/audit", label: "Audit Log", icon: faClipboardList, superadminOnly: true },

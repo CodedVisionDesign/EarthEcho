@@ -9,6 +9,7 @@ import { db } from "./db";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   session: { strategy: "jwt" },
+  trustHost: true,
   debug: process.env.NODE_ENV === "development",
   logger: {
     error(code, ...message) {
@@ -89,38 +90,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
     async signIn({ user, account, profile }) {
-      // Block banned users on OAuth sign-in too
-      if (user.id) {
-        const dbUser = await db.user.findUnique({
-          where: { id: user.id },
-          select: { banned: true },
-        });
-        if (dbUser?.banned) return false;
-      }
-
-      // Refresh OAuth profile image on each sign-in
-      try {
-        if (account?.provider === "google" && user.id && profile?.picture) {
-          await db.user.update({
-            where: { id: user.id },
-            data: { image: profile.picture as string },
+      // For OAuth providers, check if user already exists by email
+      // (user.id may not correspond to a DB record for first-time OAuth sign-ins)
+      if (account && account.provider !== "credentials" && user.email) {
+        try {
+          const existingUser = await db.user.findUnique({
+            where: { email: user.email },
+            select: { id: true, banned: true },
           });
-        }
-        if (account?.provider === "facebook" && user.id) {
-          const fbPicture =
-            (profile as Record<string, unknown>)?.picture &&
-            typeof (profile as Record<string, unknown>).picture === "object"
-              ? ((profile as Record<string, unknown>).picture as { data?: { url?: string } })?.data?.url
-              : undefined;
-          if (fbPicture) {
-            await db.user.update({
-              where: { id: user.id },
-              data: { image: fbPicture },
-            });
+
+          // Block banned users
+          if (existingUser?.banned) return false;
+
+          // Refresh profile image for existing users
+          if (existingUser) {
+            if (account.provider === "google" && profile?.picture) {
+              await db.user.update({
+                where: { id: existingUser.id },
+                data: { image: profile.picture as string },
+              });
+            }
+            if (account.provider === "facebook") {
+              const fbPicture =
+                (profile as Record<string, unknown>)?.picture &&
+                typeof (profile as Record<string, unknown>).picture === "object"
+                  ? ((profile as Record<string, unknown>).picture as { data?: { url?: string } })?.data?.url
+                  : undefined;
+              if (fbPicture) {
+                await db.user.update({
+                  where: { id: existingUser.id },
+                  data: { image: fbPicture },
+                });
+              }
+            }
           }
+          // New user — adapter will create the record after signIn returns true
+        } catch (error) {
+          console.error("[AUTH] signIn callback error:", error);
+          // Don't block sign-in if profile image update fails
         }
-      } catch {
-        // User record may not exist yet during first OAuth sign-in
       }
       return true;
     },

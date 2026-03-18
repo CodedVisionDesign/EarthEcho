@@ -93,7 +93,7 @@ export default async function AdminChallengeDetailPage({
     { range: "75-100%", count: 0, fill: bucketFills[3] },
   ];
   for (const p of allParticipants) {
-    const pct = Math.min(100, (p.progress / challenge.targetValue) * 100);
+    const pct = challenge.targetValue > 0 ? Math.min(100, (p.progress / challenge.targetValue) * 100) : 0;
     if (pct < 25) progressBuckets[0].count++;
     else if (pct < 50) progressBuckets[1].count++;
     else if (pct < 75) progressBuckets[2].count++;
