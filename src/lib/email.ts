@@ -27,6 +27,9 @@ const TEXT_SECONDARY = "#555555";
 const BACKGROUND = "#F0F7F4";
 
 function emailWrapper(content: string): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
+  const logoUrl = `${appUrl}/assets/logo.png`;
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -47,8 +50,13 @@ function emailWrapper(content: string): string {
             <td style="background-color:${BRAND_GREEN};padding:28px 32px;text-align:center;">
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
                 <tr>
+                  <td align="center" style="padding-bottom:8px;">
+                    <img src="${logoUrl}" alt="EarthEcho" width="48" height="48" style="display:block;width:48px;height:48px;border-radius:10px;" />
+                  </td>
+                </tr>
+                <tr>
                   <td style="font-size:28px;color:#ffffff;font-weight:700;letter-spacing:1px;">
-                    &#127793; EarthEcho
+                    EarthEcho
                   </td>
                 </tr>
                 <tr>
