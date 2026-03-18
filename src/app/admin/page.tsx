@@ -7,6 +7,7 @@ import {
   faClipboardList,
   faShieldHalved,
   faBolt,
+  faTrophy,
 } from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -62,6 +63,8 @@ export default async function AdminDashboard() {
     totalThreads,
     totalReplies,
     bannedUsers,
+    activeChallenges,
+    pendingChallenges,
     recentAuditLogs,
     usersByMonth,
     activitiesByCategory,
@@ -75,6 +78,8 @@ export default async function AdminDashboard() {
     db.thread.count(),
     db.reply.count(),
     db.user.count({ where: { banned: true } }),
+    db.challenge.count({ where: { status: "ACTIVE" } }),
+    db.challenge.count({ where: { status: "PENDING_REVIEW" } }),
     db.auditLog.findMany({
       take: 10,
       orderBy: { createdAt: "desc" },
@@ -172,6 +177,22 @@ export default async function AdminDashboard() {
       icon: faBan,
       gradient: "from-coral to-coral/80",
     },
+    {
+      label: "Active Challenges",
+      value: activeChallenges,
+      icon: faTrophy,
+      gradient: "from-sunshine to-sunshine/80",
+    },
+    ...(pendingChallenges > 0
+      ? [
+          {
+            label: "Pending Reviews",
+            value: pendingChallenges,
+            icon: faClipboardList,
+            gradient: "from-amber-500 to-amber-500/80",
+          },
+        ]
+      : []),
   ];
 
   return (

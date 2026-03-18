@@ -7,9 +7,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getCurrentUser, getThread, resolveUserImage } from "@/lib/queries";
 import { ReplyForm } from "@/components/forum/ReplyForm";
-import { ReactionButton } from "@/components/forum/ReactionButton";
 import { ThreadActions } from "@/components/forum/ThreadActions";
-import { ReplyActions } from "@/components/forum/ReplyActions";
+import { ThreadedReplies } from "@/components/forum/ThreadedReplies";
 
 const CATEGORY_BADGE_VARIANT: Record<string, "forest" | "ocean" | "sunshine" | "info" | "neutral"> = {
   tips: "forest",
@@ -37,8 +36,6 @@ function getInitials(name: string | null): string {
     .toUpperCase()
     .slice(0, 2);
 }
-
-type ReactionType = "cheer" | "helpful" | "inspiring";
 
 export default async function ThreadPage({
   params,
@@ -142,86 +139,11 @@ export default async function ThreadPage({
             </p>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {thread.replies.map((reply) => {
-              // Count reactions by type
-              const reactionCounts: Record<ReactionType, number> = {
-                cheer: 0,
-                helpful: 0,
-                inspiring: 0,
-              };
-              const userReactions = new Set<ReactionType>();
-
-              for (const reaction of reply.reactions) {
-                const t = reaction.type as ReactionType;
-                if (t in reactionCounts) {
-                  reactionCounts[t]++;
-                  if (reaction.userId === currentUser.id) {
-                    userReactions.add(t);
-                  }
-                }
-              }
-
-              const isReplyAuthor = currentUser.id === reply.userId;
-
-              return (
-                <Card key={reply.id} variant="default" className="p-5">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {resolveUserImage(reply.user) ? (
-                        <Image
-                          src={resolveUserImage(reply.user)!}
-                          alt={reply.user.displayName || reply.user.name || "User"}
-                          width={28}
-                          height={28}
-                          className="h-7 w-7 rounded-full object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-[10px] font-semibold text-slate">
-                          {getInitials(reply.user.displayName || reply.user.name)}
-                        </div>
-                      )}
-                      <div>
-                        <span className="text-sm font-medium text-charcoal">
-                          {reply.user.displayName || reply.user.name}
-                        </span>
-                        <span className="ml-2 text-xs text-slate">
-                          {formatDate(reply.createdAt)}
-                        </span>
-                      </div>
-                    </div>
-                    {isReplyAuthor && (
-                      <ReplyActions replyId={reply.id} content={reply.content} />
-                    )}
-                  </div>
-
-                  <div className="mb-3 text-sm leading-relaxed text-charcoal/80">
-                    {reply.content.split("\n").map((paragraph, i) => (
-                      <p key={i} className="mb-1">
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
-
-                  {/* Reaction buttons */}
-                  <div className="flex gap-2">
-                    {(["cheer", "helpful", "inspiring"] as const).map(
-                      (type) => (
-                        <ReactionButton
-                          key={type}
-                          replyId={reply.id}
-                          type={type}
-                          count={reactionCounts[type]}
-                          active={userReactions.has(type)}
-                        />
-                      )
-                    )}
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
+          <ThreadedReplies
+            threadId={thread.id}
+            replies={thread.replies as Parameters<typeof ThreadedReplies>[0]["replies"]}
+            currentUserId={currentUser.id}
+          />
         )}
       </div>
 

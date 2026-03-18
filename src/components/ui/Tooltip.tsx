@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useCallback, useRef, useEffect } from "react";
+
 interface TooltipProps {
   content: string;
   children: React.ReactNode;
@@ -21,14 +23,40 @@ const arrowClasses = {
 };
 
 export function Tooltip({ content, children, position = "top" }: TooltipProps) {
+  const [visible, setVisible] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+
+  const show = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setVisible(true);
+  }, []);
+
+  const hide = useCallback(() => {
+    timeoutRef.current = setTimeout(() => setVisible(false), 100);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   if (!content) return <>{children}</>;
 
   return (
-    <span className="group relative inline-flex">
+    <span
+      className="relative inline-flex"
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+    >
       {children}
       <span
         role="tooltip"
-        className={`pointer-events-none absolute z-50 max-w-64 rounded-lg bg-charcoal px-3 py-1.5 text-xs text-white shadow-lg opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100 ${positionClasses[position]}`}
+        className={`pointer-events-none absolute z-50 max-w-64 rounded-lg bg-charcoal px-3 py-1.5 text-xs text-white shadow-lg transition-opacity duration-200 ${
+          visible ? "opacity-100" : "opacity-0"
+        } ${positionClasses[position]}`}
       >
         {content}
         <span

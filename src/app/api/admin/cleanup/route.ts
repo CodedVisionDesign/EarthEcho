@@ -32,10 +32,31 @@ export async function POST(request: Request) {
     },
   });
 
+  // Auto-activate approved challenges whose start date has arrived
+  const activated = await db.challenge.updateMany({
+    where: {
+      status: "APPROVED",
+      startDate: { lte: new Date() },
+      endDate: { gt: new Date() },
+    },
+    data: { status: "ACTIVE", isActive: true },
+  });
+
+  // Auto-complete active challenges whose end date has passed
+  const completed = await db.challenge.updateMany({
+    where: {
+      status: "ACTIVE",
+      endDate: { lt: new Date() },
+    },
+    data: { status: "COMPLETED", isActive: false },
+  });
+
   return NextResponse.json({
     success: true,
     deletedAuditLogs: deletedLogs.count,
     deletedTokens: deletedTokens.count,
+    activatedChallenges: activated.count,
+    completedChallenges: completed.count,
     retentionDays,
   });
 }

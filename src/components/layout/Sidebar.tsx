@@ -8,6 +8,7 @@ import { signOut } from "next-auth/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
   faChartLine,
   faDroplet,
@@ -121,11 +122,12 @@ export function Sidebar({ userName, userImage, userRole }: SidebarProps) {
 
   const sidebarContent = (
     <>
-      {/* Logo */}
-      <div className="border-b border-white/30 px-6 py-4">
+      {/* Logo + Notification Bell */}
+      <div className="flex items-center justify-between border-b border-white/30 px-6 py-4">
         <Link href="/dashboard" className="inline-flex">
           <Logo size="md" textClassName="text-charcoal" />
         </Link>
+        <NotificationBell />
       </div>
 
       {/* Navigation */}
@@ -226,23 +228,38 @@ export function Sidebar({ userName, userImage, userRole }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile hamburger button - glass pill */}
-      <button
-        type="button"
-        onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-200 hover:scale-105 md:hidden"
-        style={{
-          background: "rgba(255, 255, 255, 0.55)",
-          backdropFilter: "blur(16px) saturate(1.4)",
-          WebkitBackdropFilter: "blur(16px) saturate(1.4)",
-          boxShadow:
-            "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 0 rgba(255,255,255,0.6)",
-          border: "1px solid rgba(255, 255, 255, 0.4)",
-        }}
-        aria-label="Open navigation menu"
-      >
-        <FontAwesomeIcon icon={faBars} className="h-4 w-4 text-charcoal" />
-      </button>
+      {/* Mobile top bar — hamburger + notification bell */}
+      <div className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between px-4 pt-4 md:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-200 hover:scale-105"
+          style={{
+            background: "rgba(255, 255, 255, 0.55)",
+            backdropFilter: "blur(16px) saturate(1.4)",
+            WebkitBackdropFilter: "blur(16px) saturate(1.4)",
+            boxShadow:
+              "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 0 rgba(255,255,255,0.6)",
+            border: "1px solid rgba(255, 255, 255, 0.4)",
+          }}
+          aria-label="Open navigation menu"
+        >
+          <FontAwesomeIcon icon={faBars} className="h-4 w-4 text-charcoal" />
+        </button>
+        <div
+          className="flex h-10 w-10 items-center justify-center rounded-xl"
+          style={{
+            background: "rgba(255, 255, 255, 0.55)",
+            backdropFilter: "blur(16px) saturate(1.4)",
+            WebkitBackdropFilter: "blur(16px) saturate(1.4)",
+            boxShadow:
+              "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 0 rgba(255,255,255,0.6)",
+            border: "1px solid rgba(255, 255, 255, 0.4)",
+          }}
+        >
+          <NotificationBell />
+        </div>
+      </div>
 
       {/* Mobile overlay */}
       {mobileOpen && (

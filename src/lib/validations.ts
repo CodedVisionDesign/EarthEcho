@@ -31,6 +31,7 @@ export const threadSchema = z.object({
 export const replySchema = z.object({
   threadId: z.string().min(1),
   content: z.string().min(1, "Reply cannot be empty").max(2000),
+  parentReplyId: z.string().optional(),
 });
 
 export const reactionSchema = z.object({

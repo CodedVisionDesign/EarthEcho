@@ -1,0 +1,24 @@
+{
+  "name": "Earth Echo",
+  "short_name": "EarthEcho",
+  "description": "Track and reduce your environmental impact",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#F8F9FA",
+  "theme_color": "#2D6A4F",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["lifestyle", "education", "utilities"]
+}

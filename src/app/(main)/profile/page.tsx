@@ -19,6 +19,7 @@ import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { LinkedAccountsCard } from "@/components/profile/LinkedAccountsCard";
+import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
 import { ImpactSummaryCard } from "@/components/profile/ImpactSummaryCard";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
@@ -267,6 +268,9 @@ export default async function ProfilePage() {
             </div>
             <ChangePasswordForm hasPassword={!!user.password} />
           </Card>
+
+          {/* Notification Preferences */}
+          <NotificationPreferences />
         </div>
       </div>
     </div>

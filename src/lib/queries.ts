@@ -292,7 +292,7 @@ export async function getActiveChallenges() {
   try {
     await db.challenge.updateMany({
       where: { isActive: true, endDate: { lt: new Date() } },
-      data: { isActive: false },
+      data: { isActive: false, status: "COMPLETED" },
     });
   } catch {
     // Neon HTTP adapter may not support updateMany — skip deactivation
@@ -509,6 +509,12 @@ export async function getThread(threadId: string) {
         include: {
           user: { select: { id: true, name: true, displayName: true, image: true, customImage: true } },
           reactions: true,
+          parentReply: {
+            select: {
+              id: true,
+              user: { select: { name: true, displayName: true } },
+            },
+          },
         },
         orderBy: { createdAt: "asc" },
       },

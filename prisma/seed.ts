@@ -382,6 +382,7 @@ async function main() {
       startDate: monthStart,
       endDate: monthEnd,
       isActive: true,
+      status: "ACTIVE",
     },
     {
       title: `Plastic-Free ${monthName}`,
@@ -391,6 +392,7 @@ async function main() {
       startDate: monthStart,
       endDate: monthEnd,
       isActive: true,
+      status: "ACTIVE",
     },
     {
       title: `${monthName} Carbon Crunch`,
@@ -400,6 +402,7 @@ async function main() {
       startDate: monthStart,
       endDate: monthEnd,
       isActive: true,
+      status: "ACTIVE",
     },
     // Past challenges
     {
@@ -410,6 +413,7 @@ async function main() {
       startDate: lastMonthStart,
       endDate: lastMonthEnd,
       isActive: false,
+      status: "COMPLETED",
     },
     {
       title: `${lastMonthName} Secondhand Style`,
@@ -419,6 +423,7 @@ async function main() {
       startDate: lastMonthStart,
       endDate: lastMonthEnd,
       isActive: false,
+      status: "COMPLETED",
     },
     {
       title: `${twoMonthsAgoName} Recycling Rally`,
@@ -428,6 +433,7 @@ async function main() {
       startDate: twoMonthsAgoStart,
       endDate: twoMonthsAgoEnd,
       isActive: false,
+      status: "COMPLETED",
     },
     // Upcoming
     {
@@ -438,6 +444,7 @@ async function main() {
       startDate: nextMonthStart,
       endDate: nextMonthEnd,
       isActive: false,
+      status: "APPROVED",
     },
   ];
 
