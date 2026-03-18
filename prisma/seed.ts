@@ -657,6 +657,53 @@ async function main() {
     console.log("  Created admin: " + adminEmail);
   }
 
+  // ==========================================
+  // Moderation Words
+  // ==========================================
+
+  const moderationWords: Array<{ word: string; type: "flag" | "ban" }> = [
+    // Auto-ban: severe slurs and hate speech
+    { word: "n*gger", type: "ban" },
+    { word: "f*ggot", type: "ban" },
+    { word: "r*tard", type: "ban" },
+    { word: "k*ke", type: "ban" },
+    { word: "sp*c", type: "ban" },
+    { word: "ch*nk", type: "ban" },
+    { word: "tr*nny", type: "ban" },
+    // Auto-ban: threats and extreme content
+    { word: "kill yourself", type: "ban" },
+    { word: "kys", type: "ban" },
+    { word: "go die", type: "ban" },
+    // Flag: profanity (review, don't auto-block)
+    { word: "shit", type: "flag" },
+    { word: "fuck", type: "flag" },
+    { word: "bitch", type: "flag" },
+    { word: "damn", type: "flag" },
+    { word: "crap", type: "flag" },
+    { word: "piss", type: "flag" },
+    // Flag: harassment indicators
+    { word: "idiot", type: "flag" },
+    { word: "stupid", type: "flag" },
+    { word: "moron", type: "flag" },
+    { word: "loser", type: "flag" },
+    { word: "shut up", type: "flag" },
+    // Flag: spam indicators
+    { word: "buy now", type: "flag" },
+    { word: "click here", type: "flag" },
+    { word: "free money", type: "flag" },
+    { word: "act now", type: "flag" },
+    { word: "limited offer", type: "flag" },
+  ];
+
+  for (const mw of moderationWords) {
+    await prisma.moderationWord.upsert({
+      where: { word: mw.word },
+      update: { type: mw.type },
+      create: { word: mw.word, type: mw.type },
+    });
+  }
+  console.log(`  Seeded ${moderationWords.length} moderation words`);
+
   console.log("\nSeeding complete!");
   console.log("\n  Demo login: demo@example.com / demo1234");
   console.log("  Developer: " + developerEmail + " / EarthEchoAdmin2024!");

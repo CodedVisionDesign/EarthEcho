@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { requireAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
+import { AdminPinButton } from "@/components/admin/AdminPinButton";
 import { ModerationWords } from "@/components/admin/ModerationWords";
 import Link from "next/link";
 
@@ -160,7 +161,7 @@ export default async function AdminForumPage({
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="neutral" size="sm">{thread.category}</Badge>
-                    {thread.isPinned && <Badge variant="info" size="sm">Pinned</Badge>}
+                    <AdminPinButton threadId={thread.id} isPinned={thread.isPinned} />
                     <AdminDeleteButton
                       type="thread"
                       id={thread.id}

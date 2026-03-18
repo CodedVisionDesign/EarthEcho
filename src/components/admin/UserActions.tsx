@@ -3,18 +3,20 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBan, faCircleCheck, faUserShield, faUser, faSpinner } from "@/lib/fontawesome";
-import { banUser, unbanUser, promoteToAdmin, demoteFromAdmin } from "@/lib/admin-actions";
+import { faBan, faCircleCheck, faUserShield, faUser, faSpinner, faRotateRight } from "@/lib/fontawesome";
+import { banUser, unbanUser, promoteToAdmin, demoteFromAdmin, adminSendPasswordReset } from "@/lib/admin-actions";
 
 interface UserActionsProps {
   userId: string;
   userName: string;
   userRole: string;
+  userEmail: string;
+  hasPassword: boolean;
   isBanned: boolean;
   currentUserRole: string;
 }
 
-export function UserActions({ userId, userName, userRole, isBanned, currentUserRole }: UserActionsProps) {
+export function UserActions({ userId, userName, userRole, userEmail, hasPassword, isBanned, currentUserRole }: UserActionsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showBanModal, setShowBanModal] = useState(false);
@@ -72,9 +74,35 @@ export function UserActions({ userId, userName, userRole, isBanned, currentUserR
     });
   }
 
+  function handlePasswordReset() {
+    if (!confirm(`Send a password reset email to ${userName} (${userEmail})?`)) return;
+    startTransition(async () => {
+      try {
+        await adminSendPasswordReset(userId);
+        alert("Password reset email sent successfully.");
+        router.refresh();
+      } catch (e) {
+        alert(e instanceof Error ? e.message : "Failed to send reset email");
+      }
+    });
+  }
+
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
+        {/* Password Reset (superadmin/developer only, credentials users only) */}
+        {isSuperAdmin && hasPassword && (
+          <button
+            type="button"
+            onClick={handlePasswordReset}
+            disabled={isPending}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-sunshine/10 px-3 py-1.5 text-xs font-medium text-sunshine transition-colors hover:bg-sunshine/20 disabled:opacity-50"
+          >
+            {isPending ? <FontAwesomeIcon icon={faSpinner} className="h-3 w-3" spin /> : <FontAwesomeIcon icon={faRotateRight} className="h-3 w-3" />}
+            Reset Password
+          </button>
+        )}
+
         {/* Ban/Unban */}
         {!isTargetAdmin && (
           isBanned ? (

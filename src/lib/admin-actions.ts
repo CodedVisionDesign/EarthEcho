@@ -3,7 +3,9 @@
 import { db } from "./db";
 import { requireAdmin, requireSuperAdmin, createAuditLog } from "./admin";
 import { revalidatePath } from "next/cache";
-import { sendBanNotificationEmail } from "./email";
+import { sendBanNotificationEmail, sendPasswordResetEmail, sendAdminInviteEmail } from "./email";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 // ---------------------------------------------------------------------------
 // Ban / Unban
@@ -144,6 +146,41 @@ export async function adminDeleteReply(replyId: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Pin / Unpin threads
+// ---------------------------------------------------------------------------
+
+export async function togglePinThread(threadId: string) {
+  const admin = await requireAdmin();
+
+  const thread = await db.thread.findUnique({
+    where: { id: threadId },
+    select: { id: true, title: true, isPinned: true },
+  });
+
+  if (!thread) throw new Error("Thread not found");
+
+  const newPinned = !thread.isPinned;
+
+  await db.thread.update({
+    where: { id: threadId },
+    data: { isPinned: newPinned },
+  });
+
+  await createAuditLog({
+    adminId: admin.id,
+    action: newPinned ? "pin_thread" : "unpin_thread",
+    targetId: threadId,
+    targetType: "thread",
+    details: { title: thread.title },
+  });
+
+  revalidatePath("/admin/forum");
+  revalidatePath("/forum");
+
+  return { isPinned: newPinned };
+}
+
+// ---------------------------------------------------------------------------
 // Moderation words
 // ---------------------------------------------------------------------------
 
@@ -228,6 +265,103 @@ export async function demoteFromAdmin(userId: string) {
     targetId: userId,
     targetType: "user",
     details: { targetEmail: target.email, targetName: target.name },
+  });
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin");
+}
+
+// ---------------------------------------------------------------------------
+// Send password reset email (admin-triggered)
+// ---------------------------------------------------------------------------
+
+export async function adminSendPasswordReset(userId: string) {
+  const admin = await requireSuperAdmin();
+
+  const target = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true, password: true },
+  });
+
+  if (!target) throw new Error("User not found");
+  if (!target.email) throw new Error("User has no email address");
+  if (!target.password) throw new Error("User uses social login — no password to reset");
+
+  // Generate a reset token
+  const token = crypto.randomBytes(32).toString("hex");
+  const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      resetToken: token,
+      resetTokenExpiry: expires,
+    },
+  });
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
+  const resetUrl = `${appUrl}/reset-password?token=${token}`;
+
+  await sendPasswordResetEmail(
+    target.name ?? "User",
+    target.email,
+    resetUrl,
+  );
+
+  await createAuditLog({
+    adminId: admin.id,
+    action: "admin_password_reset",
+    targetId: userId,
+    targetType: "user",
+    details: { targetEmail: target.email, targetName: target.name },
+  });
+
+  revalidatePath("/admin/users");
+}
+
+// ---------------------------------------------------------------------------
+// Invite admin (creates account + sends branded invite email)
+// ---------------------------------------------------------------------------
+
+export async function inviteAdmin(email: string, name: string) {
+  const admin = await requireSuperAdmin();
+
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) throw new Error("Email is required");
+
+  const existing = await db.user.findUnique({ where: { email: normalized } });
+  if (existing) throw new Error("A user with this email already exists");
+
+  const tempPassword = crypto.randomBytes(8).toString("base64url");
+  const hashedPassword = await bcrypt.hash(tempPassword, 12);
+
+  const newAdmin = await db.user.create({
+    data: {
+      email: normalized,
+      name: name.trim() || "Admin",
+      displayName: name.trim() || "Admin",
+      password: hashedPassword,
+      role: "admin",
+    },
+  });
+
+  await db.account.create({
+    data: {
+      userId: newAdmin.id,
+      type: "credentials",
+      provider: "credentials",
+      providerAccountId: newAdmin.id,
+    },
+  });
+
+  await sendAdminInviteEmail(normalized, tempPassword);
+
+  await createAuditLog({
+    adminId: admin.id,
+    action: "invite_admin",
+    targetId: newAdmin.id,
+    targetType: "user",
+    details: { email: normalized, name: name.trim() },
   });
 
   revalidatePath("/admin/users");

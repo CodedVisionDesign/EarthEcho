@@ -273,3 +273,212 @@ export async function sendBanNotificationEmail(
     emailWrapper(body),
   );
 }
+
+// ---------------------------------------------------------------------------
+// sendAdminInviteEmail
+// ---------------------------------------------------------------------------
+
+export async function sendAdminInviteEmail(
+  email: string,
+  tempPassword: string,
+): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
+
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:22px;color:${TEXT_PRIMARY};">
+      You've Been Invited as an Admin
+    </h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      You have been invited to join the EarthEcho platform as an <strong>administrator</strong>.
+    </p>
+    <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      Use the credentials below to sign in:
+    </p>
+
+    <!-- Credentials box -->
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;background-color:${BRAND_LIGHT};border-radius:8px;border:1px solid #B7E4C7;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0 0 8px;font-size:14px;color:${TEXT_SECONDARY};">
+            <strong>Email:</strong> ${email}
+          </p>
+          <p style="margin:0;font-size:14px;color:${TEXT_SECONDARY};">
+            <strong>Temporary Password:</strong>
+            <span style="font-family:monospace;background-color:#ffffff;padding:2px 8px;border-radius:4px;font-size:15px;color:${BRAND_GREEN};font-weight:600;">
+              ${tempPassword}
+            </span>
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    ${buttonHtml(`${appUrl}/login`, "Sign In to EarthEcho")}
+
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:24px 0 0;background-color:#FFF8E1;border-radius:8px;border:1px solid #FFE082;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#F57F17;">
+            &#9888; Important
+          </p>
+          <ul style="margin:0;padding:0 0 0 18px;font-size:13px;line-height:1.7;color:${TEXT_SECONDARY};">
+            <li>Please change your password after your first sign-in.</li>
+            <li>Do not share these credentials with anyone.</li>
+          </ul>
+        </td>
+      </tr>
+    </table>`;
+
+  await sendEmail(
+    email,
+    "You've been invited as an EarthEcho Admin",
+    emailWrapper(body),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Email HTML generators (for previews)
+// ---------------------------------------------------------------------------
+
+export function getWelcomeEmailHtml(name: string): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:22px;color:${TEXT_PRIMARY};">
+      Welcome to EarthEcho, ${name}!
+    </h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      We're thrilled to have you join our community of environmentally-conscious individuals
+      committed to making a positive impact on the planet.
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      With EarthEcho you can:
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px 8px;">
+      <tr>
+        <td style="padding:4px 10px 4px 0;font-size:15px;color:${BRAND_GREEN};vertical-align:top;">&#9679;</td>
+        <td style="padding:4px 0;font-size:15px;color:${TEXT_SECONDARY};">Track your carbon footprint across transport, energy, shopping &amp; more</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 10px 4px 0;font-size:15px;color:${BRAND_GREEN};vertical-align:top;">&#9679;</td>
+        <td style="padding:4px 0;font-size:15px;color:${TEXT_SECONDARY};">Complete eco-challenges and earn badges</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 10px 4px 0;font-size:15px;color:${BRAND_GREEN};vertical-align:top;">&#9679;</td>
+        <td style="padding:4px 0;font-size:15px;color:${TEXT_SECONDARY};">Join the community forum and share your journey</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 10px 4px 0;font-size:15px;color:${BRAND_GREEN};vertical-align:top;">&#9679;</td>
+        <td style="padding:4px 0;font-size:15px;color:${TEXT_SECONDARY};">Climb the leaderboard and inspire others</td>
+      </tr>
+    </table>
+    ${buttonHtml(`${appUrl}/dashboard`, "Go to Your Dashboard")}
+    <p style="margin:0;font-size:13px;color:${TEXT_SECONDARY};text-align:center;">
+      Every small action adds up. Let's make a difference together.
+    </p>`;
+  return emailWrapper(body);
+}
+
+export function getPasswordResetEmailHtml(name: string): string {
+  const resetUrl = "https://earthecho.co.uk/reset-password?token=example-token";
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:22px;color:${TEXT_PRIMARY};">
+      Password Reset Request
+    </h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      Hi ${name},
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      We received a request to reset the password associated with your EarthEcho account.
+      Click the button below to set a new password.
+    </p>
+    ${buttonHtml(resetUrl, "Reset Your Password")}
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:24px 0 0;background-color:#FFF8E1;border-radius:8px;border:1px solid #FFE082;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#F57F17;">
+            &#9888; Important Security Information
+          </p>
+          <ul style="margin:0;padding:0 0 0 18px;font-size:13px;line-height:1.7;color:${TEXT_SECONDARY};">
+            <li>This link expires in <strong>1 hour</strong> for your security.</li>
+            <li>If you did not request a password reset, please ignore this email. Your password will remain unchanged.</li>
+            <li>Never share this link with anyone. EarthEcho staff will never ask for your password.</li>
+          </ul>
+        </td>
+      </tr>
+    </table>`;
+  return emailWrapper(body);
+}
+
+export function getBanNotificationEmailHtml(name: string, reason: string): string {
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:22px;color:${TEXT_PRIMARY};">
+      Account Suspended
+    </h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      Dear ${name},
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      We are writing to inform you that your EarthEcho account has been suspended
+      following a review of your activity on the platform.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;background-color:#FFEBEE;border-radius:8px;border-left:4px solid #C62828;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#C62828;text-transform:uppercase;letter-spacing:0.5px;">
+            Reason for Suspension
+          </p>
+          <p style="margin:0;font-size:15px;line-height:1.6;color:${TEXT_PRIMARY};">
+            ${reason}
+          </p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      If you believe this action was taken in error, please contact our support team
+      by replying to this email.
+    </p>`;
+  return emailWrapper(body);
+}
+
+export function getAdminInviteEmailHtml(email: string): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:22px;color:${TEXT_PRIMARY};">
+      You've Been Invited as an Admin
+    </h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      You have been invited to join the EarthEcho platform as an <strong>administrator</strong>.
+    </p>
+    <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      Use the credentials below to sign in:
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;background-color:${BRAND_LIGHT};border-radius:8px;border:1px solid #B7E4C7;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0 0 8px;font-size:14px;color:${TEXT_SECONDARY};">
+            <strong>Email:</strong> ${email}
+          </p>
+          <p style="margin:0;font-size:14px;color:${TEXT_SECONDARY};">
+            <strong>Temporary Password:</strong>
+            <span style="font-family:monospace;background-color:#ffffff;padding:2px 8px;border-radius:4px;font-size:15px;color:${BRAND_GREEN};font-weight:600;">
+              ••••••••••••
+            </span>
+          </p>
+        </td>
+      </tr>
+    </table>
+    ${buttonHtml(`${appUrl}/login`, "Sign In to EarthEcho")}
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:24px 0 0;background-color:#FFF8E1;border-radius:8px;border:1px solid #FFE082;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#F57F17;">
+            &#9888; Important
+          </p>
+          <ul style="margin:0;padding:0 0 0 18px;font-size:13px;line-height:1.7;color:${TEXT_SECONDARY};">
+            <li>Please change your password after your first sign-in.</li>
+            <li>Do not share these credentials with anyone.</li>
+          </ul>
+        </td>
+      </tr>
+    </table>`;
+  return emailWrapper(body);
+}

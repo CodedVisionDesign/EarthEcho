@@ -174,7 +174,7 @@ export default async function DashboardPage() {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
-                Welcome back, {user.displayName || user.name || "Explorer"}!
+                Welcome back, {user.name || user.displayName || "Explorer"}!
               </h1>
               <p className="mt-1 text-sm text-white/70">
                 Here&apos;s your environmental impact this week

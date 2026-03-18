@@ -34,6 +34,10 @@ model User {
   bannedAt  DateTime?
   bannedBy  String?   // userId of the admin who banned
 
+  // Password reset
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
   // Gamification
   totalPoints  Int       @default(0)
   streakDays   Int       @default(0)
