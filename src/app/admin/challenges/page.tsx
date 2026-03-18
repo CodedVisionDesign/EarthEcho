@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrophy, faPlus, faUsers } from "@/lib/fontawesome";
+import { faTrophy, faPlus, faUsers, faCircleInfo, faEye } from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { requireAdmin } from "@/lib/admin";
@@ -45,7 +45,7 @@ export default async function AdminChallengesPage({
 
   const where = statusFilter !== "all" ? { status: statusFilter } : {};
 
-  const [challenges, total] = await Promise.all([
+  const [challenges, total, upcomingChallenges] = await Promise.all([
     db.challenge.findMany({
       where,
       include: { _count: { select: { participants: true } } },
@@ -54,6 +54,15 @@ export default async function AdminChallengesPage({
       skip: (currentPage - 1) * PAGE_SIZE,
     }),
     db.challenge.count({ where }),
+    // Upcoming: PENDING_REVIEW or APPROVED challenges starting in the future
+    db.challenge.findMany({
+      where: {
+        status: { in: ["PENDING_REVIEW", "APPROVED"] },
+        startDate: { gt: new Date() },
+      },
+      orderBy: { startDate: "asc" },
+      take: 10,
+    }),
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -95,6 +104,71 @@ export default async function AdminChallengesPage({
 
       {/* Auto-Generate Config (superadmin only) */}
       {isSuperAdmin && <AutoGenerateConfigWrapper />}
+
+      {/* Generation Frequency Info */}
+      <Card variant="default" className="mb-4 p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ocean/10">
+            <FontAwesomeIcon icon={faCircleInfo} className="h-4 w-4 text-ocean" />
+          </div>
+          <div className="text-sm text-slate">
+            <p className="font-medium text-charcoal">Challenge Generation Schedule</p>
+            <p className="mt-1">
+              Challenges are <strong>auto-generated monthly</strong> via the daily cron job.
+              Each enabled template produces one challenge for the following month, created with <strong>Pending Review</strong> status.
+              Approved challenges are auto-activated on their start date and auto-completed when they end.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-3 text-xs">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-warning" /> Generated → Pending Review
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-ocean" /> Admin Approves → Approved
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-forest" /> Start Date Arrives → Active
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-slate" /> End Date Passes → Completed
+              </span>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Upcoming Challenges Preview */}
+      {upcomingChallenges.length > 0 && (
+        <Card variant="default" className="mb-4 overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
+            <FontAwesomeIcon icon={faEye} className="h-4 w-4 text-forest" />
+            <h2 className="text-sm font-semibold text-charcoal">Upcoming Challenges Preview</h2>
+            <span className="rounded-full bg-forest/10 px-2 py-0.5 text-[11px] font-medium text-forest">
+              {upcomingChallenges.length}
+            </span>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {upcomingChallenges.map((ch) => {
+              const statusBadge = STATUS_BADGE[ch.status] ?? STATUS_BADGE.DRAFT;
+              const cat = CATEGORIES[ch.category as ActivityCategory];
+              const formatDate = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+              return (
+                <Link key={ch.id} href={`/admin/challenges/${ch.id}`} className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-gray-50">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-charcoal">{ch.title}</p>
+                    <p className="mt-0.5 line-clamp-1 text-xs text-slate">{ch.description}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-slate">
+                      <span>{cat?.icon} {cat?.label ?? ch.category}</span>
+                      <span>{formatDate(ch.startDate)} – {formatDate(ch.endDate)}</span>
+                      <span>Target: {ch.targetValue} {cat?.unitLabel?.toLowerCase() ?? "units"}</span>
+                    </div>
+                  </div>
+                  <Badge variant={statusBadge.variant} size="sm">{statusBadge.label}</Badge>
+                </Link>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* Status Filter Tabs */}
       <div className="mb-4 flex flex-wrap items-center gap-1.5">

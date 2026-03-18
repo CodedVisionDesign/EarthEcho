@@ -701,11 +701,15 @@ export async function resetPassword(input: { token: string; password: string }) 
 
   const hashedPassword = await bcrypt.hash(input.password, 12);
 
-  // Update password and mark token as used in transaction
+  // Update password, clear any admin-issued reset token, and mark token as used
   await db.$transaction([
     db.user.update({
       where: { id: user.id },
-      data: { password: hashedPassword },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
     }),
     db.passwordResetToken.update({
       where: { id: record.id },

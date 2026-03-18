@@ -6,6 +6,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
 import { verifyLoginToken } from "./webauthn-server";
+import { createAuditLog } from "./admin";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -160,6 +161,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Don't block sign-in if profile image update fails
         }
       }
+
+      // Log admin/superadmin/developer logins to audit trail
+      try {
+        const loginEmail = user.email;
+        if (loginEmail) {
+          const loginUser = await db.user.findUnique({
+            where: { email: loginEmail },
+            select: { id: true, role: true, name: true, email: true },
+          });
+          if (loginUser && ["admin", "superadmin", "developer"].includes(loginUser.role)) {
+            const provider = account?.provider ?? "unknown";
+            await createAuditLog({
+              adminId: loginUser.id,
+              action: "admin_login",
+              targetId: loginUser.id,
+              targetType: "user",
+              details: {
+                email: loginUser.email,
+                name: loginUser.name,
+                provider,
+                role: loginUser.role,
+              },
+            });
+          }
+        }
+      } catch (error) {
+        console.error("[AUTH] Login audit log error:", error);
+        // Don't block sign-in if audit logging fails
+      }
+
       return true;
     },
     async session({ session, token }) {

@@ -9,12 +9,18 @@ import Link from "next/link";
 const PAGE_SIZE = 30;
 
 const ACTION_LABELS: Record<string, { label: string; variant: "success" | "danger" | "warning" | "info" | "neutral" }> = {
+  admin_login: { label: "Admin Login", variant: "info" },
   ban_user: { label: "Ban User", variant: "danger" },
   unban_user: { label: "Unban User", variant: "success" },
-  delete_thread: { label: "Delete Thread", variant: "warning" },
-  delete_reply: { label: "Delete Reply", variant: "warning" },
-  promote_admin: { label: "Promote Admin", variant: "info" },
-  demote_admin: { label: "Demote Admin", variant: "neutral" },
+  change_role: { label: "Change Role", variant: "warning" },
+  admin_password_reset: { label: "Password Reset", variant: "warning" },
+  invite_admin: { label: "Invite Admin", variant: "info" },
+  delete_thread: { label: "Delete Thread", variant: "danger" },
+  delete_reply: { label: "Delete Reply", variant: "danger" },
+  pin_thread: { label: "Pin Thread", variant: "info" },
+  unpin_thread: { label: "Unpin Thread", variant: "neutral" },
+  toggle_auto_generate: { label: "Toggle Auto-Generate", variant: "info" },
+  update_challenge_template: { label: "Update Template", variant: "neutral" },
 };
 
 function formatDate(date: Date): string {
@@ -144,10 +150,16 @@ export default async function AdminAuditPage({
                           {log.targetType && <span className="capitalize">{log.targetType}</span>}
                           {log.targetId && <span className="ml-1 font-mono">{log.targetId.slice(0, 8)}...</span>}
                         </td>
-                        <td className="max-w-[250px] truncate px-4 py-3 text-xs text-slate">
-                          {details.reason && <span>Reason: {details.reason}</span>}
-                          {details.targetEmail && <span> ({details.targetEmail})</span>}
-                          {details.title && <span>&ldquo;{details.title}&rdquo;</span>}
+                        <td className="max-w-[300px] truncate px-4 py-3 text-xs text-slate">
+                          {details.reason && <span>Reason: {details.reason} </span>}
+                          {details.targetEmail && <span>({details.targetEmail}) </span>}
+                          {details.email && !details.targetEmail && <span>({details.email}) </span>}
+                          {details.title && <span>&ldquo;{details.title}&rdquo; </span>}
+                          {details.provider && <span>via {details.provider} </span>}
+                          {details.previousRole && details.newRole && (
+                            <span>{details.previousRole} → {details.newRole} </span>
+                          )}
+                          {details.enabled && <span>{details.enabled === "true" ? "Enabled" : "Disabled"} </span>}
                         </td>
                       </tr>
                     );

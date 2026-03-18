@@ -134,14 +134,20 @@ export function NotificationBell() {
             ref={panelRef}
             className="fixed inset-x-3 top-14 z-[70] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5 sm:inset-x-auto sm:top-auto sm:w-96 md:w-[28rem]"
             style={
-              // On sm+ screens, position the panel below the bell button
+              // On sm+ screens, position the panel relative to the bell button
               typeof window !== "undefined" && window.innerWidth >= 640 && bellRef.current
                 ? (() => {
                     const rect = bellRef.current.getBoundingClientRect();
+                    const top = rect.bottom + 8;
+                    // On desktop (md+), the bell is in the sidebar — anchor panel to the left
+                    // so it appears beside/overlapping the main content area, not clipped
+                    const isDesktop = window.innerWidth >= 768;
                     return {
                       position: "fixed" as const,
-                      top: rect.bottom + 8,
-                      right: Math.max(16, window.innerWidth - rect.right),
+                      top,
+                      ...(isDesktop
+                        ? { left: Math.max(16, rect.left) }
+                        : { right: Math.max(16, window.innerWidth - rect.right) }),
                     };
                   })()
                 : undefined

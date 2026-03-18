@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUsers, faSearch, faShieldHalved, faUserShield, faBan, faUserPlus, faEnvelopeOpenText, faArrowUp, faArrowDown, faGoogle, faFacebook, faEnvelope, faApple } from "@/lib/fontawesome";
+import { faUsers, faSearch, faShieldHalved, faUserShield, faBan, faUserPlus, faEnvelopeOpenText, faArrowUp, faArrowDown, faGoogle, faFacebook, faEnvelope, faApple, faRotateRight } from "@/lib/fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -32,12 +32,13 @@ type SortField = "name" | "role" | "points" | "joined";
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string; role?: string; sort?: string; order?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; role?: string; sort?: string; order?: string; provider?: string }>;
 }) {
   const admin = await requireAdmin();
-  const { q, page, role, sort, order } = await searchParams;
+  const { q, page, role, sort, order, provider } = await searchParams;
   const search = q?.trim() ?? "";
   const roleFilter = (["all", "admins", "users"].includes(role ?? "") ? role : "all") as RoleFilter;
+  const providerFilter = (["google", "facebook", "apple", "credentials"].includes(provider ?? "") ? provider : null) as string | null;
   const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
 
   // Determine sort field and order
@@ -61,7 +62,14 @@ export default async function AdminUsersPage({
         ? { role: "user" }
         : {};
 
-  const where = { ...searchFilter, ...roleFilterWhere };
+  // Provider filter: credentials = has password, others = has matching account
+  const providerFilterWhere = providerFilter === "credentials"
+    ? { password: { not: null } }
+    : providerFilter
+      ? { accounts: { some: { provider: providerFilter } } }
+      : {};
+
+  const where = { ...searchFilter, ...roleFilterWhere, ...providerFilterWhere };
 
   // Build orderBy based on sort field
   const orderByMap: Record<SortField, Record<string, "asc" | "desc">> = {
@@ -86,6 +94,7 @@ export default async function AdminUsersPage({
         banReason: true,
         totalPoints: true,
         password: true,
+        resetTokenExpiry: true,
         createdAt: true,
         accounts: { select: { provider: true } },
       },
@@ -101,17 +110,19 @@ export default async function AdminUsersPage({
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const isSuperAdmin = admin.role === "superadmin" || admin.role === "developer";
 
-  function buildUrl(overrides: { page?: number; role?: string; q?: string; sort?: string; order?: string } = {}) {
+  function buildUrl(overrides: { page?: number; role?: string; q?: string; sort?: string; order?: string; provider?: string | null } = {}) {
     const params = new URLSearchParams();
     const s = overrides.q ?? search;
     const r = overrides.role ?? roleFilter;
     const p = overrides.page ?? undefined;
     const st = overrides.sort ?? sort;
     const o = overrides.order ?? order;
+    const prov = overrides.provider !== undefined ? overrides.provider : providerFilter;
     if (s) params.set("q", s);
     if (r && r !== "all") params.set("role", r);
     if (st) params.set("sort", st);
     if (o) params.set("order", o);
+    if (prov) params.set("provider", prov);
     if (p && p > 1) params.set("page", String(p));
     const qs = params.toString();
     return `/admin/users${qs ? `?${qs}` : ""}`;
@@ -136,6 +147,10 @@ export default async function AdminUsersPage({
       if (!providers.includes(a.provider)) providers.push(a.provider);
     }
     return providers;
+  }
+
+  function hasActiveReset(user: { resetTokenExpiry: Date | null }) {
+    return user.resetTokenExpiry !== null && user.resetTokenExpiry > new Date();
   }
 
   return (
@@ -208,19 +223,28 @@ export default async function AdminUsersPage({
         </form>
       </div>
 
-      {/* Provider Breakdown */}
-      <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-slate">
+      {/* Provider Filter Toggles */}
+      <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
         {Object.entries(PROVIDER_CONFIG).map(([key, cfg]) => {
           const count =
             key === "credentials"
               ? emailPasswordCount
               : providerCounts.find((p) => p.provider === key)?._count.provider ?? 0;
           if (count === 0) return null;
+          const isActive = providerFilter === key;
           return (
-            <span key={key} className="flex items-center gap-1.5">
-              <FontAwesomeIcon icon={cfg.icon} className={`h-3 w-3 ${cfg.color}`} aria-hidden />
+            <Link
+              key={key}
+              href={buildUrl({ provider: isActive ? null : key, page: 1 })}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium transition-all ${
+                isActive
+                  ? "bg-charcoal text-white shadow-sm"
+                  : "bg-gray-100 text-slate hover:bg-gray-200"
+              }`}
+            >
+              <FontAwesomeIcon icon={cfg.icon} className={`h-3 w-3 ${isActive ? "text-white" : cfg.color}`} aria-hidden />
               {count} {cfg.label}
-            </span>
+            </Link>
           );
         })}
       </div>
@@ -307,14 +331,22 @@ export default async function AdminUsersPage({
                       <Badge variant={role.variant} size="sm">{role.label}</Badge>
                     </td>
                     <td className="px-4 py-3">
-                      {user.banned ? (
-                        <Badge variant="danger" size="sm">
-                          <FontAwesomeIcon icon={faBan} className="h-2.5 w-2.5" />
-                          Banned
-                        </Badge>
-                      ) : (
-                        <Badge variant="success" size="sm">Active</Badge>
-                      )}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {user.banned ? (
+                          <Badge variant="danger" size="sm">
+                            <FontAwesomeIcon icon={faBan} className="h-2.5 w-2.5" />
+                            Banned
+                          </Badge>
+                        ) : (
+                          <Badge variant="success" size="sm">Active</Badge>
+                        )}
+                        {hasActiveReset(user) && (
+                          <Badge variant="warning" size="sm">
+                            <FontAwesomeIcon icon={faRotateRight} className="h-2.5 w-2.5" />
+                            Reset Pending
+                          </Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 font-medium text-charcoal">
                       {user.totalPoints.toLocaleString()}
@@ -328,6 +360,7 @@ export default async function AdminUsersPage({
                         userName={user.name || user.displayName || "User"}
                         userEmail={user.email ?? ""}
                         hasPassword={!!user.password}
+                        resetPending={hasActiveReset(user)}
                         userRole={user.role}
                         isBanned={user.banned}
                         currentUserRole={admin.role}
@@ -372,10 +405,16 @@ export default async function AdminUsersPage({
                     <p className="truncate text-xs text-slate">{user.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <Badge variant={role.variant} size="sm">{role.label}</Badge>
                   {user.banned && (
                     <Badge variant="danger" size="sm">Banned</Badge>
+                  )}
+                  {hasActiveReset(user) && (
+                    <Badge variant="warning" size="sm">
+                      <FontAwesomeIcon icon={faRotateRight} className="h-2.5 w-2.5" />
+                      Reset
+                    </Badge>
                   )}
                 </div>
               </div>
@@ -403,6 +442,7 @@ export default async function AdminUsersPage({
                 userName={user.name || user.displayName || "User"}
                 userEmail={user.email ?? ""}
                 hasPassword={!!user.password}
+                resetPending={hasActiveReset(user)}
                 userRole={user.role}
                 isBanned={user.banned}
                 currentUserRole={admin.role}

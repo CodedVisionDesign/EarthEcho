@@ -12,11 +12,12 @@ interface UserActionsProps {
   userRole: string;
   userEmail: string;
   hasPassword: boolean;
+  resetPending: boolean;
   isBanned: boolean;
   currentUserRole: string;
 }
 
-export function UserActions({ userId, userName, userRole, userEmail, hasPassword, isBanned, currentUserRole }: UserActionsProps) {
+export function UserActions({ userId, userName, userRole, userEmail, hasPassword, resetPending, isBanned, currentUserRole }: UserActionsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showBanModal, setShowBanModal] = useState(false);
@@ -97,15 +98,25 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
       <div className="flex flex-wrap items-center gap-2">
         {/* Password Reset (superadmin/developer only, credentials users only) */}
         {isSuperAdmin && hasPassword && (
-          <button
-            type="button"
-            onClick={handlePasswordReset}
-            disabled={isPending}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-sunshine/10 px-3 py-1.5 text-xs font-medium text-sunshine transition-colors hover:bg-sunshine/20 disabled:opacity-50"
-          >
-            {isPending ? <FontAwesomeIcon icon={faSpinner} className="h-3 w-3" spin /> : <FontAwesomeIcon icon={faRotateRight} className="h-3 w-3" />}
-            Reset Password
-          </button>
+          resetPending ? (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-lg bg-sunshine/10 px-3 py-1.5 text-xs font-medium text-sunshine cursor-default"
+              title="A password reset link has already been sent and is still valid"
+            >
+              <FontAwesomeIcon icon={faRotateRight} className="h-3 w-3" />
+              Reset Sent
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={handlePasswordReset}
+              disabled={isPending}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-sunshine/10 px-3 py-1.5 text-xs font-medium text-sunshine transition-colors hover:bg-sunshine/20 disabled:opacity-50"
+            >
+              {isPending ? <FontAwesomeIcon icon={faSpinner} className="h-3 w-3" spin /> : <FontAwesomeIcon icon={faRotateRight} className="h-3 w-3" />}
+              Reset Password
+            </button>
+          )
         )}
 
         {/* Ban/Unban */}

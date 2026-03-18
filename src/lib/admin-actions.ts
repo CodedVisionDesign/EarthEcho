@@ -17,7 +17,7 @@ export async function banUser(userId: string, reason: string): Promise<{ success
 
     const target = await db.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true, role: true },
+      select: { id: true, name: true, displayName: true, email: true, role: true },
     });
 
     if (!target) return { success: false, error: "User not found" };
@@ -46,7 +46,7 @@ export async function banUser(userId: string, reason: string): Promise<{ success
     // Send notification email (best-effort, don't block on failure)
     if (target.email) {
       sendBanNotificationEmail(
-        target.name ?? "User",
+        target.name || target.displayName || "there",
         target.email,
         reason,
       ).catch(() => {
@@ -287,7 +287,7 @@ export async function adminSendPasswordReset(userId: string): Promise<{ success:
 
     const target = await db.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true, password: true },
+      select: { id: true, name: true, displayName: true, email: true, password: true },
     });
 
     if (!target) return { success: false, error: "User not found" };
@@ -310,7 +310,7 @@ export async function adminSendPasswordReset(userId: string): Promise<{ success:
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
     await sendPasswordResetEmail(
-      target.name ?? "User",
+      target.name || target.displayName || "there",
       target.email,
       resetUrl,
     );
