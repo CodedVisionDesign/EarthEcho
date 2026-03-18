@@ -329,6 +329,7 @@ export default async function AdminUsersPage({
         {users.map((user) => {
           const role = ROLE_BADGE[user.role] ?? ROLE_BADGE.user;
           const avatar = user.customImage || user.image;
+          const providers = getUserProviders(user);
           return (
             <Card key={user.id} variant="default" className="p-4">
               <div className="mb-3 flex items-start justify-between">
@@ -362,6 +363,21 @@ export default async function AdminUsersPage({
                 </div>
               </div>
               <div className="mb-3 flex items-center gap-4 text-xs text-slate">
+                <span className="flex items-center gap-1">
+                  {providers.map((p) => {
+                    const cfg = PROVIDER_CONFIG[p];
+                    if (!cfg) return null;
+                    return (
+                      <FontAwesomeIcon
+                        key={p}
+                        icon={cfg.icon}
+                        className={`h-3 w-3 ${cfg.color}`}
+                        title={cfg.label}
+                        aria-hidden
+                      />
+                    );
+                  })}
+                </span>
                 <span>{user.totalPoints.toLocaleString()} pts</span>
                 <span>Joined {user.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
               </div>
