@@ -499,6 +499,25 @@ export function getAdminInviteEmailHtml(email: string): string {
   return emailWrapper(body);
 }
 
+export function getNotificationEmailHtml(title: string, body: string): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
+  const content = `
+    <h1 style="margin:0 0 16px;font-size:22px;color:${TEXT_PRIMARY};">
+      ${title}
+    </h1>
+    <p style="margin:0 0 8px;font-size:15px;line-height:1.7;color:${TEXT_SECONDARY};">
+      Hi Jane,
+    </p>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:${TEXT_SECONDARY};">
+      ${body}
+    </p>
+    ${buttonHtml(`${appUrl}/dashboard`, "View on EarthEcho")}
+    <p style="margin:24px 0 0;font-size:12px;color:#999999;">
+      You can manage your notification preferences in your <a href="${appUrl}/profile" style="color:${BRAND_GREEN};">profile settings</a>.
+    </p>`;
+  return emailWrapper(content);
+}
+
 // ---------------------------------------------------------------------------
 // Notification Email (forum replies, reactions, badges, etc.)
 // ---------------------------------------------------------------------------

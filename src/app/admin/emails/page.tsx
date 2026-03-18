@@ -7,8 +7,10 @@ import {
   getPasswordResetEmailHtml,
   getBanNotificationEmailHtml,
   getAdminInviteEmailHtml,
+  getNotificationEmailHtml,
 } from "@/lib/email";
 import Link from "next/link";
+import { SendTestEmailButton } from "@/components/admin/SendTestEmailButton";
 
 const EMAIL_TEMPLATES = [
   {
@@ -34,6 +36,15 @@ const EMAIL_TEMPLATES = [
     name: "Admin Invite",
     description: "Sent when inviting a new administrator",
     getHtml: () => getAdminInviteEmailHtml("admin@example.com"),
+  },
+  {
+    id: "notification",
+    name: "Notification",
+    description: "Sent for forum replies, reactions, badges, and other activity",
+    getHtml: () => getNotificationEmailHtml(
+      "New Reply to Your Thread",
+      "Alex Green replied to your thread <strong>\"Tips for reducing food waste\"</strong> in the community forum.",
+    ),
   },
 ];
 
@@ -82,10 +93,13 @@ export default async function AdminEmailsPage({
         ))}
       </div>
 
-      {/* Template Info */}
-      <Card variant="default" className="mb-4 px-5 py-3">
-        <h2 className="text-sm font-semibold text-charcoal">{activeTemplate.name}</h2>
-        <p className="text-xs text-slate">{activeTemplate.description}</p>
+      {/* Template Info + Send Test */}
+      <Card variant="default" className="mb-4 flex items-center justify-between px-5 py-3">
+        <div>
+          <h2 className="text-sm font-semibold text-charcoal">{activeTemplate.name}</h2>
+          <p className="text-xs text-slate">{activeTemplate.description}</p>
+        </div>
+        <SendTestEmailButton />
       </Card>
 
       {/* Email Preview */}
