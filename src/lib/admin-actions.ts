@@ -295,9 +295,25 @@ export async function adminSendPasswordReset(userId: string): Promise<{ success:
     if (!target.password) return { success: false, error: "User uses social login — no password to reset" };
 
     // Generate a reset token
-    const token = crypto.randomBytes(32).toString("hex");
+    const token = crypto.randomBytes(48).toString("hex");
     const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
+    // Invalidate any previous unused tokens for this email
+    await db.passwordResetToken.updateMany({
+      where: { email: target.email, used: false },
+      data: { used: true },
+    });
+
+    // Create the token in the PasswordResetToken table (where resetPassword() looks it up)
+    await db.passwordResetToken.create({
+      data: {
+        email: target.email,
+        token,
+        expires,
+      },
+    });
+
+    // Also store on the User model so the admin UI can show "reset pending"
     await db.user.update({
       where: { id: userId },
       data: {

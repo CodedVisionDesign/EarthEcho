@@ -4,7 +4,12 @@
       "Bash(grep -r .banned /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src --include=*.ts --include=*.tsx -C 3)",
       "Bash(grep -r \"signOut\\\\|redirect\\\\|location.href\\\\|router.push\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src --include=*.ts --include=*.tsx -l)",
       "Bash(grep -r \"getSession\\\\|useSession\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/app --include=*.tsx -n)",
-      "Bash(grep \"await auth\\(\\)\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/lib/*.ts)"
+      "Bash(grep \"await auth\\(\\)\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/lib/*.ts)",
+      "Bash(node -e \"const p = require\\(''./package.json''\\); console.log\\(''next-auth:'', p.dependencies[''next-auth'']\\); console.log\\(''@auth/prisma-adapter:'', p.dependencies[''@auth/prisma-adapter'']\\)\")",
+      "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src -path *reset-password* -o -path *forgot-password*)",
+      "Bash(grep -r \"requestPasswordReset\\\\|adminSendPasswordReset\\\\|resetPassword\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src --include=*.ts --include=*.tsx -l)",
+      "Bash(node -e \"const d=require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\);const v=JSON.parse\\(d\\);console.log\\(v.filter\\(x=>x.startsWith\\(''''5.''''\\)\\).slice\\(-10\\).join\\(''''\\\\n''''\\)\\)\")",
+      "Bash(npm view:*)"
     ]
   }
 }

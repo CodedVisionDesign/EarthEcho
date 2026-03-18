@@ -108,7 +108,10 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
   }
 
   function handlePasswordReset() {
-    if (!confirm(`Send a password reset email to ${userName} (${userEmail})?`)) return;
+    const msg = resetPending
+      ? `Resend password reset to ${userName} (${userEmail})? This will cancel the previous link.`
+      : `Send a password reset email to ${userName} (${userEmail})?`;
+    if (!confirm(msg)) return;
     startTransition(async () => {
       try {
         const result = await adminSendPasswordReset(userId);
@@ -129,25 +132,16 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
       <div className="flex flex-wrap items-center gap-2">
         {/* Password Reset (superadmin/developer only, credentials users only) */}
         {isSuperAdmin && hasPassword && (
-          resetPending ? (
-            <span
-              className="inline-flex items-center gap-1.5 rounded-lg bg-sunshine/10 px-3 py-1.5 text-xs font-medium text-sunshine cursor-default"
-              title="A password reset link has already been sent and is still valid"
-            >
-              <FontAwesomeIcon icon={faRotateRight} className="h-3 w-3" />
-              Reset Sent
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={handlePasswordReset}
-              disabled={isPending}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-sunshine/10 px-3 py-1.5 text-xs font-medium text-sunshine transition-colors hover:bg-sunshine/20 disabled:opacity-50"
-            >
-              {isPending ? <FontAwesomeIcon icon={faSpinner} className="h-3 w-3" spin /> : <FontAwesomeIcon icon={faRotateRight} className="h-3 w-3" />}
-              Reset Password
-            </button>
-          )
+          <button
+            type="button"
+            onClick={handlePasswordReset}
+            disabled={isPending}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-sunshine/10 px-3 py-1.5 text-xs font-medium text-sunshine transition-colors hover:bg-sunshine/20 disabled:opacity-50"
+            title={resetPending ? "A reset link was already sent — clicking will cancel it and send a new one" : undefined}
+          >
+            {isPending ? <FontAwesomeIcon icon={faSpinner} className="h-3 w-3" spin /> : <FontAwesomeIcon icon={faRotateRight} className="h-3 w-3" />}
+            {resetPending ? "Resend Reset" : "Reset Password"}
+          </button>
         )}
 
         {/* Ban/Unban */}
