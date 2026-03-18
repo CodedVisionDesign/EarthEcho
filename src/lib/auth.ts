@@ -92,7 +92,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }) {
       // For OAuth providers, check if user already exists by email
       // (user.id may not correspond to a DB record for first-time OAuth sign-ins)
-      if (account?.provider !== "credentials" && user.email) {
+      if (account && account.provider !== "credentials" && user.email) {
         try {
           const existingUser = await db.user.findUnique({
             where: { email: user.email },
