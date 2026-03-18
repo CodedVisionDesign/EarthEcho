@@ -89,24 +89,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       // Refresh OAuth profile image on each sign-in
-      if (account?.provider === "google" && user.id && profile?.picture) {
-        await db.user.update({
-          where: { id: user.id },
-          data: { image: profile.picture as string },
-        });
-      }
-      if (account?.provider === "facebook" && user.id) {
-        const fbPicture =
-          (profile as Record<string, unknown>)?.picture &&
-          typeof (profile as Record<string, unknown>).picture === "object"
-            ? ((profile as Record<string, unknown>).picture as { data?: { url?: string } })?.data?.url
-            : undefined;
-        if (fbPicture) {
+      try {
+        if (account?.provider === "google" && user.id && profile?.picture) {
           await db.user.update({
             where: { id: user.id },
-            data: { image: fbPicture },
+            data: { image: profile.picture as string },
           });
         }
+        if (account?.provider === "facebook" && user.id) {
+          const fbPicture =
+            (profile as Record<string, unknown>)?.picture &&
+            typeof (profile as Record<string, unknown>).picture === "object"
+              ? ((profile as Record<string, unknown>).picture as { data?: { url?: string } })?.data?.url
+              : undefined;
+          if (fbPicture) {
+            await db.user.update({
+              where: { id: user.id },
+              data: { image: fbPicture },
+            });
+          }
+        }
+      } catch {
+        // User record may not exist yet during first OAuth sign-in
       }
       return true;
     },
