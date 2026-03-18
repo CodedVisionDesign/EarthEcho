@@ -466,6 +466,55 @@ export async function registerUser(input: {
 }
 
 // ==========================================
+// Onboarding Actions
+// ==========================================
+
+export async function completeOnboarding(input: {
+  displayName?: string;
+  bio?: string;
+  interests?: string[];
+}) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, onboardingCompleted: true },
+  });
+
+  if (!user) return { error: "User not found" };
+  if (user.onboardingCompleted) return { success: true };
+
+  // Update profile fields if provided
+  const updateData: Record<string, unknown> = {
+    onboardingCompleted: true,
+    totalPoints: { increment: 50 },
+  };
+  if (input.displayName?.trim()) updateData.displayName = input.displayName.trim();
+  if (input.bio?.trim()) updateData.bio = input.bio.trim();
+
+  await db.user.update({
+    where: { id: session.user.id },
+    data: updateData,
+  });
+
+  // Record the points transaction
+  await db.pointTransaction.create({
+    data: {
+      userId: session.user.id,
+      points: 50,
+      reason: "Completed onboarding",
+    },
+  });
+
+  // Check for profile_complete badge
+  await checkAndAwardBadges(session.user.id);
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+// ==========================================
 // Password Reset Actions (OWASP compliant)
 // ==========================================
 

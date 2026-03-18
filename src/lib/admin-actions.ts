@@ -205,11 +205,22 @@ export async function removeModerationWord(id: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Role management (superadmin only)
+// Role management (superadmin / developer only)
 // ---------------------------------------------------------------------------
 
-export async function promoteToAdmin(userId: string) {
+const ASSIGNABLE_ROLES = ["user", "admin", "superadmin"] as const;
+type AssignableRole = (typeof ASSIGNABLE_ROLES)[number];
+
+export async function changeUserRole(userId: string, newRole: AssignableRole) {
   const admin = await requireSuperAdmin();
+
+  if (!ASSIGNABLE_ROLES.includes(newRole)) {
+    throw new Error("Invalid role");
+  }
+
+  if (userId === admin.id) {
+    throw new Error("You cannot change your own role");
+  }
 
   const target = await db.user.findUnique({
     where: { id: userId },
@@ -217,54 +228,31 @@ export async function promoteToAdmin(userId: string) {
   });
 
   if (!target) throw new Error("User not found");
-  if (["admin", "superadmin", "developer"].includes(target.role)) {
-    throw new Error("User is already an admin");
+  if (target.role === "developer") {
+    throw new Error("Cannot change the role of a developer account");
   }
+  if (target.role === newRole) {
+    throw new Error(`User is already a ${newRole}`);
+  }
+
+  const previousRole = target.role;
 
   await db.user.update({
     where: { id: userId },
-    data: { role: "admin" },
+    data: { role: newRole },
   });
 
   await createAuditLog({
     adminId: admin.id,
-    action: "promote_admin",
+    action: "change_role",
     targetId: userId,
     targetType: "user",
-    details: { targetEmail: target.email, targetName: target.name },
-  });
-
-  revalidatePath("/admin/users");
-  revalidatePath("/admin");
-}
-
-export async function demoteFromAdmin(userId: string) {
-  const admin = await requireSuperAdmin();
-
-  const target = await db.user.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true, email: true, role: true },
-  });
-
-  if (!target) throw new Error("User not found");
-  if (target.role === "superadmin" || target.role === "developer") {
-    throw new Error("Cannot demote a superadmin or developer");
-  }
-  if (target.role !== "admin") {
-    throw new Error("User is not an admin");
-  }
-
-  await db.user.update({
-    where: { id: userId },
-    data: { role: "user" },
-  });
-
-  await createAuditLog({
-    adminId: admin.id,
-    action: "demote_admin",
-    targetId: userId,
-    targetType: "user",
-    details: { targetEmail: target.email, targetName: target.name },
+    details: {
+      targetEmail: target.email,
+      targetName: target.name,
+      previousRole,
+      newRole,
+    },
   });
 
   revalidatePath("/admin/users");

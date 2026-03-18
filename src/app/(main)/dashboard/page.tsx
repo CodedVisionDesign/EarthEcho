@@ -18,6 +18,8 @@ import {
   faAward,
   faBullseye,
 } from "@/lib/fontawesome";
+import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
+import { GettingStartedGuide } from "@/components/dashboard/GettingStartedGuide";
 import { ImpactSummaryCard } from "@/components/charts/ImpactSummaryCard";
 import { WeeklyTrendChart } from "@/components/charts/WeeklyTrendChart";
 import { TransportComparisonChart } from "@/components/charts/TransportComparisonChart";
@@ -166,8 +168,14 @@ export default async function DashboardPage() {
     .filter((b) => !b.earned && b.progress > 0)
     .sort((a, b) => b.progress - a.progress)[0] ?? null;
 
+  const isNewUser = !user.onboardingCompleted;
+  const hasNoActivities = recentActivities.length === 0;
+
   return (
     <div>
+      {/* Onboarding Modal for new users */}
+      {isNewUser && <OnboardingModal userName={user.name || "Explorer"} />}
+
       {/* Hero Header */}
       <FadeIn variant="fade-up">
         <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-forest via-forest/90 to-ocean p-6 text-white shadow-lg sm:p-8">
@@ -219,11 +227,20 @@ export default async function DashboardPage() {
         ))}
       </StaggerGroup>
 
+      {/* Getting Started Guide (shown to new users with no activities) */}
+      {hasNoActivities && (
+        <FadeIn className="mb-8" delay={0.1}>
+          <GettingStartedGuide userName={user.name || "Explorer"} />
+        </FadeIn>
+      )}
+
       {/* Charts Row */}
-      <FadeIn className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2" delay={0.15} cinematic>
-        <WeeklyTrendChart data={weeklyTrend} />
-        <TransportComparisonChart />
-      </FadeIn>
+      {!hasNoActivities && (
+        <FadeIn className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2" delay={0.15} cinematic>
+          <WeeklyTrendChart data={weeklyTrend} />
+          <TransportComparisonChart />
+        </FadeIn>
+      )}
 
       {/* Recent Activity + Next Badge Row */}
       <FadeIn className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2" delay={0.2}>

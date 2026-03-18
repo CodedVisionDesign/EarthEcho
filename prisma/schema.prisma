@@ -38,6 +38,9 @@ model User {
   resetToken       String?
   resetTokenExpiry DateTime?
 
+  // Onboarding
+  onboardingCompleted Boolean @default(false)
+
   // Gamification
   totalPoints  Int       @default(0)
   streakDays   Int       @default(0)

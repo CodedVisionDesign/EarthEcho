@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBan, faCircleCheck, faUserShield, faUser, faSpinner, faRotateRight } from "@/lib/fontawesome";
-import { banUser, unbanUser, promoteToAdmin, demoteFromAdmin, adminSendPasswordReset } from "@/lib/admin-actions";
+import { faBan, faCircleCheck, faUserShield, faSpinner, faRotateRight } from "@/lib/fontawesome";
+import { banUser, unbanUser, changeUserRole, adminSendPasswordReset } from "@/lib/admin-actions";
 
 interface UserActionsProps {
   userId: string;
@@ -50,26 +50,15 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
     });
   }
 
-  function handlePromote() {
-    if (!confirm(`Promote ${userName} to admin?`)) return;
+  function handleRoleChange(newRole: string) {
+    const labels: Record<string, string> = { user: "User", admin: "Admin", superadmin: "Super Admin" };
+    if (!confirm(`Change ${userName}'s role to ${labels[newRole] ?? newRole}?`)) return;
     startTransition(async () => {
       try {
-        await promoteToAdmin(userId);
+        await changeUserRole(userId, newRole as "user" | "admin" | "superadmin");
         router.refresh();
       } catch (e) {
-        alert(e instanceof Error ? e.message : "Failed to promote user");
-      }
-    });
-  }
-
-  function handleDemote() {
-    if (!confirm(`Remove admin role from ${userName}?`)) return;
-    startTransition(async () => {
-      try {
-        await demoteFromAdmin(userId);
-        router.refresh();
-      } catch (e) {
-        alert(e instanceof Error ? e.message : "Failed to demote user");
+        alert(e instanceof Error ? e.message : "Failed to change role");
       }
     });
   }
@@ -128,29 +117,21 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
           )
         )}
 
-        {/* Promote/Demote (superadmin only) */}
-        {isSuperAdmin && userRole !== "superadmin" && userRole !== "developer" && (
-          userRole === "admin" ? (
-            <button
-              type="button"
-              onClick={handleDemote}
+        {/* Role change (superadmin/developer only, not for developer accounts) */}
+        {isSuperAdmin && userRole !== "developer" && (
+          <div className="inline-flex items-center gap-1.5">
+            <FontAwesomeIcon icon={faUserShield} className="h-3 w-3 text-ocean" />
+            <select
+              value={userRole}
+              onChange={(e) => handleRoleChange(e.target.value)}
               disabled={isPending}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-slate transition-colors hover:bg-gray-200 disabled:opacity-50"
+              className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-charcoal transition-colors hover:border-gray-300 focus:border-ocean focus:outline-none focus:ring-1 focus:ring-ocean/20 disabled:opacity-50"
             >
-              <FontAwesomeIcon icon={faUser} className="h-3 w-3" />
-              Remove Admin
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handlePromote}
-              disabled={isPending}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-ocean/10 px-3 py-1.5 text-xs font-medium text-ocean transition-colors hover:bg-ocean/20 disabled:opacity-50"
-            >
-              <FontAwesomeIcon icon={faUserShield} className="h-3 w-3" />
-              Make Admin
-            </button>
-          )
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+              <option value="superadmin">Super Admin</option>
+            </select>
+          </div>
         )}
       </div>
 
