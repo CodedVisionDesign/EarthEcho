@@ -17,6 +17,37 @@ interface UserActionsProps {
   currentUserRole: string;
 }
 
+const BAN_REASON_TEMPLATES = [
+  {
+    label: "Spam / Self-Promotion",
+    reason: "Your account has been suspended for posting spam or unsolicited promotional content, which violates our Community Guidelines.",
+  },
+  {
+    label: "Harassment",
+    reason: "Your account has been suspended due to behaviour that constitutes harassment or bullying of other community members, in violation of our Community Guidelines.",
+  },
+  {
+    label: "Inappropriate Content",
+    reason: "Your account has been suspended for posting content that is inappropriate, offensive, or violates our Community Guidelines regarding acceptable content on the platform.",
+  },
+  {
+    label: "Impersonation",
+    reason: "Your account has been suspended for impersonating another individual or misrepresenting your identity, which is a violation of our Terms of Service.",
+  },
+  {
+    label: "Terms of Service Violation",
+    reason: "Your account has been suspended for a violation of our Terms of Service. Repeated or serious violations may result in permanent account termination.",
+  },
+  {
+    label: "Fraudulent Activity",
+    reason: "Your account has been suspended due to suspected fraudulent activity, including falsifying data or manipulating platform features in a deceptive manner.",
+  },
+  {
+    label: "Multiple Accounts",
+    reason: "Your account has been suspended for operating multiple accounts in violation of our one-account-per-user policy outlined in the Terms of Service.",
+  },
+];
+
 export function UserActions({ userId, userName, userRole, userEmail, hasPassword, resetPending, isBanned, currentUserRole }: UserActionsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -165,23 +196,50 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
       {/* Ban Modal */}
       {showBanModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
             <h3 className="mb-1 text-lg font-semibold text-charcoal">
               Ban {userName}
             </h3>
             <p className="mb-4 text-sm text-slate">
-              This will prevent the user from logging in. A notification email will be sent.
+              This will immediately suspend the user&apos;s account — they will be redirected to a suspension page and signed out. A notification email will be sent explaining the reason.
             </p>
+
+            {/* Reason Templates */}
+            <label className="mb-1.5 block text-sm font-medium text-charcoal">
+              Select a reason
+            </label>
+            <div className="mb-3 flex flex-wrap gap-1.5">
+              {BAN_REASON_TEMPLATES.map((template) => (
+                <button
+                  key={template.label}
+                  type="button"
+                  onClick={() => setBanReason(template.reason)}
+                  className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
+                    banReason === template.reason
+                      ? "bg-coral text-white"
+                      : "bg-gray-100 text-slate hover:bg-gray-200"
+                  }`}
+                >
+                  {template.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Editable reason */}
             <label className="mb-1 block text-sm font-medium text-charcoal">
-              Reason for ban
+              Reason for suspension
             </label>
             <textarea
               value={banReason}
               onChange={(e) => setBanReason(e.target.value)}
               rows={3}
-              placeholder="Describe the reason for this ban..."
-              className="mb-4 w-full rounded-lg border border-gray-200 p-3 text-sm text-charcoal placeholder:text-slate/50 focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest"
+              placeholder="Select a template above or write a custom reason..."
+              className="mb-1 w-full rounded-lg border border-gray-200 p-3 text-sm text-charcoal placeholder:text-slate/50 focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral/30"
             />
+            <p className="mb-4 text-[10px] text-slate">
+              This reason will be shown to the user in the suspension email and on the suspension page.
+            </p>
+
             <div className="flex justify-end gap-3">
               <button
                 type="button"
@@ -197,7 +255,7 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
                 className="inline-flex items-center gap-2 rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-coral/90 disabled:opacity-50"
               >
                 {isPending && <FontAwesomeIcon icon={faSpinner} className="h-3 w-3" spin />}
-                Confirm Ban
+                Confirm Suspension
               </button>
             </div>
           </div>

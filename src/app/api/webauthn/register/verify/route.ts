@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyRegistrationResponse } from "@simplewebauthn/server";
 import { auth } from "@/lib/auth";
+import { checkBanned } from "@/lib/auth-guard";
 import {
   getWebAuthnConfig,
   consumeChallenge,
@@ -12,6 +13,8 @@ export async function POST(request: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const banned = await checkBanned(session.user.id);
+  if (banned) return NextResponse.json({ error: banned }, { status: 403 });
 
   const body = await request.json();
   const { credential, deviceName } = body;

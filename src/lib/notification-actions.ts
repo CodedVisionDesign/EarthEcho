@@ -2,6 +2,7 @@
 
 import { db } from "./db";
 import { auth } from "./auth";
+import { checkBanned } from "./auth-guard";
 import { revalidatePath } from "next/cache";
 
 // ==========================================
@@ -87,6 +88,8 @@ export async function updateNotificationPreferences(input: {
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   await db.notificationPreference.upsert({
     where: { userId: session.user.id },
@@ -116,6 +119,8 @@ export async function subscribeToPush(subscription: {
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   // Upsert based on userId + endpoint
   const existing = await db.pushSubscription.findFirst({

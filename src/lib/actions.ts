@@ -2,6 +2,7 @@
 
 import { db } from "./db";
 import { auth } from "./auth";
+import { checkBanned } from "./auth-guard";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -37,6 +38,8 @@ export async function logActivity(input: {
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const parsed = activitySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -121,6 +124,8 @@ export async function updateActivity(input: {
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const parsed = updateActivitySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -156,6 +161,8 @@ export async function updateActivity(input: {
 export async function deleteActivity(id: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const existing = await db.activity.findUnique({ where: { id } });
   if (!existing || existing.userId !== session.user.id) return { error: "Activity not found" };
@@ -170,6 +177,8 @@ export async function deleteActivity(id: string) {
 export async function bulkDeleteActivities(ids: string[]) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
   if (ids.length === 0) return { error: "No activities selected" };
   if (ids.length > 100) return { error: "Cannot delete more than 100 at once" };
 
@@ -207,6 +216,8 @@ export async function bulkDeleteActivities(ids: string[]) {
 export async function joinChallenge(challengeId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const challenge = await db.challenge.findUnique({ where: { id: challengeId } });
   if (!challenge || !challenge.isActive) return { error: "Challenge not available" };
@@ -236,6 +247,8 @@ export async function createThread(input: {
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const parsed = threadSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -265,6 +278,8 @@ export async function createThread(input: {
 export async function createReply(input: { threadId: string; content: string; parentReplyId?: string }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const parsed = replySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -351,6 +366,8 @@ export async function createReply(input: { threadId: string; content: string; pa
 export async function toggleReaction(input: { replyId: string; type: string }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const parsed = reactionSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -405,6 +422,8 @@ export async function toggleReaction(input: { replyId: string; type: string }) {
 export async function editThread(input: { id: string; title?: string; content?: string }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const parsed = editThreadSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -429,6 +448,8 @@ export async function editThread(input: { id: string; title?: string; content?: 
 export async function deleteThread(id: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const thread = await db.thread.findUnique({ where: { id } });
   if (!thread) return { error: "Thread not found" };
@@ -443,6 +464,8 @@ export async function deleteThread(id: string) {
 export async function editReply(input: { id: string; content: string }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const parsed = editReplySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -463,6 +486,8 @@ export async function editReply(input: { id: string; content: string }) {
 export async function deleteReply(id: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const reply = await db.reply.findUnique({ where: { id } });
   if (!reply) return { error: "Reply not found" };
@@ -486,6 +511,8 @@ export async function updateProfile(input: {
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -554,6 +581,8 @@ export async function completeOnboarding(input: {
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
@@ -599,6 +628,8 @@ export async function completeOnboarding(input: {
 export async function completeTour() {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
@@ -730,6 +761,8 @@ export async function changePassword(input: {
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   if (!input.currentPassword || !input.newPassword) {
     return { error: "All fields are required" };
@@ -772,6 +805,8 @@ export async function createGuideComment(input: {
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+  const banned = await checkBanned(session.user.id);
+  if (banned) return { error: banned };
 
   const parsed = guideCommentSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };

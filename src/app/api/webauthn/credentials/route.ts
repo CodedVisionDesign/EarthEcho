@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { checkBanned } from "@/lib/auth-guard";
 
 export async function GET() {
   const session = await auth();
@@ -29,6 +30,8 @@ export async function DELETE(request: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const banned = await checkBanned(session.user.id);
+  if (banned) return NextResponse.json({ error: banned }, { status: 403 });
 
   const body = await request.json();
   const { credentialId } = body;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { checkBanned } from "@/lib/auth-guard";
 import { writeFile, unlink, mkdir } from "fs/promises";
 import path from "path";
 
@@ -12,6 +13,8 @@ export async function POST(request: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const banned = await checkBanned(session.user.id);
+  if (banned) return NextResponse.json({ error: banned }, { status: 403 });
 
   const formData = await request.formData();
   const file = formData.get("avatar") as File | null;
@@ -76,6 +79,8 @@ export async function DELETE() {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const banned = await checkBanned(session.user.id);
+  if (banned) return NextResponse.json({ error: banned }, { status: 403 });
 
   const currentUser = await db.user.findUnique({
     where: { id: session.user.id },

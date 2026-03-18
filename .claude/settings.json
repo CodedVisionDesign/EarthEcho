@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r .banned /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src --include=*.ts --include=*.tsx -C 3)",
+      "Bash(grep -r \"signOut\\\\|redirect\\\\|location.href\\\\|router.push\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src --include=*.ts --include=*.tsx -l)",
+      "Bash(grep -r \"getSession\\\\|useSession\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/app --include=*.tsx -n)",
+      "Bash(grep \"await auth\\(\\)\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/lib/*.ts)"
+    ]
+  }
+}

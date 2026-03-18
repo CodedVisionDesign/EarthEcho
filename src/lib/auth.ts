@@ -111,9 +111,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
+      const isBanned = !!(auth?.user as Record<string, unknown> | undefined)?.banned;
       const protectedPaths = ["/dashboard", "/track", "/challenges", "/leaderboard", "/badges", "/forum", "/resources", "/profile"];
       const isProtected = protectedPaths.some((path) => nextUrl.pathname.startsWith(path));
       const isAdminPath = nextUrl.pathname.startsWith("/admin");
+      const isBannedPage = nextUrl.pathname === "/banned";
+
+      // Allow banned users to reach the /banned page (and /api/auth for sign-out)
+      if (isBanned && !isBannedPage && !nextUrl.pathname.startsWith("/api/auth")) {
+        return Response.redirect(new URL("/banned", nextUrl));
+      }
 
       if ((isProtected || isAdminPath) && !isLoggedIn) {
         return Response.redirect(new URL("/login", nextUrl));
@@ -203,6 +210,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.role) {
         (session.user as unknown as Record<string, unknown>).role = token.role;
       }
+      // Expose ban status so middleware/authorized callback and client can react
+      if (token.banned) {
+        (session.user as unknown as Record<string, unknown>).banned = true;
+        if (token.banReason) {
+          (session.user as unknown as Record<string, unknown>).banReason = token.banReason;
+        }
+      }
       return session;
     },
     async jwt({ token, user }) {
@@ -213,14 +227,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.sub) {
         const dbUser = await db.user.findUnique({
           where: { id: token.sub },
-          select: { customImage: true, image: true, role: true, banned: true },
+          select: { customImage: true, image: true, role: true, banned: true, banReason: true },
         });
         if (dbUser) {
           token.picture = dbUser.customImage || dbUser.image || token.picture;
           token.role = dbUser.role;
-          // If user was banned after login, invalidate session
+          // If user was banned after login, propagate to session
           if (dbUser.banned) {
             token.banned = true;
+            token.banReason = dbUser.banReason ?? undefined;
+          } else {
+            // Clear ban flag if user was unbanned
+            delete token.banned;
+            delete token.banReason;
           }
         }
       }
