@@ -1,96 +1,169 @@
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faKey,
+  faCircleInfo,
+  faShieldHalved,
+  faGear,
+  faEnvelope,
+  faArrowLeft,
+} from "@/lib/fontawesome";
+import { Navigation } from "@/components/landing/Navigation";
+import { FooterSection } from "@/components/landing/FooterSection";
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 export const metadata = {
   title: "Cookie Policy | Earth Echo",
   description: "How Earth Echo uses cookies and similar technologies.",
 };
 
+function Section({
+  icon,
+  title,
+  children,
+}: {
+  icon: IconDefinition;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-6">
+      <div className="mb-3 flex items-center gap-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-forest/15">
+          <FontAwesomeIcon icon={icon} className="h-3.5 w-3.5 text-leaf" aria-hidden />
+        </div>
+        <h2 className="text-lg font-semibold text-white">{title}</h2>
+      </div>
+      <div className="pl-11 text-[15px] leading-relaxed text-white/60">{children}</div>
+    </div>
+  );
+}
+
 export default function CookiePolicyPage() {
   return (
-    <main className="min-h-screen bg-[#0a1628] text-gray-200 px-6 py-16 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold text-white mb-8">Cookie Policy</h1>
-      <p className="text-sm text-gray-400 mb-8">Last updated: March 17, 2026</p>
+    <div className="relative min-h-screen bg-charcoal">
+      <Navigation />
 
-      <section className="space-y-6 text-gray-300 leading-relaxed">
-        <div>
-          <h2 className="text-xl font-semibold text-white mb-2">1. What Are Cookies</h2>
-          <p>
-            Cookies are small text files stored on your device when you visit a website. They help
-            the site remember your preferences and activity.
-          </p>
-        </div>
-
-        <div>
-          <h2 className="text-xl font-semibold text-white mb-2">2. Cookies We Use</h2>
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-gray-400 border-b border-gray-700">
-                <tr>
-                  <th className="py-2 pr-4">Cookie</th>
-                  <th className="py-2 pr-4">Type</th>
-                  <th className="py-2 pr-4">Purpose</th>
-                  <th className="py-2">Duration</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-300">
-                <tr className="border-b border-gray-800">
-                  <td className="py-2 pr-4 font-mono text-xs">authjs.session-token</td>
-                  <td className="py-2 pr-4">Essential</td>
-                  <td className="py-2 pr-4">Keeps you signed in</td>
-                  <td className="py-2">Session / 30 days</td>
-                </tr>
-                <tr className="border-b border-gray-800">
-                  <td className="py-2 pr-4 font-mono text-xs">authjs.csrf-token</td>
-                  <td className="py-2 pr-4">Essential</td>
-                  <td className="py-2 pr-4">Protects against cross-site request forgery</td>
-                  <td className="py-2">Session</td>
-                </tr>
-                <tr className="border-b border-gray-800">
-                  <td className="py-2 pr-4 font-mono text-xs">authjs.callback-url</td>
-                  <td className="py-2 pr-4">Essential</td>
-                  <td className="py-2 pr-4">Redirects you after sign-in</td>
-                  <td className="py-2">Session</td>
-                </tr>
-              </tbody>
-            </table>
+      {/* Hero banner */}
+      <div className="relative overflow-hidden pt-36 pb-16">
+        <div className="absolute inset-0 bg-gradient-to-b from-forest/10 via-transparent to-transparent" />
+        <div className="relative mx-auto max-w-3xl px-6">
+          <Link
+            href="/"
+            className="mb-6 inline-flex items-center gap-2 text-sm text-white/40 transition-colors hover:text-white/70"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} className="h-3 w-3" aria-hidden />
+            Back to home
+          </Link>
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-forest/15">
+              <FontAwesomeIcon icon={faKey} className="h-5 w-5 text-leaf" aria-hidden />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Cookie Policy</h1>
+              <p className="mt-1 text-sm text-white/40">Last updated: March 17, 2026</p>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div>
-          <h2 className="text-xl font-semibold text-white mb-2">3. Third-Party Cookies</h2>
-          <p>
-            We do not use any third-party advertising, analytics, or tracking cookies. The only
-            third-party interaction occurs during OAuth sign-in with Google or Facebook, which is
-            handled server-side and does not set persistent third-party cookies on your device.
-          </p>
+      {/* Content */}
+      <main className="mx-auto max-w-3xl px-6 pb-24">
+        <div className="space-y-4">
+          <Section icon={faCircleInfo} title="1. What Are Cookies">
+            <p>
+              Cookies are small text files stored on your device when you visit a website. They help
+              the site remember your preferences and activity.
+            </p>
+          </Section>
+
+          <Section icon={faKey} title="2. Cookies We Use">
+            <div className="mt-2 overflow-x-auto rounded-lg border border-white/[0.06]">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className="border-b border-white/[0.06] bg-white/[0.02]">
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40">Cookie</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40">Type</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40">Purpose</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40">Duration</th>
+                  </tr>
+                </thead>
+                <tbody className="text-white/60">
+                  <tr className="border-b border-white/[0.04]">
+                    <td className="px-4 py-3 font-mono text-xs text-leaf/80">authjs.session-token</td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full bg-forest/15 px-2 py-0.5 text-xs font-medium text-leaf">Essential</span>
+                    </td>
+                    <td className="px-4 py-3">Keeps you signed in</td>
+                    <td className="px-4 py-3 text-white/40">Session / 30 days</td>
+                  </tr>
+                  <tr className="border-b border-white/[0.04]">
+                    <td className="px-4 py-3 font-mono text-xs text-leaf/80">authjs.csrf-token</td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full bg-forest/15 px-2 py-0.5 text-xs font-medium text-leaf">Essential</span>
+                    </td>
+                    <td className="px-4 py-3">Protects against cross-site request forgery</td>
+                    <td className="px-4 py-3 text-white/40">Session</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 font-mono text-xs text-leaf/80">authjs.callback-url</td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full bg-forest/15 px-2 py-0.5 text-xs font-medium text-leaf">Essential</span>
+                    </td>
+                    <td className="px-4 py-3">Redirects you after sign-in</td>
+                    <td className="px-4 py-3 text-white/40">Session</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </Section>
+
+          <Section icon={faShieldHalved} title="3. Third-Party Cookies">
+            <p>
+              We do not use any third-party advertising, analytics, or tracking cookies. The only
+              third-party interaction occurs during OAuth sign-in with Google or Facebook, which is
+              handled server-side and does not set persistent third-party cookies on your device.
+            </p>
+          </Section>
+
+          <Section icon={faGear} title="4. Managing Cookies">
+            <p>
+              Since we only use essential cookies required for authentication, disabling them will
+              prevent you from signing in. You can clear cookies at any time through your browser
+              settings.
+            </p>
+          </Section>
+
+          <Section icon={faEnvelope} title="5. Contact">
+            <p>
+              For questions about our use of cookies, contact us at{" "}
+              <a href="mailto:contact@codedvisiondesign.co.uk" className="text-leaf underline decoration-leaf/30 hover:text-leaf/80">
+                contact@codedvisiondesign.co.uk
+              </a>
+              .
+            </p>
+          </Section>
         </div>
 
-        <div>
-          <h2 className="text-xl font-semibold text-white mb-2">4. Managing Cookies</h2>
-          <p>
-            Since we only use essential cookies required for authentication, disabling them will
-            prevent you from signing in. You can clear cookies at any time through your browser
-            settings.
-          </p>
+        {/* Cross-links */}
+        <div className="mt-12 flex flex-wrap gap-3">
+          {[
+            { href: "/privacy", label: "Privacy Policy" },
+            { href: "/terms", label: "Terms of Service" },
+            { href: "/data-deletion", label: "Data Deletion" },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/50 transition-all hover:border-leaf/30 hover:text-leaf"
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
+      </main>
 
-        <div>
-          <h2 className="text-xl font-semibold text-white mb-2">5. Contact</h2>
-          <p>
-            For questions about our use of cookies, contact us at{" "}
-            <a href="mailto:contact@codedvisiondesign.co.uk" className="text-emerald-400 underline hover:text-emerald-300">
-              contact@codedvisiondesign.co.uk
-            </a>
-            .
-          </p>
-        </div>
-      </section>
-
-      <footer className="mt-16 pt-8 border-t border-gray-700 flex gap-6 text-sm text-gray-400">
-        <Link href="/privacy" className="hover:text-emerald-400">Privacy Policy</Link>
-        <Link href="/terms" className="hover:text-emerald-400">Terms of Service</Link>
-        <Link href="/data-deletion" className="hover:text-emerald-400">Data Deletion</Link>
-      </footer>
-    </main>
+      <FooterSection />
+    </div>
   );
 }

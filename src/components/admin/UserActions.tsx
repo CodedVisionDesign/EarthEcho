@@ -101,7 +101,7 @@ export function UserActions({ userId, userName, userRole, isBanned, currentUserR
         )}
 
         {/* Promote/Demote (superadmin only) */}
-        {isSuperAdmin && userRole !== "superadmin" && (
+        {isSuperAdmin && userRole !== "superadmin" && userRole !== "developer" && (
           userRole === "admin" ? (
             <button
               type="button"

@@ -239,6 +239,12 @@ export async function createThread(input: {
   const parsed = threadSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  // Check for auto-blocked moderation words
+  const banWords = await db.moderationWord.findMany({ where: { type: "ban" } });
+  const textToCheck = `${parsed.data.title} ${parsed.data.content}`.toLowerCase();
+  const blocked = banWords.find((w) => textToCheck.includes(w.word));
+  if (blocked) return { error: "Your post contains content that is not allowed." };
+
   const thread = await db.thread.create({
     data: {
       userId: session.user.id,
@@ -264,6 +270,12 @@ export async function createReply(input: { threadId: string; content: string }) 
 
   const thread = await db.thread.findUnique({ where: { id: parsed.data.threadId } });
   if (!thread) return { error: "Thread not found" };
+
+  // Check for auto-blocked moderation words
+  const banWords = await db.moderationWord.findMany({ where: { type: "ban" } });
+  if (banWords.some((w) => parsed.data.content.toLowerCase().includes(w.word))) {
+    return { error: "Your reply contains content that is not allowed." };
+  }
 
   await db.reply.create({
     data: {
@@ -537,6 +549,48 @@ export async function resetPassword(input: { token: string; password: string }) 
       data: { used: true },
     }),
   ]);
+
+  return { success: true };
+}
+
+// ==========================================
+// Change Password (logged-in users)
+// ==========================================
+
+export async function changePassword(input: {
+  currentPassword: string;
+  newPassword: string;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  if (!input.currentPassword || !input.newPassword) {
+    return { error: "All fields are required" };
+  }
+
+  if (input.newPassword.length < 8) {
+    return { error: "New password must be at least 8 characters" };
+  }
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { password: true },
+  });
+
+  if (!user?.password) {
+    return { error: "Your account uses social login and has no password to change. Set a password via the forgot password flow." };
+  }
+
+  const isValid = await bcrypt.compare(input.currentPassword, user.password);
+  if (!isValid) {
+    return { error: "Current password is incorrect" };
+  }
+
+  const hashedPassword = await bcrypt.hash(input.newPassword, 12);
+  await db.user.update({
+    where: { id: session.user.id },
+    data: { password: hashedPassword },
+  });
 
   return { success: true };
 }

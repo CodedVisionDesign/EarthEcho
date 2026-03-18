@@ -37,7 +37,7 @@ export default async function AdminAuditPage({
   const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
 
   // Superadmin sees all logs, regular admin sees only their own
-  const baseWhere = admin.role === "superadmin"
+  const baseWhere = (admin.role === "superadmin" || admin.role === "developer")
     ? {}
     : { adminId: admin.id };
 
@@ -73,7 +73,7 @@ export default async function AdminAuditPage({
           <div>
             <h1 className="text-xl font-bold text-charcoal">Audit Log</h1>
             <p className="text-sm text-slate">
-              {total} entries{admin.role !== "superadmin" ? " (your actions)" : ""}
+              {total} entries{admin.role !== "superadmin" && admin.role !== "developer" ? " (your actions)" : ""}
             </p>
           </div>
         </div>

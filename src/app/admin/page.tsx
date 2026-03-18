@@ -226,7 +226,7 @@ export default async function AdminDashboard() {
               Recent Activity
             </h2>
           </div>
-          {admin.role === "superadmin" && (
+          {(admin.role === "superadmin" || admin.role === "developer") && (
             <a
               href="/admin/audit"
               className="text-xs font-medium text-forest hover:underline"

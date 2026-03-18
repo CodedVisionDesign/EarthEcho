@@ -608,33 +608,59 @@ async function main() {
   console.log("  Seeded 4 threads, 8 replies, 5 reactions");
 
   // ==========================================
-  // Super Admin User
+  // Developer Account (full access)
   // ==========================================
-  const superAdminEmail = "contact@codedvisiondesign.co.uk";
-  const existingSuperAdmin = await prisma.user.findUnique({ where: { email: superAdminEmail } });
-  if (existingSuperAdmin) {
+  const developerEmail = "contact@codedvisiondesign.co.uk";
+  const existingDeveloper = await prisma.user.findUnique({ where: { email: developerEmail } });
+  if (existingDeveloper) {
     await prisma.user.update({
-      where: { email: superAdminEmail },
-      data: { role: "superadmin" },
+      where: { email: developerEmail },
+      data: { role: "developer" },
     });
-    console.log("  Updated existing super admin: " + superAdminEmail);
+    console.log("  Updated existing developer: " + developerEmail);
   } else {
-    const superAdminPassword = await bcrypt.hash("EarthEchoAdmin2024!", 12);
+    const developerPassword = await bcrypt.hash("EarthEchoAdmin2024!", 12);
     await prisma.user.create({
       data: {
-        name: "Super Admin",
-        email: superAdminEmail,
-        password: superAdminPassword,
-        role: "superadmin",
-        displayName: "Super Admin",
+        name: "Developer",
+        email: developerEmail,
+        password: developerPassword,
+        role: "developer",
+        displayName: "Developer",
       },
     });
-    console.log("  Created super admin: " + superAdminEmail);
+    console.log("  Created developer: " + developerEmail);
+  }
+
+  // ==========================================
+  // Admin Account
+  // ==========================================
+  const adminEmail = "contact@earthecho.co.uk";
+  const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
+  if (existingAdmin) {
+    await prisma.user.update({
+      where: { email: adminEmail },
+      data: { role: "admin" },
+    });
+    console.log("  Updated existing admin: " + adminEmail);
+  } else {
+    const adminPassword = await bcrypt.hash("EarthEchoAdmin2024!", 12);
+    await prisma.user.create({
+      data: {
+        name: "EarthEcho Admin",
+        email: adminEmail,
+        password: adminPassword,
+        role: "admin",
+        displayName: "EarthEcho Admin",
+      },
+    });
+    console.log("  Created admin: " + adminEmail);
   }
 
   console.log("\nSeeding complete!");
   console.log("\n  Demo login: demo@example.com / demo1234");
-  console.log("  Super admin: " + superAdminEmail + " / EarthEchoAdmin2024!");
+  console.log("  Developer: " + developerEmail + " / EarthEchoAdmin2024!");
+  console.log("  Admin: " + adminEmail + " / EarthEchoAdmin2024!");
 }
 
 main()

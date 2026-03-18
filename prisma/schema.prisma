@@ -26,7 +26,7 @@ model User {
   isPublic    Boolean  @default(true)
 
   // Role-based access control
-  role      String  @default("user") // "user", "admin", "superadmin"
+  role      String  @default("user") // "user", "admin", "superadmin", "developer"
 
   // Ban management
   banned    Boolean   @default(false)

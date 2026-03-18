@@ -9,12 +9,14 @@ import {
   faChartLine,
   faCircleInfo,
   faMedal,
+  faKey,
 } from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { getCurrentUser, getUserProfile, resolveUserImage } from "@/lib/queries";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
+import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { LinkedAccountsCard } from "@/components/profile/LinkedAccountsCard";
 import { ImpactSummaryCard } from "@/components/profile/ImpactSummaryCard";
@@ -253,6 +255,17 @@ export default async function ProfilePage() {
               bio={user.bio ?? ""}
               isPublic={user.isPublic}
             />
+          </Card>
+
+          {/* Change Password */}
+          <Card variant="default" className="p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <FontAwesomeIcon icon={faKey} className="h-4 w-4 text-forest" aria-hidden />
+              <h3 className="text-[15px] font-semibold text-charcoal">
+                Change Password
+              </h3>
+            </div>
+            <ChangePasswordForm hasPassword={!!user.password} />
           </Card>
         </div>
       </div>

@@ -11,6 +11,7 @@ import Image from "next/image";
 const PAGE_SIZE = 20;
 
 const ROLE_BADGE: Record<string, { variant: "success" | "info" | "warning" | "neutral" | "forest"; label: string }> = {
+  developer: { variant: "forest", label: "Developer" },
   superadmin: { variant: "warning", label: "Super Admin" },
   admin: { variant: "info", label: "Admin" },
   user: { variant: "neutral", label: "User" },
