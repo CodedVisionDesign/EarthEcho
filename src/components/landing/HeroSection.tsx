@@ -39,7 +39,7 @@ export function HeroSection() {
       </div>
 
       {/* Animated globe background */}
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[500px] h-[500px] lg:w-[700px] lg:h-[700px] opacity-80 pointer-events-none z-[2]">
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] lg:w-[700px] lg:h-[700px] opacity-80 pointer-events-none z-[2]">
         <AnimatedGlobe />
       </div>
 

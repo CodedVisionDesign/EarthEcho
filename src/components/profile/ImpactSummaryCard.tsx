@@ -64,7 +64,7 @@ export function ImpactSummaryCard({ categoryBreakdown }: ImpactSummaryCardProps)
               <div className="min-w-0 flex-1">
                 <div className="text-xs text-slate">{display.label}</div>
                 <div className="flex items-center gap-1.5 text-sm font-semibold text-charcoal">
-                  <span className="truncate">{human.comparison}</span>
+                  <span className="truncate" title={human.comparison}>{human.comparison}</span>
                   {human.tooltip && (
                     <Tooltip content={human.tooltip} position="bottom">
                       <FontAwesomeIcon

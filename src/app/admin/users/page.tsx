@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUsers, faSearch, faShieldHalved, faUserShield, faBan, faUserPlus, faEnvelopeOpenText, faArrowUp, faArrowDown } from "@/lib/fontawesome";
+import { faUsers, faSearch, faShieldHalved, faUserShield, faBan, faUserPlus, faEnvelopeOpenText, faArrowUp, faArrowDown, faGoogle, faFacebook, faEnvelope, faApple } from "@/lib/fontawesome";
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { requireAdmin } from "@/lib/admin";
@@ -16,6 +17,13 @@ const ROLE_BADGE: Record<string, { variant: "success" | "info" | "warning" | "ne
   superadmin: { variant: "warning", label: "Super Admin" },
   admin: { variant: "info", label: "Admin" },
   user: { variant: "neutral", label: "User" },
+};
+
+const PROVIDER_CONFIG: Record<string, { icon: IconDefinition; color: string; label: string }> = {
+  google:      { icon: faGoogle,   color: "text-[#4285F4]", label: "Google" },
+  facebook:    { icon: faFacebook, color: "text-[#1877F2]", label: "Facebook" },
+  apple:       { icon: faApple,    color: "text-charcoal",  label: "Apple" },
+  credentials: { icon: faEnvelope, color: "text-slate",     label: "Email" },
 };
 
 type RoleFilter = "all" | "admins" | "users";
@@ -63,7 +71,7 @@ export default async function AdminUsersPage({
     joined: { createdAt: sortOrder },
   };
 
-  const [users, total] = await Promise.all([
+  const [users, total, providerCounts, emailPasswordCount] = await Promise.all([
     db.user.findMany({
       where,
       select: {
@@ -79,12 +87,15 @@ export default async function AdminUsersPage({
         totalPoints: true,
         password: true,
         createdAt: true,
+        accounts: { select: { provider: true } },
       },
       orderBy: orderByMap[sortField],
       take: PAGE_SIZE,
       skip: (currentPage - 1) * PAGE_SIZE,
     }),
     db.user.count({ where }),
+    db.account.groupBy({ by: ["provider"], _count: { provider: true } }),
+    db.user.count({ where: { password: { not: null } } }),
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -116,6 +127,15 @@ export default async function AdminUsersPage({
   function getSortIcon(field: SortField) {
     if (sortField !== field) return null;
     return sortOrder === "asc" ? faArrowUp : faArrowDown;
+  }
+
+  function getUserProviders(user: { password: string | null; accounts: { provider: string }[] }) {
+    const providers: string[] = [];
+    if (user.password) providers.push("credentials");
+    for (const a of user.accounts) {
+      if (!providers.includes(a.provider)) providers.push(a.provider);
+    }
+    return providers;
   }
 
   return (
@@ -195,6 +215,7 @@ export default async function AdminUsersPage({
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50/50">
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">User</th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">Auth</th>
                 <th className="px-4 py-3">
                   <Link href={getSortUrl("role")} className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate/70 hover:text-forest transition-colors">
                     Role
@@ -221,6 +242,7 @@ export default async function AdminUsersPage({
               {users.map((user) => {
                 const role = ROLE_BADGE[user.role] ?? ROLE_BADGE.user;
                 const avatar = user.customImage || user.image;
+                const providers = getUserProviders(user);
                 return (
                   <tr key={user.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
                     <td className="px-4 py-3">
@@ -245,6 +267,23 @@ export default async function AdminUsersPage({
                           </p>
                           <p className="truncate text-xs text-slate">{user.email}</p>
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        {providers.map((p) => {
+                          const cfg = PROVIDER_CONFIG[p];
+                          if (!cfg) return null;
+                          return (
+                            <FontAwesomeIcon
+                              key={p}
+                              icon={cfg.icon}
+                              className={`h-3.5 w-3.5 ${cfg.color}`}
+                              title={cfg.label}
+                              aria-hidden
+                            />
+                          );
+                        })}
                       </div>
                     </td>
                     <td className="px-4 py-3">

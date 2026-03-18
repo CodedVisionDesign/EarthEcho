@@ -13,6 +13,7 @@ import {
   faRocket,
 } from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
+import { TourTriggerButton } from "@/components/tour/TourTriggerButton";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 interface GettingStartedGuideProps {
@@ -89,17 +90,22 @@ export function GettingStartedGuide({ userName }: GettingStartedGuideProps) {
     <Card variant="default" className="overflow-hidden p-0">
       {/* Header */}
       <div className="bg-gradient-to-r from-forest/5 via-ocean/5 to-leaf/5 px-6 py-5 sm:px-8 sm:py-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-forest to-ocean">
-            <FontAwesomeIcon icon={faRocket} className="h-4 w-4 text-white" aria-hidden />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-forest to-ocean">
+              <FontAwesomeIcon icon={faRocket} className="h-4 w-4 text-white" aria-hidden />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-charcoal">
+                Getting Started
+              </h2>
+              <p className="text-sm text-slate">
+                Here are some things to try first, {userName}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-charcoal">
-              Getting Started
-            </h2>
-            <p className="text-sm text-slate">
-              Here are some things to try first, {userName}
-            </p>
+          <div className="hidden md:block">
+            <TourTriggerButton />
           </div>
         </div>
       </div>

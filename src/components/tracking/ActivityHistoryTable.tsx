@@ -317,7 +317,7 @@ function MobileCardRow({ activity, unitLabel, isSelected, onToggle }: MobileCard
       </button>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="truncate font-medium capitalize text-charcoal">
+          <span className="truncate font-medium capitalize text-charcoal" title={activity.type.replace(/_/g, " ")}>
             {activity.type.replace(/_/g, " ")}
           </span>
           <span className="flex-shrink-0 text-sm font-semibold text-charcoal">
@@ -327,7 +327,7 @@ function MobileCardRow({ activity, unitLabel, isSelected, onToggle }: MobileCard
         <div className="mt-0.5 flex items-baseline justify-between gap-2 text-xs text-slate">
           <span>{formatDate(activity.date)}</span>
           {activity.note && (
-            <span className="truncate">{activity.note}</span>
+            <span className="truncate" title={activity.note}>{activity.note}</span>
           )}
         </div>
       </div>
@@ -506,7 +506,7 @@ export function ActivityHistoryTable({
                     <td className="whitespace-nowrap px-4 py-3 font-medium text-charcoal">
                       {activity.value} {unitLabel}
                     </td>
-                    <td className="max-w-[200px] truncate px-4 py-3 text-slate">
+                    <td className="max-w-[200px] truncate px-4 py-3 text-slate" title={activity.note || ""}>
                       {activity.note || "\u2014"}
                     </td>
                     <td className="px-4 py-3">

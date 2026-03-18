@@ -19,6 +19,8 @@ import {
   faBullseye,
 } from "@/lib/fontawesome";
 import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
+import { TourStarter } from "@/components/tour/TourStarter";
+import { TourTriggerButton } from "@/components/tour/TourTriggerButton";
 import { GettingStartedGuide } from "@/components/dashboard/GettingStartedGuide";
 import { ImpactSummaryCard } from "@/components/charts/ImpactSummaryCard";
 import { WeeklyTrendChart } from "@/components/charts/WeeklyTrendChart";
@@ -176,6 +178,12 @@ export default async function DashboardPage() {
       {/* Onboarding Modal for new users */}
       {isNewUser && <OnboardingModal userName={user.name || "Explorer"} />}
 
+      {/* Tour auto-start for users who completed onboarding but not the tour */}
+      <TourStarter
+        tourCompleted={user.tourCompleted}
+        autoStart={!isNewUser && !user.tourCompleted}
+      />
+
       {/* Hero Header */}
       <FadeIn variant="fade-up">
         <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-forest via-forest/90 to-ocean p-6 text-white shadow-lg sm:p-8">
@@ -201,7 +209,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap gap-2" data-tour-step="quick-actions">
             {QUICK_ACTIONS.map((action) => (
               <Button
                 key={action.label}
@@ -219,6 +227,7 @@ export default async function DashboardPage() {
       </FadeIn>
 
       {/* Impact Cards Grid */}
+      <div data-tour-step="impact-cards">
       <StaggerGroup className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" stagger={0.07}>
         {impactCards.map((card) => (
           <StaggerItem key={card.label}>
@@ -226,6 +235,7 @@ export default async function DashboardPage() {
           </StaggerItem>
         ))}
       </StaggerGroup>
+      </div>
 
       {/* Getting Started Guide (shown to new users with no activities) */}
       {hasNoActivities && (

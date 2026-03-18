@@ -593,6 +593,42 @@ export async function completeOnboarding(input: {
 }
 
 // ==========================================
+// Tour Actions
+// ==========================================
+
+export async function completeTour() {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, tourCompleted: true },
+  });
+
+  if (!user) return { error: "User not found" };
+  if (user.tourCompleted) return { success: true }; // Already awarded, no double points
+
+  await db.user.update({
+    where: { id: session.user.id },
+    data: {
+      tourCompleted: true,
+      totalPoints: { increment: 25 },
+    },
+  });
+
+  await db.pointTransaction.create({
+    data: {
+      userId: session.user.id,
+      points: 25,
+      reason: "Completed platform tour",
+    },
+  });
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+// ==========================================
 // Password Reset Actions (OWASP compliant)
 // ==========================================
 
