@@ -43,13 +43,15 @@ export function RunningTotalBanner({
           <div className="flex items-center gap-1.5 text-sm text-white/70">
             <span>{comparison}</span>
             {calculationTooltip && (
-              <Tooltip content={calculationTooltip} position="bottom">
-                <FontAwesomeIcon
-                  icon={faCircleInfo}
-                  className="h-3 w-3 cursor-help text-white/40 transition-colors hover:text-white/70"
-                  aria-hidden
-                />
-              </Tooltip>
+              <div className="group">
+                <Tooltip content={calculationTooltip} position="bottom">
+                  <FontAwesomeIcon
+                    icon={faCircleInfo}
+                    className="h-3 w-3 cursor-help text-white/40 transition-colors group-hover:text-white/70"
+                    aria-hidden
+                  />
+                </Tooltip>
+              </div>
             )}
           </div>
         </div>
