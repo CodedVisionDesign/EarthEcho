@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUsers, faSearch, faShieldHalved, faUserShield, faBan, faUserPlus, faEnvelopeOpenText } from "@/lib/fontawesome";
+import { faUsers, faSearch, faShieldHalved, faUserShield, faBan, faUserPlus, faEnvelopeOpenText, faArrowUp, faArrowDown } from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { requireAdmin } from "@/lib/admin";
@@ -19,17 +19,22 @@ const ROLE_BADGE: Record<string, { variant: "success" | "info" | "warning" | "ne
 };
 
 type RoleFilter = "all" | "admins" | "users";
+type SortField = "name" | "role" | "points" | "joined";
 
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string; role?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; role?: string; sort?: string; order?: string }>;
 }) {
   const admin = await requireAdmin();
-  const { q, page, role } = await searchParams;
+  const { q, page, role, sort, order } = await searchParams;
   const search = q?.trim() ?? "";
   const roleFilter = (["all", "admins", "users"].includes(role ?? "") ? role : "all") as RoleFilter;
   const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
+
+  // Determine sort field and order
+  const sortField = (["name", "role", "points", "joined"].includes(sort ?? "") ? sort : "joined") as SortField;
+  const sortOrder = (order === "asc" ? "asc" : "desc") as "asc" | "desc";
 
   const searchFilter = search
     ? {
@@ -50,6 +55,14 @@ export default async function AdminUsersPage({
 
   const where = { ...searchFilter, ...roleFilterWhere };
 
+  // Build orderBy based on sort field
+  const orderByMap: Record<SortField, Record<string, "asc" | "desc">> = {
+    name: { name: sortOrder },
+    role: { role: sortOrder },
+    points: { totalPoints: sortOrder },
+    joined: { createdAt: sortOrder },
+  };
+
   const [users, total] = await Promise.all([
     db.user.findMany({
       where,
@@ -67,7 +80,7 @@ export default async function AdminUsersPage({
         password: true,
         createdAt: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: orderByMap[sortField],
       take: PAGE_SIZE,
       skip: (currentPage - 1) * PAGE_SIZE,
     }),
@@ -77,16 +90,32 @@ export default async function AdminUsersPage({
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const isSuperAdmin = admin.role === "superadmin" || admin.role === "developer";
 
-  function buildUrl(overrides: { page?: number; role?: string; q?: string } = {}) {
+  function buildUrl(overrides: { page?: number; role?: string; q?: string; sort?: string; order?: string } = {}) {
     const params = new URLSearchParams();
     const s = overrides.q ?? search;
     const r = overrides.role ?? roleFilter;
     const p = overrides.page ?? undefined;
+    const st = overrides.sort ?? sort;
+    const o = overrides.order ?? order;
     if (s) params.set("q", s);
     if (r && r !== "all") params.set("role", r);
+    if (st) params.set("sort", st);
+    if (o) params.set("order", o);
     if (p && p > 1) params.set("page", String(p));
     const qs = params.toString();
     return `/admin/users${qs ? `?${qs}` : ""}`;
+  }
+
+  // Helper to get sort icon and toggle order
+  function getSortUrl(field: SortField) {
+    const isCurrentSort = sortField === field;
+    const newOrder = isCurrentSort && sortOrder === "desc" ? "asc" : "desc";
+    return buildUrl({ sort: field, order: newOrder, page: 1 });
+  }
+
+  function getSortIcon(field: SortField) {
+    if (sortField !== field) return null;
+    return sortOrder === "asc" ? faArrowUp : faArrowDown;
   }
 
   return (
@@ -166,10 +195,25 @@ export default async function AdminUsersPage({
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50/50">
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">User</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">Role</th>
+                <th className="px-4 py-3">
+                  <Link href={getSortUrl("role")} className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate/70 hover:text-forest transition-colors">
+                    Role
+                    {getSortIcon("role") && <FontAwesomeIcon icon={getSortIcon("role")!} className="h-3 w-3" />}
+                  </Link>
+                </th>
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">Status</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">Points</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">Joined</th>
+                <th className="px-4 py-3">
+                  <Link href={getSortUrl("points")} className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate/70 hover:text-forest transition-colors">
+                    Points
+                    {getSortIcon("points") && <FontAwesomeIcon icon={getSortIcon("points")!} className="h-3 w-3" />}
+                  </Link>
+                </th>
+                <th className="px-4 py-3">
+                  <Link href={getSortUrl("joined")} className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate/70 hover:text-forest transition-colors">
+                    Joined
+                    {getSortIcon("joined") && <FontAwesomeIcon icon={getSortIcon("joined")!} className="h-3 w-3" />}
+                  </Link>
+                </th>
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">Actions</th>
               </tr>
             </thead>
