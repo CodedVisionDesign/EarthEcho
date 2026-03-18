@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell, faXmark, faSpinner } from "@/lib/fontawesome";
 import { subscribeToPush } from "@/lib/notification-actions";
 
 const DISMISSED_KEY = "push-optin-dismissed";
 const DISMISS_DAYS = 14;
+/** Delay before showing the banner (ms) — avoids clashing with onboarding modal */
+const DISPLAY_DELAY_MS = 5000;
+/** Maximum time to wait for the server to save the subscription */
+const SUBSCRIBE_TIMEOUT_MS = 10000;
 
 /**
  * Shows a dismissible banner prompting the user to enable push notifications.
@@ -15,6 +19,7 @@ const DISMISS_DAYS = 14;
  * - User hasn't already subscribed to push
  * - User hasn't dismissed the banner recently
  * - Notification permission is not permanently denied
+ * - Onboarding modal is not visible (delayed render)
  */
 export function PushOptIn() {
   const [show, setShow] = useState(false);
@@ -34,18 +39,25 @@ export function PushOptIn() {
       if (Date.now() - dismissedAt < DISMISS_DAYS * 86400000) return;
     }
 
-    // Check if already subscribed
-    navigator.serviceWorker.ready.then((reg) => {
-      reg.pushManager.getSubscription().then((sub) => {
-        if (!sub) setShow(true);
+    // Delay display so it doesn't overlap with the onboarding modal
+    const timer = setTimeout(() => {
+      // Don't show if onboarding modal is currently visible
+      if (document.querySelector("[data-onboarding-modal]")) return;
+
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.pushManager.getSubscription().then((sub) => {
+          if (!sub) setShow(true);
+        });
       });
-    });
+    }, DISPLAY_DELAY_MS);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  function handleDismiss() {
+  const handleDismiss = useCallback(() => {
     localStorage.setItem(DISMISSED_KEY, Date.now().toString());
     setShow(false);
-  }
+  }, []);
 
   function handleEnable() {
     startTransition(async () => {
@@ -57,17 +69,23 @@ export function PushOptIn() {
         });
         const json = sub.toJSON();
         if (json.endpoint && json.keys) {
-          await subscribeToPush({
-            endpoint: json.endpoint,
-            keys: {
-              p256dh: json.keys.p256dh || "",
-              auth: json.keys.auth || "",
-            },
-          });
+          // Race the server call against a timeout so the spinner can't hang forever
+          await Promise.race([
+            subscribeToPush({
+              endpoint: json.endpoint,
+              keys: {
+                p256dh: json.keys.p256dh || "",
+                auth: json.keys.auth || "",
+              },
+            }),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Subscribe timeout")), SUBSCRIBE_TIMEOUT_MS)
+            ),
+          ]);
         }
         setShow(false);
       } catch {
-        // User denied or error — hide the prompt
+        // User denied, timeout, or server error — hide the prompt
         handleDismiss();
       }
     });

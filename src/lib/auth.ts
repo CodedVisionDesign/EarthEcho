@@ -142,19 +142,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (existingUser?.banned) return false;
 
           if (existingUser) {
-            // Check if this OAuth account is already linked
-            const existingAccount = await db.account.findFirst({
-              where: {
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-              },
-            });
-
-            // If no linked account exists, create the link now (before handleLoginOrRegister runs)
-            // This prevents OAuthAccountNotLinked errors for existing credentials users
-            if (!existingAccount) {
-              await db.account.create({
-                data: {
+            // Atomically link the OAuth account if not already linked.
+            // Uses upsert to avoid TOCTOU race conditions (e.g. double-clicks).
+            // Only runs for EXISTING users — new users are handled by PrismaAdapter.
+            try {
+              await db.account.upsert({
+                where: {
+                  provider_providerAccountId: {
+                    provider: account.provider,
+                    providerAccountId: account.providerAccountId,
+                  },
+                },
+                update: {
+                  access_token: account.access_token as string | undefined,
+                  refresh_token: account.refresh_token as string | undefined,
+                  expires_at: account.expires_at as number | undefined,
+                  id_token: account.id_token as string | undefined,
+                  token_type: account.token_type as string | undefined,
+                  scope: account.scope as string | undefined,
+                },
+                create: {
                   userId: existingUser.id,
                   type: account.type,
                   provider: account.provider,
@@ -167,6 +174,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   expires_at: account.expires_at as number | undefined,
                 },
               });
+            } catch (linkError) {
+              // Log but don't block sign-in — worst case the adapter handles it
+              console.warn("[AUTH] Account link upsert failed:", linkError);
             }
 
             // Refresh profile image for existing users
@@ -190,7 +200,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               }
             }
           }
-          // New user — adapter will create the record after signIn returns true
+          // New user — adapter will create both the user and account records
         } catch (error) {
           console.error("[AUTH] signIn callback error:", error);
           // Don't block sign-in if account linking or profile image update fails

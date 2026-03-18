@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSeedling,
@@ -37,7 +36,6 @@ const INTEREST_OPTIONS: { key: string; label: string; icon: IconDefinition; colo
 const TOTAL_STEPS = 4;
 
 export function OnboardingModal({ userName }: OnboardingModalProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState(0);
   const [interests, setInterests] = useState<string[]>([]);
@@ -70,12 +68,14 @@ export function OnboardingModal({ userName }: OnboardingModalProps) {
           interests,
         });
         setCompleted(true);
+        // Use hard navigation to guarantee fresh server data.
+        // router.refresh() can stall if the revalidation cache hasn't propagated.
         setTimeout(() => {
-          router.refresh();
+          window.location.replace("/dashboard");
         }, 2000);
       } catch {
-        // Fail silently, close modal
-        router.refresh();
+        // Force reload even on error to clear the modal
+        window.location.replace("/dashboard");
       }
     });
   }
@@ -84,17 +84,17 @@ export function OnboardingModal({ userName }: OnboardingModalProps) {
     startTransition(async () => {
       try {
         await completeOnboarding({});
-        router.refresh();
       } catch {
-        router.refresh();
+        // Continue to reload even on error
       }
+      window.location.replace("/dashboard");
     });
   }
 
   // Completion celebration screen
   if (completed) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div data-onboarding-modal className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div className="w-full max-w-md animate-scale-in rounded-3xl bg-white p-8 text-center shadow-2xl">
           <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-forest to-ocean">
             <FontAwesomeIcon icon={faCircleCheck} className="h-10 w-10 text-white" />
@@ -112,7 +112,7 @@ export function OnboardingModal({ userName }: OnboardingModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+    <div data-onboarding-modal className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
       <div className="w-full max-w-lg animate-slide-up sm:animate-scale-in rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl flex flex-col max-h-[85dvh] sm:max-h-[85vh]">
         {/* Progress bar */}
         <div className="shrink-0 px-6 pt-6 sm:px-8 sm:pt-8">
