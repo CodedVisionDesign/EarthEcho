@@ -14,6 +14,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Set default reply-to address
+transporter.set("from", {
+  name: "EarthEcho",
+  email: "contact@earthecho.co.uk",
+});
+
 export { transporter };
 
 // ---------------------------------------------------------------------------
@@ -47,20 +53,22 @@ function emailWrapper(content: string): string {
 
           <!-- Header -->
           <tr>
-            <td style="background-color:${BRAND_GREEN};padding:28px 32px;text-align:center;">
+            <td style="background-color:${BRAND_GREEN};padding:32px 32px;text-align:center;">
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
                 <tr>
-                  <td align="center" style="padding-bottom:8px;">
-                    <img src="${logoUrl}" alt="EarthEcho" width="48" height="48" style="display:block;width:48px;height:48px;border-radius:10px;" />
+                  <td align="center" style="padding-bottom:16px;">
+                    <div style="display:inline-block;background-color:#ffffff;padding:8px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                      <img src="${logoUrl}" alt="EarthEcho" width="48" height="48" style="display:block;width:48px;height:48px;border-radius:8px;" />
+                    </div>
                   </td>
                 </tr>
                 <tr>
-                  <td style="font-size:28px;color:#ffffff;font-weight:700;letter-spacing:1px;">
+                  <td style="font-size:32px;color:#ffffff;font-weight:800;letter-spacing:-0.5px;margin:0;">
                     EarthEcho
                   </td>
                 </tr>
                 <tr>
-                  <td style="font-size:13px;color:${BRAND_LIGHT};padding-top:4px;letter-spacing:0.5px;">
+                  <td style="font-size:14px;color:#ffffff;padding-top:8px;letter-spacing:0.3px;font-weight:500;opacity:0.95;">
                     Track Your Environmental Impact
                   </td>
                 </tr>
@@ -70,19 +78,21 @@ function emailWrapper(content: string): string {
 
           <!-- Body -->
           <tr>
-            <td style="padding:36px 32px;">
+            <td style="padding:40px 32px;font-size:15px;line-height:1.7;color:${TEXT_SECONDARY};">
               ${content}
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="background-color:${BRAND_LIGHT};padding:20px 32px;text-align:center;border-top:1px solid #B7E4C7;">
-              <p style="margin:0;font-size:13px;color:${TEXT_PRIMARY};">
+            <td style="background-color:${BRAND_LIGHT};padding:24px 32px;text-align:center;border-top:1px solid #B7E4C7;">
+              <p style="margin:0;font-size:14px;font-weight:600;color:${TEXT_PRIMARY};line-height:1.4;">
                 EarthEcho &mdash; Track Your Environmental Impact
               </p>
-              <p style="margin:8px 0 0;font-size:11px;color:${TEXT_SECONDARY};">
-                &copy; ${new Date().getFullYear()} EarthEcho. All rights reserved.
+              <p style="margin:8px 0 0;font-size:12px;color:${TEXT_SECONDARY};line-height:1.5;">
+                &copy; ${new Date().getFullYear()} EarthEcho. All rights reserved.<br />
+                <a href="https://earthecho.co.uk" style="color:${BRAND_GREEN};text-decoration:none;font-weight:500;">Visit our website</a> |
+                <a href="mailto:contact@earthecho.co.uk" style="color:${BRAND_GREEN};text-decoration:none;font-weight:500;">contact@earthecho.co.uk</a>
               </p>
             </td>
           </tr>
@@ -118,7 +128,8 @@ export async function sendEmail(
   html: string,
 ): Promise<void> {
   await transporter.sendMail({
-    from: `"EarthEcho" <${process.env.SMTP_USER}>`,
+    from: '"EarthEcho" <contact@earthecho.co.uk>',
+    replyTo: "contact@earthecho.co.uk",
     to,
     subject,
     html,
