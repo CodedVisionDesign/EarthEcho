@@ -17,6 +17,14 @@ export async function getAutoGenerateConfig() {
 
   const templates = await db.challengeTemplate.findMany({
     orderBy: { category: "asc" },
+    select: {
+      id: true,
+      category: true,
+      titlePattern: true,
+      description: true,
+      targetValue: true,
+      isEnabled: true,
+    },
   });
 
   return {

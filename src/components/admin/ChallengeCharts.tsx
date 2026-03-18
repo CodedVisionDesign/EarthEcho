@@ -3,6 +3,7 @@
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -39,7 +40,7 @@ export function ProgressDistributionChart({ data }: { data: ProgressBucket[] }) 
             <Tooltip contentStyle={TOOLTIP_STYLE} />
             <Bar dataKey="count" name="Participants" radius={[4, 4, 0, 0]}>
               {data.map((entry, i) => (
-                <rect key={i} fill={entry.fill} />
+                <Cell key={i} fill={entry.fill} />
               ))}
             </Bar>
           </BarChart>
