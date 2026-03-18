@@ -129,8 +129,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async signIn({ user, account, profile }) {
       // For OAuth providers, check if user already exists by email
-      // (user.id may not correspond to a DB record for first-time OAuth sign-ins)
-      if (account && account.provider !== "credentials" && user.email) {
+      // and pre-link the account if needed (workaround for allowDangerousEmailAccountLinking
+      // not being respected in next-auth v5 beta)
+      if (account && account.provider !== "credentials" && account.provider !== "passkey" && user.email) {
         try {
           const existingUser = await db.user.findUnique({
             where: { email: user.email },
@@ -140,8 +141,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Block banned users
           if (existingUser?.banned) return false;
 
-          // Refresh profile image for existing users
           if (existingUser) {
+            // Check if this OAuth account is already linked
+            const existingAccount = await db.account.findFirst({
+              where: {
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            });
+
+            // If no linked account exists, create the link now (before handleLoginOrRegister runs)
+            // This prevents OAuthAccountNotLinked errors for existing credentials users
+            if (!existingAccount) {
+              await db.account.create({
+                data: {
+                  userId: existingUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  access_token: account.access_token as string | undefined,
+                  token_type: account.token_type as string | undefined,
+                  scope: account.scope as string | undefined,
+                  id_token: account.id_token as string | undefined,
+                  refresh_token: account.refresh_token as string | undefined,
+                  expires_at: account.expires_at as number | undefined,
+                },
+              });
+            }
+
+            // Refresh profile image for existing users
             if (account.provider === "google" && profile?.picture) {
               await db.user.update({
                 where: { id: existingUser.id },
@@ -165,7 +193,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // New user — adapter will create the record after signIn returns true
         } catch (error) {
           console.error("[AUTH] signIn callback error:", error);
-          // Don't block sign-in if profile image update fails
+          // Don't block sign-in if account linking or profile image update fails
         }
       }
 

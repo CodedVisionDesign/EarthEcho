@@ -9,7 +9,13 @@
       "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src -path *reset-password* -o -path *forgot-password*)",
       "Bash(grep -r \"requestPasswordReset\\\\|adminSendPasswordReset\\\\|resetPassword\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src --include=*.ts --include=*.tsx -l)",
       "Bash(node -e \"const d=require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\);const v=JSON.parse\\(d\\);console.log\\(v.filter\\(x=>x.startsWith\\(''''5.''''\\)\\).slice\\(-10\\).join\\(''''\\\\n''''\\)\\)\")",
-      "Bash(npm view:*)"
+      "Bash(npm view:*)",
+      "Bash(find c:/xampp/htdocs/CarbonFootprint/DashboardStudyProject/node_modules -path */@auth/core/package.json -exec grep -l version {})",
+      "Bash(grep '\"\"version\"\"' \"c:/xampp/htdocs/CarbonFootprint/DashboardStudyProject/node_modules/@auth/core/package.json\")",
+      "Bash(grep '\"\"version\"\"' \"c:/xampp/htdocs/CarbonFootprint/DashboardStudyProject/node_modules/@auth/prisma-adapter/node_modules/@auth/core/package.json\")",
+      "Bash(python -c \"import json,sys; versions=[v for v in json.load\\(sys.stdin\\) if ''''beta'''' in v]; print\\(''''\\\\n''''.join\\(versions[-10:]\\)\\)\")",
+      "Bash(node -e \"const d=[];process.stdin.on\\(''''data'''',c=>d.push\\(c\\)\\);process.stdin.on\\(''''end'''',\\(\\)=>{const v=JSON.parse\\(d.join\\(''''''''\\)\\).filter\\(v=>v.includes\\(''''beta''''\\)\\);console.log\\(v.slice\\(-10\\).join\\(''''\\\\n''''\\)\\)}\\)\")",
+      "Bash(node -e \"const d=[];process.stdin.on\\(''''data'''',c=>d.push\\(c\\)\\);process.stdin.on\\(''''end'''',\\(\\)=>{const lock=JSON.parse\\(d.join\\(''''''''\\)\\);const nextAuth=lock.packages?.[''''node_modules/next-auth'''']||lock.dependencies?.[''''next-auth''''];console.log\\(''''next-auth:'''', JSON.stringify\\(nextAuth,null,2\\)\\)}\\)\")"
     ]
   }
 }
