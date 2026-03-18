@@ -141,6 +141,7 @@ model Activity {
 
   @@index([userId, category])
   @@index([userId, date])
+  @@index([date, category])
   @@map("activities")
 }
 
@@ -466,4 +467,35 @@ model PasswordResetToken {
 
   @@index([email])
   @@map("password_reset_tokens")
+}
+
+// ==========================================
+// App Settings (key-value store)
+// ==========================================
+
+model AppSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("app_settings")
+}
+
+// ==========================================
+// Challenge Templates (auto-generation)
+// ==========================================
+
+model ChallengeTemplate {
+  id           String  @id @default(cuid())
+  category     String  @unique
+  titlePattern String
+  description  String  @db.Text
+  targetValue  Float
+  isEnabled    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("challenge_templates")
 }

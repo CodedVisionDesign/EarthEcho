@@ -16,6 +16,11 @@ import { db } from "@/lib/db";
 import { CATEGORIES, type ActivityCategory } from "@/lib/categories";
 import { ChallengeActions } from "@/components/admin/ChallengeActions";
 import { ChallengeForm } from "@/components/admin/ChallengeForm";
+import {
+  ProgressDistributionChart,
+  DailyJoinRateChart,
+  ProgressTrendChart,
+} from "@/components/admin/ChallengeCharts";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -37,19 +42,27 @@ export default async function AdminChallengeDetailPage({
   const { id } = await params;
   const isSuperAdmin = admin.role === "superadmin" || admin.role === "developer";
 
-  const challenge = await db.challenge.findUnique({
-    where: { id },
-    include: {
-      _count: { select: { participants: true } },
-      participants: {
-        include: { user: { select: { id: true, name: true, displayName: true, image: true } } },
-        orderBy: { progress: "desc" },
-        take: 20,
+  // Fetch challenge with all participants for charts, and top 20 for leaderboard
+  const [challengeData, allParticipants] = await Promise.all([
+    db.challenge.findUnique({
+      where: { id },
+      include: {
+        _count: { select: { participants: true } },
+        participants: {
+          include: { user: { select: { id: true, name: true, displayName: true, image: true } } },
+          orderBy: { progress: "desc" },
+          take: 20,
+        },
       },
-    },
-  });
+    }),
+    db.challengeParticipant.findMany({
+      where: { challengeId: id },
+      select: { progress: true, joinedAt: true },
+    }),
+  ]);
 
-  if (!challenge) notFound();
+  if (!challengeData) notFound();
+  const challenge = challengeData;
 
   const cat = CATEGORIES[challenge.category as ActivityCategory];
   const statusBadge = STATUS_BADGE[challenge.status] ?? STATUS_BADGE.DRAFT;
@@ -58,18 +71,66 @@ export default async function AdminChallengeDetailPage({
 
   // Analytics
   const totalParticipants = challenge._count.participants;
-  const completedCount = challenge.participants.filter(
+  const completedCount = allParticipants.filter(
     (p) => p.progress >= challenge.targetValue,
   ).length;
   const completionRate = totalParticipants > 0 ? Math.round((completedCount / totalParticipants) * 100) : 0;
   const avgProgress = totalParticipants > 0
     ? Math.round(
-        challenge.participants.reduce(
+        allParticipants.reduce(
           (sum, p) => sum + Math.min((p.progress / challenge.targetValue) * 100, 100),
           0,
         ) / totalParticipants,
       )
     : 0;
+
+  // Chart data: Progress Distribution
+  const bucketFills = ["#E5E7EB", "#52B788", "#2D6A4F", "#1B4965"];
+  const progressBuckets = [
+    { range: "0-25%", count: 0, fill: bucketFills[0] },
+    { range: "25-50%", count: 0, fill: bucketFills[1] },
+    { range: "50-75%", count: 0, fill: bucketFills[2] },
+    { range: "75-100%", count: 0, fill: bucketFills[3] },
+  ];
+  for (const p of allParticipants) {
+    const pct = Math.min(100, (p.progress / challenge.targetValue) * 100);
+    if (pct < 25) progressBuckets[0].count++;
+    else if (pct < 50) progressBuckets[1].count++;
+    else if (pct < 75) progressBuckets[2].count++;
+    else progressBuckets[3].count++;
+  }
+
+  // Chart data: Daily Join Rate
+  const joinMap = new Map<string, number>();
+  for (const p of allParticipants) {
+    const key = p.joinedAt.toISOString().split("T")[0];
+    joinMap.set(key, (joinMap.get(key) ?? 0) + 1);
+  }
+  const joinRateData = Array.from(joinMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, joins]) => ({
+      date: new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
+      joins,
+    }));
+
+  // Chart data: Progress Trend (simulated as cumulative avg at join milestones)
+  const sortedByJoin = [...allParticipants].sort(
+    (a, b) => a.joinedAt.getTime() - b.joinedAt.getTime(),
+  );
+  const progressTrendData: { date: string; avgProgress: number }[] = [];
+  let runningSum = 0;
+  for (let i = 0; i < sortedByJoin.length; i++) {
+    runningSum += Math.min(100, (sortedByJoin[i].progress / challenge.targetValue) * 100);
+    // Sample at intervals to keep chart readable
+    if (sortedByJoin.length <= 20 || i % Math.max(1, Math.floor(sortedByJoin.length / 20)) === 0 || i === sortedByJoin.length - 1) {
+      progressTrendData.push({
+        date: sortedByJoin[i].joinedAt.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
+        avgProgress: Math.round(runningSum / (i + 1)),
+      });
+    }
+  }
+
+  const showCharts = totalParticipants > 0 && ["ACTIVE", "COMPLETED"].includes(challenge.status);
 
   // Fetch creator/approver names
   const [creator, approver] = await Promise.all([
@@ -195,6 +256,15 @@ export default async function AdminChallengeDetailPage({
           </div>
         </Card>
       </div>
+
+      {/* Challenge Charts */}
+      {showCharts && (
+        <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <ProgressDistributionChart data={progressBuckets} />
+          <DailyJoinRateChart data={joinRateData} />
+          <ProgressTrendChart data={progressTrendData} />
+        </div>
+      )}
 
       {/* Participant Leaderboard */}
       {totalParticipants > 0 && (

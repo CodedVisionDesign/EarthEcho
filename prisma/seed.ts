@@ -711,6 +711,67 @@ async function main() {
   }
   console.log(`  Seeded ${moderationWords.length} moderation words`);
 
+  // ==========================================
+  // App Settings
+  // ==========================================
+  await prisma.appSetting.upsert({
+    where: { key: "challenge_auto_generate_enabled" },
+    update: {},
+    create: { key: "challenge_auto_generate_enabled", value: "false" },
+  });
+  console.log("  Seeded app settings");
+
+  // ==========================================
+  // Challenge Templates (auto-generation)
+  // ==========================================
+  const challengeTemplates = [
+    {
+      category: "WATER",
+      titlePattern: "{month} Water Saver Sprint",
+      description: "Save {target} litres of water this month through mindful daily habits — shorter showers, full loads, and reusable bottles.",
+      targetValue: 500,
+    },
+    {
+      category: "CARBON",
+      titlePattern: "{month} Carbon Crunch",
+      description: "Cut {target} kg of CO₂ this month through diet, energy, and lifestyle changes.",
+      targetValue: 25,
+    },
+    {
+      category: "PLASTIC",
+      titlePattern: "Plastic-Free {month}",
+      description: "Avoid {target} single-use plastic items this month. Every bag, bottle, and straw counts!",
+      targetValue: 100,
+    },
+    {
+      category: "RECYCLING",
+      titlePattern: "{month} Recycling Rally",
+      description: "Recycle {target} kg of materials this month. Sort, separate, and recycle!",
+      targetValue: 50,
+    },
+    {
+      category: "TRANSPORT",
+      titlePattern: "Car-Free {month}",
+      description: "Use alternatives to driving for {target} work days this month. Walk, cycle, or take public transport!",
+      targetValue: 5,
+    },
+    {
+      category: "FASHION",
+      titlePattern: "{month} Secondhand Style",
+      description: "Buy {target} secondhand items instead of new. Swap, thrift, or repair!",
+      targetValue: 5,
+    },
+  ];
+
+  for (const template of challengeTemplates) {
+    await prisma.challengeTemplate.upsert({
+      where: { category: template.category },
+      update: {},
+      create: template,
+    });
+  }
+  console.log(`  Seeded ${challengeTemplates.length} challenge templates`);
+
   console.log("\nSeeding complete!");
   console.log("\n  Demo login: demo@example.com / demo1234");
   console.log("  Developer: " + developerEmail + " / EarthEchoAdmin2024!");

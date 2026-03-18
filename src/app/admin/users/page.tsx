@@ -208,6 +208,23 @@ export default async function AdminUsersPage({
         </form>
       </div>
 
+      {/* Provider Breakdown */}
+      <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-slate">
+        {Object.entries(PROVIDER_CONFIG).map(([key, cfg]) => {
+          const count =
+            key === "credentials"
+              ? emailPasswordCount
+              : providerCounts.find((p) => p.provider === key)?._count.provider ?? 0;
+          if (count === 0) return null;
+          return (
+            <span key={key} className="flex items-center gap-1.5">
+              <FontAwesomeIcon icon={cfg.icon} className={`h-3 w-3 ${cfg.color}`} aria-hidden />
+              {count} {cfg.label}
+            </span>
+          );
+        })}
+      </div>
+
       {/* Desktop Table */}
       <Card variant="default" className="hidden overflow-hidden md:block">
         <div className="overflow-x-auto">

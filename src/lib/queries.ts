@@ -588,3 +588,148 @@ export async function getRecentActivities(userId: string, limit: number = 5) {
     take: limit,
   });
 }
+
+// ==========================================
+// Community Analytics Queries
+// ==========================================
+
+export async function getCommunityTotalsByCategory(from: Date, to: Date) {
+  const results = await db.activity.groupBy({
+    by: ["category"],
+    where: { date: { gte: from, lte: to } },
+    _sum: { value: true },
+    _count: true,
+  });
+
+  return results.map((r) => ({
+    category: r.category,
+    total: r._sum.value ?? 0,
+    count: r._count,
+  }));
+}
+
+export async function getCommunityImpactOverTime(
+  from: Date,
+  to: Date,
+  category?: string,
+) {
+  const activities = await db.activity.findMany({
+    where: {
+      date: { gte: from, lte: to },
+      ...(category ? { category } : {}),
+    },
+    select: { date: true, category: true, value: true },
+    orderBy: { date: "asc" },
+  });
+
+  // Bucket by day
+  const dayMap = new Map<string, Record<string, number>>();
+  for (const a of activities) {
+    const key = a.date.toISOString().split("T")[0];
+    if (!dayMap.has(key)) dayMap.set(key, {});
+    const bucket = dayMap.get(key)!;
+    bucket[a.category] = (bucket[a.category] ?? 0) + a.value;
+  }
+
+  return Array.from(dayMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, cats]) => ({ date, ...cats }));
+}
+
+export async function getTopContributors(
+  from: Date,
+  to: Date,
+  category?: string,
+  limit: number = 10,
+) {
+  const grouped = await db.activity.groupBy({
+    by: ["userId"],
+    where: {
+      date: { gte: from, lte: to },
+      ...(category ? { category } : {}),
+    },
+    _sum: { value: true },
+    orderBy: { _sum: { value: "desc" } },
+    take: limit,
+  });
+
+  const userIds = grouped.map((g) => g.userId);
+  const users = await db.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, name: true, displayName: true },
+  });
+  const userMap = new Map(users.map((u) => [u.id, u]));
+
+  return grouped.map((g) => {
+    const user = userMap.get(g.userId);
+    return {
+      userId: g.userId,
+      name: user?.displayName || user?.name || "Unknown",
+      total: g._sum.value ?? 0,
+    };
+  });
+}
+
+export async function getActivityTypeBreakdown(
+  from: Date,
+  to: Date,
+  category: string,
+) {
+  const results = await db.activity.groupBy({
+    by: ["type"],
+    where: { date: { gte: from, lte: to }, category },
+    _sum: { value: true },
+    _count: true,
+    orderBy: { _sum: { value: "desc" } },
+  });
+
+  return results.map((r) => ({
+    type: r.type,
+    count: r._count,
+    total: r._sum.value ?? 0,
+  }));
+}
+
+export async function getTransportModeComparison(from: Date, to: Date) {
+  const results = await db.activity.groupBy({
+    by: ["transportMode"],
+    where: {
+      date: { gte: from, lte: to },
+      category: "TRANSPORT",
+      transportMode: { not: null },
+    },
+    _sum: { co2Saved: true, distanceKm: true },
+    orderBy: { _sum: { co2Saved: "desc" } },
+  });
+
+  return results.map((r) => ({
+    mode: r.transportMode ?? "unknown",
+    co2Saved: Math.round((r._sum.co2Saved ?? 0) * 100) / 100,
+    totalKm: Math.round((r._sum.distanceKm ?? 0) * 100) / 100,
+  }));
+}
+
+export async function getActivityGrowthTrend(
+  from: Date,
+  to: Date,
+  category?: string,
+) {
+  const activities = await db.activity.findMany({
+    where: {
+      date: { gte: from, lte: to },
+      ...(category ? { category } : {}),
+    },
+    select: { date: true },
+    orderBy: { date: "asc" },
+  });
+
+  const dayMap = new Map<string, number>();
+  for (const a of activities) {
+    const key = a.date.toISOString().split("T")[0];
+    dayMap.set(key, (dayMap.get(key) ?? 0) + 1);
+  }
+
+  return Array.from(dayMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, count]) => ({ date, count }));
+}

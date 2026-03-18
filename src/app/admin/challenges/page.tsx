@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/Badge";
 import { requireAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { CATEGORIES, type ActivityCategory } from "@/lib/categories";
+import { AutoGenerateConfig } from "@/components/admin/AutoGenerateConfig";
+import { getAutoGenerateConfig } from "@/lib/auto-challenge-actions";
 import Link from "next/link";
 
 const PAGE_SIZE = 20;
@@ -90,6 +92,9 @@ export default async function AdminChallengesPage({
           </Link>
         </div>
       </div>
+
+      {/* Auto-Generate Config (superadmin only) */}
+      {isSuperAdmin && <AutoGenerateConfigWrapper />}
 
       {/* Status Filter Tabs */}
       <div className="mb-4 flex flex-wrap items-center gap-1.5">
@@ -240,5 +245,15 @@ export default async function AdminChallengesPage({
         </div>
       )}
     </div>
+  );
+}
+
+async function AutoGenerateConfigWrapper() {
+  const config = await getAutoGenerateConfig();
+  return (
+    <AutoGenerateConfig
+      globalEnabled={config.globalEnabled}
+      templates={config.templates}
+    />
   );
 }
