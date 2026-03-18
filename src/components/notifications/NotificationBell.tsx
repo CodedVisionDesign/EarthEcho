@@ -133,7 +133,7 @@ export function NotificationBell() {
 
       {/* Notification panel */}
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5 sm:w-96">
+        <div className="absolute right-0 top-full z-50 mt-2 w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5 sm:max-w-sm md:max-w-md">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
             <h3 className="text-sm font-semibold text-charcoal">Notifications</h3>
