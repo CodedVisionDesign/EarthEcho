@@ -19,6 +19,7 @@ import {
 } from "./validations";
 import { calculateCO2Saved } from "./metrics/transport";
 import { sendWelcomeEmail, sendPasswordResetEmail } from "./email";
+import { createNotification, notifyMany } from "./notifications";
 
 // ==========================================
 // Activity Actions
@@ -261,14 +262,17 @@ export async function createThread(input: {
   return { success: true, threadId: thread.id, newBadge };
 }
 
-export async function createReply(input: { threadId: string; content: string }) {
+export async function createReply(input: { threadId: string; content: string; parentReplyId?: string }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
 
   const parsed = replySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const thread = await db.thread.findUnique({ where: { id: parsed.data.threadId } });
+  const thread = await db.thread.findUnique({
+    where: { id: parsed.data.threadId },
+    select: { id: true, userId: true, title: true },
+  });
   if (!thread) return { error: "Thread not found" };
 
   // Check for auto-blocked moderation words
@@ -277,16 +281,68 @@ export async function createReply(input: { threadId: string; content: string }) 
     return { error: "Your reply contains content that is not allowed." };
   }
 
-  await db.reply.create({
+  const reply = await db.reply.create({
     data: {
       threadId: parsed.data.threadId,
       userId: session.user.id,
       content: parsed.data.content,
+      parentReplyId: parsed.data.parentReplyId || null,
     },
   });
 
   // Check for forum-related badges
   await checkAndAwardBadges(session.user.id);
+
+  // --- Notifications (non-blocking) ---
+  const replierName = session.user.name || "Someone";
+  const threadHref = `/forum/${thread.id}`;
+
+  // 1. Notify thread author (if not the replier)
+  if (thread.userId !== session.user.id) {
+    createNotification({
+      userId: thread.userId,
+      type: "reply",
+      title: "New reply to your thread",
+      body: `${replierName} replied to "${thread.title}"`,
+      href: threadHref,
+    }).catch(() => {});
+  }
+
+  // 2. If this is a nested reply, notify the parent reply author
+  if (parsed.data.parentReplyId) {
+    const parentReply = await db.reply.findUnique({
+      where: { id: parsed.data.parentReplyId },
+      select: { userId: true },
+    });
+    if (parentReply && parentReply.userId !== session.user.id && parentReply.userId !== thread.userId) {
+      createNotification({
+        userId: parentReply.userId,
+        type: "reply",
+        title: "Someone replied to your comment",
+        body: `${replierName} replied to your comment in "${thread.title}"`,
+        href: threadHref,
+      }).catch(() => {});
+    }
+  }
+
+  // 3. Notify other thread followers (people who previously replied)
+  const previousRepliers = await db.reply.findMany({
+    where: { threadId: thread.id, id: { not: reply.id } },
+    select: { userId: true },
+    distinct: ["userId"],
+  });
+  const followerIds = previousRepliers
+    .map((r) => r.userId)
+    .filter((id) => id !== thread.userId); // thread author already notified above
+
+  if (followerIds.length > 0) {
+    notifyMany(followerIds, session.user.id, {
+      type: "thread_follow",
+      title: "New activity in a thread you follow",
+      body: `${replierName} replied in "${thread.title}"`,
+      href: threadHref,
+    }).catch(() => {});
+  }
 
   revalidatePath(`/forum/${parsed.data.threadId}`);
   return { success: true };
@@ -321,11 +377,27 @@ export async function toggleReaction(input: { replyId: string; type: string }) {
     });
   }
 
-  const reply = await db.reply.findUnique({ where: { id: parsed.data.replyId } });
+  const reply = await db.reply.findUnique({
+    where: { id: parsed.data.replyId },
+    include: { thread: { select: { title: true } } },
+  });
   if (reply) {
     // Check badges for the reply author (reactions_received)
     await checkAndAwardBadges(reply.userId);
     revalidatePath(`/forum/${reply.threadId}`);
+
+    // Notify reply author about the reaction (only when adding, not removing)
+    if (!existing && reply.userId !== session.user.id) {
+      const emojiMap: Record<string, string> = { cheer: "👏", helpful: "💡", inspiring: "⭐" };
+      const emoji = emojiMap[parsed.data.type] || "";
+      createNotification({
+        userId: reply.userId,
+        type: "reaction",
+        title: "Someone reacted to your reply",
+        body: `${session.user.name || "Someone"} reacted ${emoji} to your reply in "${reply.thread.title}"`,
+        href: `/forum/${reply.threadId}`,
+      }).catch(() => {});
+    }
   }
   return { success: true };
 }
@@ -447,7 +519,13 @@ export async function registerUser(input: {
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const existing = await db.user.findUnique({ where: { email: parsed.data.email } });
-  if (existing) return { error: "An account with this email already exists" };
+  if (existing) {
+    // Check if the existing account is banned
+    if (existing.banned) {
+      return { error: "This account has been suspended and cannot be used. Please contact support if you believe this is an error." };
+    }
+    return { error: "An account with this email already exists" };
+  }
 
   const hashedPassword = await bcrypt.hash(parsed.data.password, 12);
 
@@ -822,6 +900,16 @@ async function checkAndAwardBadges(userId: string): Promise<{ name: string; icon
 
       if (met) {
         await db.userBadge.create({ data: { userId, badgeId: badge.id } });
+
+        // Notify user about earning a badge
+        createNotification({
+          userId,
+          type: "badge",
+          title: "Badge Earned!",
+          body: `You earned the "${badge.name}" badge. Keep up the great work!`,
+          href: "/badges",
+        }).catch(() => {});
+
         return { name: badge.name, icon: badge.icon };
       }
     } catch {

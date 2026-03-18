@@ -501,3 +501,49 @@ export function getAdminInviteEmailHtml(email: string): string {
     </table>`;
   return emailWrapper(body);
 }
+
+// ---------------------------------------------------------------------------
+// Notification Email (forum replies, reactions, badges, etc.)
+// ---------------------------------------------------------------------------
+
+interface NotificationEmailInput {
+  to: string;
+  userName: string;
+  title: string;
+  body: string;
+  href?: string;
+}
+
+export async function sendNotificationEmail(input: NotificationEmailInput) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
+  const fullHref = input.href ? `${appUrl}${input.href}` : appUrl;
+
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:22px;color:${TEXT_PRIMARY};">
+      ${input.title}
+    </h1>
+    <p style="margin:0 0 8px;font-size:15px;line-height:1.7;color:${TEXT_SECONDARY};">
+      Hi ${input.userName},
+    </p>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:${TEXT_SECONDARY};">
+      ${input.body}
+    </p>
+    ${buttonHtml(fullHref, "View on EarthEcho")}
+    <p style="margin:24px 0 0;font-size:12px;color:#999999;">
+      You can manage your notification preferences in your <a href="${appUrl}/profile" style="color:${BRAND_GREEN};">profile settings</a>.
+    </p>`;
+
+  const html = emailWrapper(body);
+
+  try {
+    await transporter.sendMail({
+      from: '"EarthEcho" <contact@earthecho.co.uk>',
+      replyTo: "contact@earthecho.co.uk",
+      to: input.to,
+      subject: input.title,
+      html,
+    });
+  } catch (error) {
+    console.error("[EMAIL ERROR] Notification email failed:", error);
+  }
+}
