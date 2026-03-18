@@ -61,13 +61,13 @@ export function Button({
   const content = (
     <>
       {loading ? (
-        <FontAwesomeIcon icon={faSpinner} className="h-3.5 w-3.5" spin />
+        <FontAwesomeIcon icon={faSpinner} className="h-4 w-4" spin />
       ) : leftIcon ? (
-        <FontAwesomeIcon icon={leftIcon} className="h-3.5 w-3.5" />
+        <FontAwesomeIcon icon={leftIcon} className="h-4 w-4" />
       ) : null}
       {children}
       {rightIcon && !loading && (
-        <FontAwesomeIcon icon={rightIcon} className="h-3.5 w-3.5" />
+        <FontAwesomeIcon icon={rightIcon} className="h-4 w-4" />
       )}
     </>
   );

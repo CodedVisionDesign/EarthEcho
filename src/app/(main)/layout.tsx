@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { TourShell } from "@/components/tour/TourShell";
 import { PushOptIn } from "@/components/pwa/PushOptIn";
@@ -10,6 +11,7 @@ export default async function MainLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  const userRole = (session?.user as Record<string, unknown>)?.role as string | undefined;
 
   return (
     <TourShell>
@@ -24,17 +26,24 @@ export default async function MainLayout({
         <Sidebar
           userName={session?.user?.name ?? undefined}
           userImage={session?.user?.image ?? undefined}
-          userRole={(session?.user as Record<string, unknown>)?.role as string | undefined}
+          userRole={userRole}
         />
 
-        {/* Main content */}
+        {/* Main content — pb-20 on mobile for bottom tab bar clearance */}
         <main className="relative z-10 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-6xl px-4 pt-16 pb-8 md:px-8 md:pt-8 md:pb-10">
+          <div className="mx-auto max-w-6xl px-4 pt-16 pb-20 md:px-8 md:pt-8 md:pb-10">
             <ToastProvider>
               {children}
             </ToastProvider>
           </div>
         </main>
+
+        {/* Mobile bottom tab bar */}
+        <BottomTabBar
+          userName={session?.user?.name ?? undefined}
+          userImage={session?.user?.image ?? undefined}
+          userRole={userRole}
+        />
 
         {session?.user && <PushOptIn />}
       </div>

@@ -249,7 +249,7 @@ export function NotificationBell() {
         className="relative flex h-9 w-9 items-center justify-center rounded-lg text-charcoal/50 transition-colors hover:bg-white/50 hover:text-charcoal"
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
       >
-        <FontAwesomeIcon icon={faBell} className="h-4 w-4" />
+        <FontAwesomeIcon icon={faBell} className="h-5 w-5" />
         {unreadCount > 0 && (
           <span className="absolute -right-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-coral text-[9px] font-bold text-white shadow-sm">
             {unreadCount > 9 ? "9+" : unreadCount}

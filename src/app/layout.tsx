@@ -21,7 +21,12 @@ export const metadata: Metadata = {
     "Track and reduce your environmental impact, water usage, plastic consumption, and more. Human-readable metrics, gamification, and community support.",
   manifest: "/manifest.json",
   icons: {
-    icon: "/icon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
     apple: "/apple-icon.png",
   },
   appleWebApp: {

@@ -90,6 +90,8 @@ import {
   faReply,
   faToggleOn,
   faToggleOff,
+  faHouse,
+  faGlobe,
 } from "@fortawesome/free-solid-svg-icons";
 
 // Brand icons
@@ -122,6 +124,7 @@ library.add(
   faEnvelopeOpenText, faRotateRight,
   faArrowUp, faArrowDown,
   faBell, faReply, faToggleOn, faToggleOff,
+  faHouse, faGlobe,
   // Brands
   faGoogle, faFacebook, faApple, faGooglePlay
 );
@@ -147,5 +150,6 @@ export {
   faEnvelopeOpenText, faRotateRight,
   faArrowUp, faArrowDown,
   faBell, faReply, faToggleOn, faToggleOff,
+  faHouse, faGlobe,
   faGoogle, faFacebook, faApple, faGooglePlay,
 };

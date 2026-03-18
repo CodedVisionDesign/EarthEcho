@@ -78,7 +78,7 @@ export function ImpactSummaryCard({
         >
           <FontAwesomeIcon
             icon={icon}
-            className={`h-4.5 w-4.5 ${iconColor}`}
+            className={`h-5 w-5 ${iconColor}`}
             aria-hidden
           />
         </div>

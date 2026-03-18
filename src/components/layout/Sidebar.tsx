@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -24,8 +23,6 @@ import {
   faLink,
   faCircleUser,
   faGear,
-  faBars,
-  faXmark,
   faRightFromBracket,
   faShieldHalved,
 } from "@/lib/fontawesome";
@@ -104,7 +101,7 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
         )}
         <FontAwesomeIcon
           icon={item.icon}
-          className={`h-4 w-4 shrink-0 transition-colors duration-200 ${
+          className={`h-5 w-5 shrink-0 transition-colors duration-200 ${
             isActive
               ? "text-forest"
               : "text-charcoal/40 group-hover:text-charcoal/70"
@@ -119,7 +116,6 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
 
 export function Sidebar({ userName, userImage, userRole }: SidebarProps) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "developer";
 
@@ -201,7 +197,7 @@ export function Sidebar({ userName, userImage, userRole }: SidebarProps) {
           </div>
           <FontAwesomeIcon
             icon={faGear}
-            className="h-3.5 w-3.5 text-charcoal/25"
+            className="h-4 w-4 text-charcoal/25"
             aria-hidden
           />
         </Link>
@@ -214,7 +210,7 @@ export function Sidebar({ userName, userImage, userRole }: SidebarProps) {
         >
           <FontAwesomeIcon
             icon={faRightFromBracket}
-            className="h-4 w-4"
+            className="h-5 w-5"
             aria-hidden
           />
           Sign out
@@ -235,24 +231,11 @@ export function Sidebar({ userName, userImage, userRole }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile top bar — hamburger + notification bell */}
+      {/* Mobile top bar — notification bell only (navigation via BottomTabBar) */}
       <div className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between px-4 pt-4 md:hidden">
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-200 hover:scale-105"
-          style={{
-            background: "rgba(255, 255, 255, 0.55)",
-            backdropFilter: "blur(16px) saturate(1.4)",
-            WebkitBackdropFilter: "blur(16px) saturate(1.4)",
-            boxShadow:
-              "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 0 rgba(255,255,255,0.6)",
-            border: "1px solid rgba(255, 255, 255, 0.4)",
-          }}
-          aria-label="Open navigation menu"
-        >
-          <FontAwesomeIcon icon={faBars} className="h-4 w-4 text-charcoal" />
-        </button>
+        <Link href="/dashboard" className="inline-flex">
+          <Logo size="sm" textClassName="text-charcoal" />
+        </Link>
         <div
           className="flex h-10 w-10 items-center justify-center rounded-xl"
           style={{
@@ -267,37 +250,6 @@ export function Sidebar({ userName, userImage, userRole }: SidebarProps) {
           <NotificationBell />
         </div>
       </div>
-
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden"
-          onClick={() => setMobileOpen(false)}
-          aria-hidden
-        />
-      )}
-
-      {/* Mobile sidebar - glass */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col transition-transform duration-300 ease-out md:hidden ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-        style={{
-          ...glassStyle,
-          borderRight: "1px solid rgba(255, 255, 255, 0.3)",
-        }}
-      >
-        {/* Close button */}
-        <button
-          type="button"
-          onClick={() => setMobileOpen(false)}
-          className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-charcoal/50 transition-colors hover:bg-white/40 hover:text-charcoal"
-          aria-label="Close navigation menu"
-        >
-          <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
-        </button>
-        {renderSidebarContent(() => setMobileOpen(false))}
-      </aside>
 
       {/* Desktop sidebar - glass */}
       <aside
