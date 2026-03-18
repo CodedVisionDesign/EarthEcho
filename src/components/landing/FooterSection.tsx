@@ -26,9 +26,9 @@ const footerLinks = {
     { name: "Vegan Runners", href: "https://www.veganrunners.co.uk" },
   ],
   Legal: [
-    { name: "Privacy Policy", href: "#" },
-    { name: "Terms of Service", href: "#" },
-    { name: "Cookie Policy", href: "#" },
+    { name: "Privacy Policy", href: "/privacy" },
+    { name: "Terms of Service", href: "/terms" },
+    { name: "Cookie Policy", href: "/cookies" },
   ],
 };
 
