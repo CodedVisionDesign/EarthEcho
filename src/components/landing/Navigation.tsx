@@ -143,7 +143,7 @@ export function Navigation({ variant = "dark" }: NavigationProps) {
             {navLinks.map((link, i) => (
               <a
                 key={link.name}
-                href={link.href}
+                href={link.href.startsWith("#") ? `/${link.href}` : link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`text-4xl font-bold text-charcoal hover:text-forest transition-all duration-500 ${
                   isMobileMenuOpen

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { TourShell } from "@/components/tour/TourShell";
+import { PushOptIn } from "@/components/pwa/PushOptIn";
 
 export default async function MainLayout({
   children,
@@ -34,6 +35,8 @@ export default async function MainLayout({
             </ToastProvider>
           </div>
         </main>
+
+        {session?.user && <PushOptIn />}
       </div>
     </TourShell>
   );
