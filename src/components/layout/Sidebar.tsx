@@ -231,24 +231,22 @@ export function Sidebar({ userName, userImage, userRole }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile top bar — notification bell only (navigation via BottomTabBar) */}
-      <div className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between px-4 pt-4 md:hidden">
+      {/* Mobile top bar — glass bar with logo + notification bell (navigation via BottomTabBar) */}
+      <div
+        className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between px-4 py-3 md:hidden"
+        style={{
+          background: "rgba(255, 255, 255, 0.55)",
+          backdropFilter: "blur(16px) saturate(1.4)",
+          WebkitBackdropFilter: "blur(16px) saturate(1.4)",
+          boxShadow:
+            "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 0 rgba(255,255,255,0.6)",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.4)",
+        }}
+      >
         <Link href="/dashboard" className="inline-flex">
           <Logo size="sm" textClassName="text-charcoal" />
         </Link>
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-xl"
-          style={{
-            background: "rgba(255, 255, 255, 0.55)",
-            backdropFilter: "blur(16px) saturate(1.4)",
-            WebkitBackdropFilter: "blur(16px) saturate(1.4)",
-            boxShadow:
-              "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 0 rgba(255,255,255,0.6)",
-            border: "1px solid rgba(255, 255, 255, 0.4)",
-          }}
-        >
-          <NotificationBell />
-        </div>
+        <NotificationBell />
       </div>
 
       {/* Desktop sidebar - glass */}
