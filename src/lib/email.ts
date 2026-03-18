@@ -4,6 +4,9 @@ import * as nodemailer from "nodemailer";
 // Transporter
 // ---------------------------------------------------------------------------
 
+const SMTP_FROM = process.env.SMTP_USER || "noreply@earthecho.co.uk";
+const REPLY_TO = "contact@earthecho.co.uk";
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT) || 465,
@@ -12,12 +15,6 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-});
-
-// Set default reply-to address
-transporter.set("from", {
-  name: "EarthEcho",
-  email: "contact@earthecho.co.uk",
 });
 
 export { transporter };
@@ -128,8 +125,8 @@ export async function sendEmail(
   html: string,
 ): Promise<void> {
   await transporter.sendMail({
-    from: '"EarthEcho" <contact@earthecho.co.uk>',
-    replyTo: "contact@earthecho.co.uk",
+    from: `"EarthEcho" <${SMTP_FROM}>`,
+    replyTo: REPLY_TO,
     to,
     subject,
     html,
@@ -537,8 +534,8 @@ export async function sendNotificationEmail(input: NotificationEmailInput) {
 
   try {
     await transporter.sendMail({
-      from: '"EarthEcho" <contact@earthecho.co.uk>',
-      replyTo: "contact@earthecho.co.uk",
+      from: `"EarthEcho" <${SMTP_FROM}>`,
+      replyTo: REPLY_TO,
       to: input.to,
       subject: input.title,
       html,
