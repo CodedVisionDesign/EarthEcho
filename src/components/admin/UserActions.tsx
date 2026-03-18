@@ -29,10 +29,14 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
     if (!banReason.trim()) return;
     startTransition(async () => {
       try {
-        await banUser(userId, banReason);
-        setShowBanModal(false);
-        setBanReason("");
-        router.refresh();
+        const result = await banUser(userId, banReason);
+        if (result.success) {
+          setShowBanModal(false);
+          setBanReason("");
+          router.refresh();
+        } else {
+          alert(result.error || "Failed to ban user");
+        }
       } catch (e) {
         alert(e instanceof Error ? e.message : "Failed to ban user");
       }
@@ -42,8 +46,12 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
   function handleUnban() {
     startTransition(async () => {
       try {
-        await unbanUser(userId);
-        router.refresh();
+        const result = await unbanUser(userId);
+        if (result.success) {
+          router.refresh();
+        } else {
+          alert(result.error || "Failed to unban user");
+        }
       } catch (e) {
         alert(e instanceof Error ? e.message : "Failed to unban user");
       }
@@ -55,8 +63,12 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
     if (!confirm(`Change ${userName}'s role to ${labels[newRole] ?? newRole}?`)) return;
     startTransition(async () => {
       try {
-        await changeUserRole(userId, newRole as "user" | "admin" | "superadmin");
-        router.refresh();
+        const result = await changeUserRole(userId, newRole as "user" | "admin" | "superadmin");
+        if (result.success) {
+          router.refresh();
+        } else {
+          alert(result.error || "Failed to change role");
+        }
       } catch (e) {
         alert(e instanceof Error ? e.message : "Failed to change role");
       }
@@ -67,9 +79,13 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
     if (!confirm(`Send a password reset email to ${userName} (${userEmail})?`)) return;
     startTransition(async () => {
       try {
-        await adminSendPasswordReset(userId);
-        alert("Password reset email sent successfully.");
-        router.refresh();
+        const result = await adminSendPasswordReset(userId);
+        if (result.success) {
+          alert("Password reset email sent successfully.");
+          router.refresh();
+        } else {
+          alert(result.error || "Failed to send reset email");
+        }
       } catch (e) {
         alert(e instanceof Error ? e.message : "Failed to send reset email");
       }

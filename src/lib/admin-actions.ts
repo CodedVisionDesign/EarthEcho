@@ -11,82 +11,94 @@ import crypto from "crypto";
 // Ban / Unban
 // ---------------------------------------------------------------------------
 
-export async function banUser(userId: string, reason: string) {
-  const admin = await requireAdmin();
+export async function banUser(userId: string, reason: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await requireAdmin();
 
-  const target = await db.user.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true, email: true, role: true },
-  });
-
-  if (!target) throw new Error("User not found");
-  if (["admin", "superadmin", "developer"].includes(target.role)) {
-    throw new Error("Cannot ban an admin");
-  }
-
-  await db.user.update({
-    where: { id: userId },
-    data: {
-      banned: true,
-      banReason: reason,
-      bannedAt: new Date(),
-      bannedBy: admin.id,
-    },
-  });
-
-  await createAuditLog({
-    adminId: admin.id,
-    action: "ban_user",
-    targetId: userId,
-    targetType: "user",
-    details: { reason, targetEmail: target.email, targetName: target.name },
-  });
-
-  // Send notification email (best-effort, don't block on failure)
-  if (target.email) {
-    sendBanNotificationEmail(
-      target.name ?? "User",
-      target.email,
-      reason,
-    ).catch(() => {
-      /* email delivery failure is non-critical */
+    const target = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, role: true },
     });
-  }
 
-  revalidatePath("/admin/users");
-  revalidatePath("/admin");
+    if (!target) return { success: false, error: "User not found" };
+    if (["admin", "superadmin", "developer"].includes(target.role)) {
+      return { success: false, error: "Cannot ban an admin" };
+    }
+
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        banned: true,
+        banReason: reason,
+        bannedAt: new Date(),
+        bannedBy: admin.id,
+      },
+    });
+
+    await createAuditLog({
+      adminId: admin.id,
+      action: "ban_user",
+      targetId: userId,
+      targetType: "user",
+      details: { reason, targetEmail: target.email, targetName: target.name },
+    });
+
+    // Send notification email (best-effort, don't block on failure)
+    if (target.email) {
+      sendBanNotificationEmail(
+        target.name ?? "User",
+        target.email,
+        reason,
+      ).catch(() => {
+        /* email delivery failure is non-critical */
+      });
+    }
+
+    revalidatePath("/admin/users");
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (e) {
+    console.error("[ADMIN] Ban user failed:", e);
+    return { success: false, error: e instanceof Error ? e.message : "Failed to ban user" };
+  }
 }
 
-export async function unbanUser(userId: string) {
-  const admin = await requireAdmin();
+export async function unbanUser(userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await requireAdmin();
 
-  const target = await db.user.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true, email: true },
-  });
+    const target = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true },
+    });
 
-  if (!target) throw new Error("User not found");
+    if (!target) return { success: false, error: "User not found" };
 
-  await db.user.update({
-    where: { id: userId },
-    data: {
-      banned: false,
-      banReason: null,
-      bannedAt: null,
-      bannedBy: null,
-    },
-  });
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        banned: false,
+        banReason: null,
+        bannedAt: null,
+        bannedBy: null,
+      },
+    });
 
-  await createAuditLog({
-    adminId: admin.id,
-    action: "unban_user",
-    targetId: userId,
-    targetType: "user",
-    details: { targetEmail: target.email, targetName: target.name },
-  });
+    await createAuditLog({
+      adminId: admin.id,
+      action: "unban_user",
+      targetId: userId,
+      targetType: "user",
+      details: { targetEmail: target.email, targetName: target.name },
+    });
 
-  revalidatePath("/admin/users");
-  revalidatePath("/admin");
+    revalidatePath("/admin/users");
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (e) {
+    console.error("[ADMIN] Unban user failed:", e);
+    return { success: false, error: e instanceof Error ? e.message : "Failed to unban user" };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -211,100 +223,113 @@ export async function removeModerationWord(id: string) {
 const ASSIGNABLE_ROLES = ["user", "admin", "superadmin"] as const;
 type AssignableRole = (typeof ASSIGNABLE_ROLES)[number];
 
-export async function changeUserRole(userId: string, newRole: AssignableRole) {
-  const admin = await requireSuperAdmin();
+export async function changeUserRole(userId: string, newRole: AssignableRole): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await requireSuperAdmin();
 
-  if (!ASSIGNABLE_ROLES.includes(newRole)) {
-    throw new Error("Invalid role");
+    if (!ASSIGNABLE_ROLES.includes(newRole)) {
+      return { success: false, error: "Invalid role" };
+    }
+
+    if (userId === admin.id) {
+      return { success: false, error: "You cannot change your own role" };
+    }
+
+    const target = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, role: true },
+    });
+
+    if (!target) return { success: false, error: "User not found" };
+    if (target.role === "developer") {
+      return { success: false, error: "Cannot change the role of a developer account" };
+    }
+    if (target.role === newRole) {
+      return { success: false, error: `User is already a ${newRole}` };
+    }
+
+    const previousRole = target.role;
+
+    await db.user.update({
+      where: { id: userId },
+      data: { role: newRole },
+    });
+
+    await createAuditLog({
+      adminId: admin.id,
+      action: "change_role",
+      targetId: userId,
+      targetType: "user",
+      details: {
+        targetEmail: target.email,
+        targetName: target.name,
+        previousRole,
+        newRole,
+      },
+    });
+
+    revalidatePath("/admin/users");
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (e) {
+    console.error("[ADMIN] Change role failed:", e);
+    return { success: false, error: e instanceof Error ? e.message : "Failed to change role" };
   }
-
-  if (userId === admin.id) {
-    throw new Error("You cannot change your own role");
-  }
-
-  const target = await db.user.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true, email: true, role: true },
-  });
-
-  if (!target) throw new Error("User not found");
-  if (target.role === "developer") {
-    throw new Error("Cannot change the role of a developer account");
-  }
-  if (target.role === newRole) {
-    throw new Error(`User is already a ${newRole}`);
-  }
-
-  const previousRole = target.role;
-
-  await db.user.update({
-    where: { id: userId },
-    data: { role: newRole },
-  });
-
-  await createAuditLog({
-    adminId: admin.id,
-    action: "change_role",
-    targetId: userId,
-    targetType: "user",
-    details: {
-      targetEmail: target.email,
-      targetName: target.name,
-      previousRole,
-      newRole,
-    },
-  });
-
-  revalidatePath("/admin/users");
-  revalidatePath("/admin");
 }
 
 // ---------------------------------------------------------------------------
 // Send password reset email (admin-triggered)
 // ---------------------------------------------------------------------------
 
-export async function adminSendPasswordReset(userId: string) {
-  const admin = await requireSuperAdmin();
+export async function adminSendPasswordReset(userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await requireSuperAdmin();
 
-  const target = await db.user.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true, email: true, password: true },
-  });
+    const target = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, password: true },
+    });
 
-  if (!target) throw new Error("User not found");
-  if (!target.email) throw new Error("User has no email address");
-  if (!target.password) throw new Error("User uses social login — no password to reset");
+    if (!target) return { success: false, error: "User not found" };
+    if (!target.email) return { success: false, error: "User has no email address" };
+    if (!target.password) return { success: false, error: "User uses social login — no password to reset" };
 
-  // Generate a reset token
-  const token = crypto.randomBytes(32).toString("hex");
-  const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    // Generate a reset token
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-  await db.user.update({
-    where: { id: userId },
-    data: {
-      resetToken: token,
-      resetTokenExpiry: expires,
-    },
-  });
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        resetToken: token,
+        resetTokenExpiry: expires,
+      },
+    });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
-  const resetUrl = `${appUrl}/reset-password?token=${token}`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
+    const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
-  await sendPasswordResetEmail(
-    target.name ?? "User",
-    target.email,
-    resetUrl,
-  );
+    await sendPasswordResetEmail(
+      target.name ?? "User",
+      target.email,
+      resetUrl,
+    );
 
-  await createAuditLog({
-    adminId: admin.id,
-    action: "admin_password_reset",
-    targetId: userId,
-    targetType: "user",
-    details: { targetEmail: target.email, targetName: target.name },
-  });
+    await createAuditLog({
+      adminId: admin.id,
+      action: "admin_password_reset",
+      targetId: userId,
+      targetType: "user",
+      details: { targetEmail: target.email, targetName: target.name },
+    });
 
-  revalidatePath("/admin/users");
+    revalidatePath("/admin/users");
+    return { success: true };
+  } catch (e) {
+    console.error("[ADMIN] Password reset failed:", e);
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return { success: false, error: `Failed to send reset email: ${message}` };
+  }
 }
 
 // ---------------------------------------------------------------------------
