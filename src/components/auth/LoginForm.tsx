@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { PasskeyLoginButton } from "@/components/auth/PasskeyLoginButton";
+import { startOAuthSignIn } from "@/lib/pwa-auth";
 
 export function LoginForm() {
   const router = useRouter();
@@ -58,7 +59,7 @@ export function LoginForm() {
       <div className="mb-6 space-y-3">
         <button
           type="button"
-          onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+          onClick={() => startOAuthSignIn("google")}
           className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-charcoal transition-all duration-200 hover:bg-gray-50 hover:shadow-sm"
         >
           <FontAwesomeIcon
@@ -70,7 +71,7 @@ export function LoginForm() {
         </button>
         <button
           type="button"
-          onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })}
+          onClick={() => startOAuthSignIn("facebook")}
           className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#1877F2] bg-[#1877F2] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-[#166FE5]"
         >
           <FontAwesomeIcon
