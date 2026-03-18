@@ -14,6 +14,7 @@ import {
 } from "@/lib/fontawesome";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { PasskeyLoginButton } from "@/components/auth/PasskeyLoginButton";
 
 export function LoginForm() {
   const router = useRouter();
@@ -48,6 +49,11 @@ export function LoginForm() {
 
   return (
     <>
+      {/* Passkey / Biometric Login */}
+      <div className="mb-4">
+        <PasskeyLoginButton onError={(msg) => setError(msg)} />
+      </div>
+
       {/* OAuth Buttons */}
       <div className="mb-6 space-y-3">
         <button

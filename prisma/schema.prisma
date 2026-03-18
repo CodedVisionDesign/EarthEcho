@@ -65,6 +65,7 @@ model User {
   notifications         Notification[]
   notificationPreference NotificationPreference?
   pushSubscriptions     PushSubscription[]
+  webauthnCredentials   WebAuthnCredential[]
 
   @@map("users")
 }
@@ -498,4 +499,39 @@ model ChallengeTemplate {
   updatedAt DateTime @default(now()) @updatedAt
 
   @@map("challenge_templates")
+}
+
+// ==========================================
+// WebAuthn Credentials (Passkeys)
+// ==========================================
+
+model WebAuthnCredential {
+  id           String   @id @default(cuid())
+  userId       String
+  credentialId String   @unique @db.VarChar(512)
+  publicKey    Bytes    @db.Blob
+  counter      BigInt   @default(0)
+  transports   String?  @db.VarChar(255)
+  deviceName   String?  @db.VarChar(100)
+  backedUp     Boolean  @default(false)
+  lastUsedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("webauthn_credentials")
+}
+
+model WebAuthnChallenge {
+  id        String   @id @default(cuid())
+  challenge String   @db.VarChar(512)
+  userId    String?
+  type      String   @db.VarChar(20)
+  expiresAt DateTime
+
+  @@index([challenge])
+  @@index([expiresAt])
+  @@map("webauthn_challenges")
 }

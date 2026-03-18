@@ -20,6 +20,7 @@ import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { LinkedAccountsCard } from "@/components/profile/LinkedAccountsCard";
 import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
+import { PasskeyManager } from "@/components/profile/PasskeyManager";
 import { ImpactSummaryCard } from "@/components/profile/ImpactSummaryCard";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
@@ -257,6 +258,9 @@ export default async function ProfilePage() {
               isPublic={user.isPublic}
             />
           </Card>
+
+          {/* Passkeys / Biometric Login */}
+          <PasskeyManager />
 
           {/* Change Password */}
           <Card variant="default" className="p-6">

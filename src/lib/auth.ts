@@ -5,6 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
+import { verifyLoginToken } from "./webauthn-server";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -36,6 +37,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
+      id: "passkey",
+      name: "Passkey",
+      credentials: {
+        userId: { type: "text" },
+        token: { type: "text" },
+      },
+      async authorize(credentials) {
+        const userId = credentials?.userId as string | undefined;
+        const token = credentials?.token as string | undefined;
+        if (!userId || !token) return null;
+
+        const valid = verifyLoginToken(userId, token);
+        if (!valid) return null;
+
+        const user = await db.user.findUnique({
+          where: { id: userId },
+        });
+        if (!user || user.banned) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
+      },
+    }),
+    Credentials({
+      id: "credentials",
       name: "Email",
       credentials: {
         email: { label: "Email", type: "email" },
