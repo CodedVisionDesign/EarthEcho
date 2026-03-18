@@ -34,7 +34,7 @@ const TABS: Tab[] = [
     id: "track",
     label: "Track",
     icon: faChartLine,
-    href: "/track/carbon",
+    href: "/track",
     matchPaths: ["/track"],
   },
   {

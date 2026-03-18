@@ -25,6 +25,7 @@ import {
   getUserChallengeProgress,
 } from "@/lib/queries";
 import { JoinChallengeButton } from "@/components/challenges/JoinChallengeButton";
+import { SocialTabBar } from "@/components/navigation/SocialTabBar";
 
 const CATEGORY_ICONS: Record<string, IconDefinition> = {
   WATER: faDroplet,
@@ -75,6 +76,8 @@ export default async function ChallengesPage() {
 
   return (
     <div>
+      <SocialTabBar />
+
       {/* Header */}
       <FadeIn variant="fade-up">
         <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-forest to-ocean/80 p-6 text-white shadow-lg">

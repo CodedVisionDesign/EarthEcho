@@ -10,6 +10,7 @@ import { getForumThreads, resolveUserImage } from "@/lib/queries";
 import type { ForumSort } from "@/lib/queries";
 import { ForumNewThreadToggle } from "@/components/forum/ForumNewThreadToggle";
 import { ForumSearchBar } from "@/components/forum/ForumSearchBar";
+import { SocialTabBar } from "@/components/navigation/SocialTabBar";
 
 const CATEGORIES = [
   { value: "", label: "All Topics" },
@@ -103,6 +104,8 @@ export default async function ForumPage({
 
   return (
     <div>
+      <SocialTabBar />
+
       {/* Header */}
       <FadeIn variant="fade-up">
         <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-ocean via-ocean/90 to-forest/70 p-6 text-white shadow-lg">

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { getCurrentUser, getLeaderboard, getUserRank } from "@/lib/queries";
+import { SocialTabBar } from "@/components/navigation/SocialTabBar";
 
 const RANK_STYLES: Record<number, { color: string; label: string }> = {
   1: { color: "text-amber-500", label: "1st" },
@@ -54,6 +55,8 @@ export default async function LeaderboardPage({
 
   return (
     <div>
+      <SocialTabBar />
+
       {/* Header */}
       <FadeIn variant="fade-up">
         <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-sunshine via-amber-500 to-amber-600 p-6 text-white shadow-lg">
