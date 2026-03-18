@@ -20,7 +20,7 @@ jobs:
             cd /var/www/earthecho
             git fetch origin
             git reset --hard origin/${{ github.ref_name }}
-            npm install --production
+            npm install
             npx prisma generate
             npm run build
             systemctl restart earthecho
