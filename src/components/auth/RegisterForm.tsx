@@ -182,11 +182,11 @@ export function RegisterForm() {
           />
           <span className="text-xs leading-relaxed text-slate">
             I agree to the{" "}
-            <Link href="/terms" className="font-medium text-forest underline decoration-forest/30 hover:decoration-forest">
+            <Link href="/terms" target="_blank" rel="noopener noreferrer" className="font-medium text-forest underline decoration-forest/30 hover:decoration-forest">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" className="font-medium text-forest underline decoration-forest/30 hover:decoration-forest">
+            <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-forest underline decoration-forest/30 hover:decoration-forest">
               Privacy Policy
             </Link>
             . Your data is handled in accordance with GDPR.

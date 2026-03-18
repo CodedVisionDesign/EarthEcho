@@ -113,7 +113,7 @@ export function OnboardingModal({ userName }: OnboardingModalProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
-      <div className="w-full max-w-lg animate-slide-up sm:animate-scale-in rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl flex flex-col max-h-[90dvh] sm:max-h-[85vh]">
+      <div className="w-full max-w-lg animate-slide-up sm:animate-scale-in rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl flex flex-col max-h-[85dvh] sm:max-h-[85vh]">
         {/* Progress bar */}
         <div className="shrink-0 px-6 pt-6 sm:px-8 sm:pt-8">
           <div className="mb-1 flex items-center justify-between text-[11px] text-slate">
@@ -278,7 +278,10 @@ export function OnboardingModal({ userName }: OnboardingModalProps) {
         </div>
 
         {/* Footer nav */}
-        <div className="shrink-0 border-t border-gray-100 px-6 py-4 sm:px-8 sm:py-5">
+        <div
+          className="shrink-0 border-t border-gray-100 px-6 py-4 sm:px-8 sm:py-5"
+          style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom, 1rem))" }}
+        >
           <div className="flex items-center justify-between gap-3">
             {step > 0 ? (
               <button
