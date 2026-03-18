@@ -9,9 +9,19 @@ import { db } from "./db";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   session: { strategy: "jwt" },
+  debug: process.env.NODE_ENV === "development",
+  logger: {
+    error(code, ...message) {
+      console.error("[AUTH ERROR]", code, ...message);
+    },
+    warn(code, ...message) {
+      console.warn("[AUTH WARN]", code, ...message);
+    },
+  },
   pages: {
     signIn: "/login",
     newUser: "/dashboard",
+    error: "/login",
   },
   providers: [
     Google({
