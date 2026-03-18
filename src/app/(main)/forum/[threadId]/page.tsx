@@ -1,10 +1,11 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faComments, faArrowRight } from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { getCurrentUser, getThread } from "@/lib/queries";
+import { getCurrentUser, getThread, resolveUserImage } from "@/lib/queries";
 import { ReplyForm } from "@/components/forum/ReplyForm";
 import { ReactionButton } from "@/components/forum/ReactionButton";
 import { ThreadActions } from "@/components/forum/ThreadActions";
@@ -91,9 +92,20 @@ export default async function ThreadPage({
         </h1>
 
         <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-forest/10 text-xs font-semibold text-forest">
-            {getInitials(thread.user.displayName || thread.user.name)}
-          </div>
+          {resolveUserImage(thread.user) ? (
+            <Image
+              src={resolveUserImage(thread.user)!}
+              alt={thread.user.displayName || thread.user.name || "User"}
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-full object-cover"
+              unoptimized
+            />
+          ) : (
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-forest/10 text-xs font-semibold text-forest">
+              {getInitials(thread.user.displayName || thread.user.name)}
+            </div>
+          )}
           <div>
             <span className="text-sm font-medium text-charcoal">
               {thread.user.displayName || thread.user.name}
@@ -156,11 +168,20 @@ export default async function ThreadPage({
                 <Card key={reply.id} variant="default" className="p-5">
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-[10px] font-semibold text-slate">
-                        {getInitials(
-                          reply.user.displayName || reply.user.name
-                        )}
-                      </div>
+                      {resolveUserImage(reply.user) ? (
+                        <Image
+                          src={resolveUserImage(reply.user)!}
+                          alt={reply.user.displayName || reply.user.name || "User"}
+                          width={28}
+                          height={28}
+                          className="h-7 w-7 rounded-full object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-[10px] font-semibold text-slate">
+                          {getInitials(reply.user.displayName || reply.user.name)}
+                        </div>
+                      )}
                       <div>
                         <span className="text-sm font-medium text-charcoal">
                           {reply.user.displayName || reply.user.name}

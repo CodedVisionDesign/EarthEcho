@@ -82,8 +82,8 @@ export default function PrivacyPolicyPage() {
             <p>
               Earth Echo is operated by Coded Vision Design. Our Data Protection Officer can be
               contacted at{" "}
-              <a href="mailto:contact@codedvisiondesign.co.uk" className="text-leaf underline decoration-leaf/30 hover:text-leaf/80">
-                contact@codedvisiondesign.co.uk
+              <a href="mailto:contact@earthecho.co.uk" className="text-leaf underline decoration-leaf/30 hover:text-leaf/80">
+                contact@earthecho.co.uk
               </a>
               .
             </p>
@@ -186,8 +186,8 @@ export default function PrivacyPolicyPage() {
           <Section icon={faEnvelope} title="10. Contact">
             <p>
               For privacy-related questions, contact our Data Protection Officer at{" "}
-              <a href="mailto:contact@codedvisiondesign.co.uk" className="text-leaf underline decoration-leaf/30 hover:text-leaf/80">
-                contact@codedvisiondesign.co.uk
+              <a href="mailto:contact@earthecho.co.uk" className="text-leaf underline decoration-leaf/30 hover:text-leaf/80">
+                contact@earthecho.co.uk
               </a>
               .
             </p>

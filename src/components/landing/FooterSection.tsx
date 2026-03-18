@@ -23,7 +23,7 @@ const footerLinks = {
     { name: "Waterwise", href: "https://www.waterwise.org.uk" },
     { name: "Cycling UK", href: "https://www.cyclinguk.org" },
     { name: "Vegan Outfitters", href: "https://www.veganoutfitters.com" },
-    { name: "Vegan Runners", href: "https://www.veganrunners.co.uk" },
+    { name: "Vegan Runners", href: "https://www.veganrunners.org.uk" },
   ],
   Legal: [
     { name: "Privacy Policy", href: "/privacy" },

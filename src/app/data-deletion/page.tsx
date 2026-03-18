@@ -100,8 +100,8 @@ export default function DataDeletionPage() {
                 <Dot />
                 <span>
                   <strong className="text-white/80">Email:</strong> Send a deletion request to{" "}
-                  <a href="mailto:contact@codedvisiondesign.co.uk" className="text-leaf underline decoration-leaf/30 hover:text-leaf/80">
-                    contact@codedvisiondesign.co.uk
+                  <a href="mailto:contact@earthecho.co.uk" className="text-leaf underline decoration-leaf/30 hover:text-leaf/80">
+                    contact@earthecho.co.uk
                   </a>{" "}
                   from the email address associated with your account
                 </span>
@@ -145,8 +145,8 @@ export default function DataDeletionPage() {
           <Section icon={faEnvelope} title="Contact">
             <p>
               For questions about data deletion, contact our Data Protection Officer at{" "}
-              <a href="mailto:contact@codedvisiondesign.co.uk" className="text-leaf underline decoration-leaf/30 hover:text-leaf/80">
-                contact@codedvisiondesign.co.uk
+              <a href="mailto:contact@earthecho.co.uk" className="text-leaf underline decoration-leaf/30 hover:text-leaf/80">
+                contact@earthecho.co.uk
               </a>
               .
             </p>

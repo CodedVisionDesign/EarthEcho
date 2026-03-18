@@ -367,9 +367,11 @@ export async function getLeaderboard(
   limit: number = 50,
   period: "all-time" | "monthly" | "weekly" = "all-time"
 ): Promise<LeaderboardEntry[]> {
+  const excludeAdminRoles = { role: { notIn: ["superadmin", "developer"] } };
+
   if (period === "all-time") {
     return db.user.findMany({
-      where: { isPublic: true },
+      where: { isPublic: true, ...excludeAdminRoles },
       select: {
         id: true,
         name: true,
@@ -404,7 +406,7 @@ export async function getLeaderboard(
 
   const userIds = pointsByUser.map((p) => p.userId);
   const users = await db.user.findMany({
-    where: { id: { in: userIds }, isPublic: true },
+    where: { id: { in: userIds }, isPublic: true, ...excludeAdminRoles },
     select: {
       id: true,
       name: true,
@@ -435,7 +437,7 @@ export async function getUserRank(userId: string): Promise<number | null> {
   if (!user || !user.isPublic) return null;
 
   const usersAbove = await db.user.count({
-    where: { isPublic: true, totalPoints: { gt: user.totalPoints } },
+    where: { isPublic: true, role: { notIn: ["superadmin", "developer"] }, totalPoints: { gt: user.totalPoints } },
   });
 
   return usersAbove + 1;
@@ -445,29 +447,39 @@ export async function getUserRank(userId: string): Promise<number | null> {
 // Forum Queries
 // ==========================================
 
+export type ForumSort = "latest" | "popular" | "active";
+
 export async function getForumThreads(
   category?: string,
   search?: string,
   limit: number = 20,
-  offset: number = 0
+  offset: number = 0,
+  sort: ForumSort = "latest"
 ) {
   const where = {
     ...(category ? { category } : {}),
     ...(search
       ? {
           OR: [
-            { title: { contains: search } },
-            { content: { contains: search } },
+            { title: { contains: search, mode: "insensitive" as const } },
+            { content: { contains: search, mode: "insensitive" as const } },
           ],
         }
       : {}),
+  };
+
+  // Build sort order — pinned threads always float to top
+  const sortOrder: Record<ForumSort, object[]> = {
+    latest: [{ isPinned: "desc" }, { createdAt: "desc" }],
+    popular: [{ isPinned: "desc" }, { replies: { _count: "desc" } }, { createdAt: "desc" }],
+    active: [{ isPinned: "desc" }, { updatedAt: "desc" }],
   };
 
   const [threads, total] = await Promise.all([
     db.thread.findMany({
       where,
       include: {
-        user: { select: { id: true, name: true, displayName: true, image: true } },
+        user: { select: { id: true, name: true, displayName: true, image: true, customImage: true } },
         _count: { select: { replies: true } },
         replies: {
           orderBy: { createdAt: "desc" },
@@ -478,7 +490,7 @@ export async function getForumThreads(
           },
         },
       },
-      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
+      orderBy: sortOrder[sort],
       take: limit,
       skip: offset,
     }),
@@ -492,10 +504,10 @@ export async function getThread(threadId: string) {
   return db.thread.findUnique({
     where: { id: threadId },
     include: {
-      user: { select: { id: true, name: true, displayName: true, image: true } },
+      user: { select: { id: true, name: true, displayName: true, image: true, customImage: true } },
       replies: {
         include: {
-          user: { select: { id: true, name: true, displayName: true, image: true } },
+          user: { select: { id: true, name: true, displayName: true, image: true, customImage: true } },
           reactions: true,
         },
         orderBy: { createdAt: "asc" },

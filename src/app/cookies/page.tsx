@@ -137,8 +137,8 @@ export default function CookiePolicyPage() {
           <Section icon={faEnvelope} title="5. Contact">
             <p>
               For questions about our use of cookies, contact us at{" "}
-              <a href="mailto:contact@codedvisiondesign.co.uk" className="text-leaf underline decoration-leaf/30 hover:text-leaf/80">
-                contact@codedvisiondesign.co.uk
+              <a href="mailto:contact@earthecho.co.uk" className="text-leaf underline decoration-leaf/30 hover:text-leaf/80">
+                contact@earthecho.co.uk
               </a>
               .
             </p>
