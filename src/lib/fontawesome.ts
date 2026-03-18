@@ -80,6 +80,7 @@ import {
   faChevronUp,
   faPaperPlane,
   faKey,
+  faFlag,
 } from "@fortawesome/free-solid-svg-icons";
 
 // Brand icons
@@ -108,7 +109,7 @@ library.add(
   faSquareCheck, faSquare,
   faShieldHalved, faClipboardList, faGauge, faBan, faArrowLeft,
   faUserShield, faEye, faEyeSlash, faFilter, faChevronUp,
-  faPaperPlane, faKey,
+  faPaperPlane, faKey, faFlag,
   // Brands
   faGoogle, faFacebook, faApple, faGooglePlay
 );
@@ -130,6 +131,6 @@ export {
   faSquareCheck, faSquare,
   faShieldHalved, faClipboardList, faGauge, faBan, faArrowLeft,
   faUserShield, faEye, faEyeSlash, faFilter, faChevronUp,
-  faPaperPlane, faKey,
+  faPaperPlane, faKey, faFlag,
   faGoogle, faFacebook, faApple, faGooglePlay,
 };

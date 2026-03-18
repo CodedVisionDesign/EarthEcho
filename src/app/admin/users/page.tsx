@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { UserActions } from "@/components/admin/UserActions";
 import Link from "next/link";
+import Image from "next/image";
 
 const PAGE_SIZE = 20;
 
@@ -110,9 +111,20 @@ export default async function AdminUsersPage({
                   <tr key={user.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-forest/10 text-xs font-bold text-forest">
-                          {(user.displayName || user.name || "?")[0]?.toUpperCase()}
-                        </div>
+                        {user.image ? (
+                          <Image
+                            src={user.image}
+                            alt={user.displayName || user.name || "User"}
+                            width={32}
+                            height={32}
+                            className="h-8 w-8 shrink-0 rounded-full object-cover"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-forest/10 text-xs font-bold text-forest">
+                            {(user.displayName || user.name || "?")[0]?.toUpperCase()}
+                          </div>
+                        )}
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-charcoal">
                             {user.displayName || user.name || "Unnamed"}
@@ -165,9 +177,20 @@ export default async function AdminUsersPage({
             <Card key={user.id} variant="default" className="p-4">
               <div className="mb-3 flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-forest/10 text-sm font-bold text-forest">
-                    {(user.displayName || user.name || "?")[0]?.toUpperCase()}
-                  </div>
+                  {user.image ? (
+                    <Image
+                      src={user.image}
+                      alt={user.displayName || user.name || "User"}
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 shrink-0 rounded-full object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-forest/10 text-sm font-bold text-forest">
+                      {(user.displayName || user.name || "?")[0]?.toUpperCase()}
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-charcoal">
                       {user.displayName || user.name || "Unnamed"}

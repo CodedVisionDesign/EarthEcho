@@ -341,6 +341,21 @@ model GuideComment {
 }
 
 // ==========================================
+// Forum Moderation Words
+// ==========================================
+
+model ModerationWord {
+  id   String @id @default(cuid())
+  word String @unique
+  type String // "flag" (alert admin) or "ban" (auto-block post)
+
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@map("moderation_words")
+}
+
+// ==========================================
 // Audit Logging
 // ==========================================
 

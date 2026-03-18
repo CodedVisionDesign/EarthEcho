@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -14,6 +15,7 @@ import {
   faBars,
   faXmark,
 } from "@/lib/fontawesome";
+import { Logo } from "@/components/ui/Logo";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 interface NavLink {
@@ -32,13 +34,15 @@ const NAV_LINKS: NavLink[] = [
 
 interface AdminNavProps {
   role: string;
+  userName: string;
+  userImage: string | null;
 }
 
-export function AdminNav({ role }: AdminNavProps) {
+export function AdminNav({ role, userName, userImage }: AdminNavProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isSuperAdmin = role === "superadmin";
+  const isSuperAdmin = role === "superadmin" || role === "developer";
   const visibleLinks = NAV_LINKS.filter(
     (link) => !link.superadminOnly || isSuperAdmin,
   );
@@ -55,9 +59,7 @@ export function AdminNav({ role }: AdminNavProps) {
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 md:px-6">
           {/* Brand */}
           <Link href="/admin" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-forest to-ocean text-white">
-              <FontAwesomeIcon icon={faShieldHalved} className="h-4 w-4" />
-            </div>
+            <Logo size="xs" showText={false} />
             <span className="text-base font-bold text-charcoal tracking-tight">
               EarthEcho <span className="text-forest">Admin</span>
             </span>
@@ -81,8 +83,26 @@ export function AdminNav({ role }: AdminNavProps) {
             ))}
           </nav>
 
-          {/* Back to app + Mobile toggle */}
-          <div className="flex items-center gap-2">
+          {/* User info + Back to app + Mobile toggle */}
+          <div className="flex items-center gap-3">
+            {/* User profile */}
+            <div className="hidden items-center gap-2 md:flex">
+              {userImage ? (
+                <Image
+                  src={userImage}
+                  alt={userName}
+                  width={28}
+                  height={28}
+                  className="rounded-full object-cover"
+                  unoptimized
+                />
+              ) : (
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-forest/10 text-xs font-bold text-forest">
+                  {userName[0]?.toUpperCase()}
+                </div>
+              )}
+              <span className="text-xs font-medium text-charcoal">{userName}</span>
+            </div>
             <Link
               href="/dashboard"
               className="hidden items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-slate transition-colors hover:bg-gray-50 hover:text-charcoal md:flex"

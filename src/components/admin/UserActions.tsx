@@ -20,8 +20,8 @@ export function UserActions({ userId, userName, userRole, isBanned, currentUserR
   const [showBanModal, setShowBanModal] = useState(false);
   const [banReason, setBanReason] = useState("");
 
-  const isSuperAdmin = currentUserRole === "superadmin";
-  const isTargetAdmin = userRole === "admin" || userRole === "superadmin";
+  const isSuperAdmin = currentUserRole === "superadmin" || currentUserRole === "developer";
+  const isTargetAdmin = ["admin", "superadmin", "developer"].includes(userRole);
 
   function handleBan() {
     if (!banReason.trim()) return;

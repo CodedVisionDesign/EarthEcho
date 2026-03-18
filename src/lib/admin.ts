@@ -8,10 +8,10 @@ export async function requireAdmin() {
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, role: true, email: true },
+    select: { id: true, role: true, email: true, name: true, displayName: true, image: true },
   });
 
-  if (!user || (user.role !== "admin" && user.role !== "superadmin")) {
+  if (!user || !["admin", "superadmin", "developer"].includes(user.role)) {
     redirect("/dashboard");
   }
 
@@ -24,10 +24,10 @@ export async function requireSuperAdmin() {
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, role: true, email: true },
+    select: { id: true, role: true, email: true, name: true, displayName: true, image: true },
   });
 
-  if (!user || user.role !== "superadmin") {
+  if (!user || (user.role !== "superadmin" && user.role !== "developer")) {
     redirect("/dashboard");
   }
 

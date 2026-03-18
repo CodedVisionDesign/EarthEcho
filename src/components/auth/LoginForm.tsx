@@ -78,11 +78,11 @@ export function LoginForm() {
 
       {/* Divider */}
       <div className="mb-6 flex items-center gap-3">
-        <div className="h-px flex-1 bg-white/30" />
-        <span className="text-[11px] font-medium uppercase tracking-wider text-white/60 drop-shadow-sm">
+        <div className="h-px flex-1 bg-gray-400" />
+        <span className="text-[11px] font-medium uppercase tracking-wider text-gray-600">
           or
         </span>
-        <div className="h-px flex-1 bg-white/30" />
+        <div className="h-px flex-1 bg-gray-400" />
       </div>
 
       {/* Error message */}

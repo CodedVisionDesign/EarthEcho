@@ -12,10 +12,10 @@ export default function RegisterPage() {
       >
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-white drop-shadow-md">
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
               Create Account
             </h1>
-            <p className="mt-1 text-sm text-white/80 drop-shadow-sm">
+            <p className="mt-1 text-sm text-gray-700">
               Start tracking your environmental impact today
             </p>
           </div>
@@ -25,16 +25,16 @@ export default function RegisterPage() {
 
           {/* Divider */}
           <div className="mb-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-white/30" />
-            <span className="text-[11px] font-medium uppercase tracking-wider text-white/60 drop-shadow-sm">
+            <div className="h-px flex-1 bg-gray-400" />
+            <span className="text-[11px] font-medium uppercase tracking-wider text-gray-600">
               or
             </span>
-            <div className="h-px flex-1 bg-white/30" />
+            <div className="h-px flex-1 bg-gray-400" />
           </div>
 
           <RegisterForm />
 
-          <p className="mt-6 text-center text-sm text-white/80 drop-shadow-sm">
+          <p className="mt-6 text-center text-sm text-gray-700">
             Already have an account?{" "}
             <Link
               href="/login"

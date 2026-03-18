@@ -12,6 +12,11 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { requireAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
+import {
+  UserGrowthChart,
+  CategoryBreakdownChart,
+  ActivityTrendChart,
+} from "@/components/admin/AdminCharts";
 
 function timeAgo(date: Date): string {
   const now = new Date();
@@ -36,11 +41,19 @@ const ACTION_LABELS: Record<string, { label: string; variant: "success" | "dange
   demote_admin: { label: "Demote Admin", variant: "neutral" },
 };
 
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 export default async function AdminDashboard() {
   const admin = await requireAdmin();
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
   const [
     totalUsers,
@@ -50,6 +63,9 @@ export default async function AdminDashboard() {
     totalReplies,
     bannedUsers,
     recentAuditLogs,
+    usersByMonth,
+    activitiesByCategory,
+    recentDailyActivities,
   ] = await Promise.all([
     db.user.count(),
     db.user.count({
@@ -66,7 +82,58 @@ export default async function AdminDashboard() {
         admin: { select: { name: true, email: true } },
       },
     }),
+    // User growth: registrations per month (last 6 months)
+    db.user.findMany({
+      where: { createdAt: { gte: sixMonthsAgo } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    // Activity category breakdown
+    db.activity.groupBy({
+      by: ["category"],
+      _count: { id: true },
+    }),
+    // Daily activities last 14 days
+    db.activity.findMany({
+      where: { createdAt: { gte: fourteenDaysAgo } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
   ]);
+
+  // Process user growth data
+  const growthMap = new Map<string, number>();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const key = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear().toString().slice(2)}`;
+    growthMap.set(key, 0);
+  }
+  for (const u of usersByMonth) {
+    const key = `${MONTH_NAMES[u.createdAt.getMonth()]} ${u.createdAt.getFullYear().toString().slice(2)}`;
+    if (growthMap.has(key)) growthMap.set(key, (growthMap.get(key) ?? 0) + 1);
+  }
+  const userGrowthData = Array.from(growthMap.entries()).map(([month, users]) => ({ month, users }));
+
+  // Process category breakdown
+  const categoryData = activitiesByCategory.map((c) => ({
+    name: c.category.charAt(0) + c.category.slice(1).toLowerCase(),
+    value: c._count.id,
+  }));
+
+  // Process daily activity trend
+  const dailyMap = new Map<string, number>();
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = `${d.getDate()}/${d.getMonth() + 1}`;
+    dailyMap.set(key, 0);
+  }
+  for (const a of recentDailyActivities) {
+    const key = `${a.createdAt.getDate()}/${a.createdAt.getMonth() + 1}`;
+    if (dailyMap.has(key)) dailyMap.set(key, (dailyMap.get(key) ?? 0) + 1);
+  }
+  const activityTrendData = Array.from(dailyMap.entries()).map(([day, activities]) => ({ day, activities }));
 
   const stats = [
     {
@@ -118,7 +185,7 @@ export default async function AdminDashboard() {
           <div>
             <h1 className="text-2xl font-bold text-charcoal">Admin Dashboard</h1>
             <p className="text-sm text-slate">
-              Welcome back, {admin.email}
+              Welcome back, {admin.displayName || admin.name || admin.email}
             </p>
           </div>
         </div>
@@ -137,6 +204,17 @@ export default async function AdminDashboard() {
             <p className="mt-0.5 text-xs text-slate">{stat.label}</p>
           </Card>
         ))}
+      </div>
+
+      {/* Charts Row */}
+      <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <UserGrowthChart data={userGrowthData} />
+        <CategoryBreakdownChart data={categoryData} />
+      </div>
+
+      {/* Activity Trend - Full Width */}
+      <div className="mb-8">
+        <ActivityTrendChart data={activityTrendData} />
       </div>
 
       {/* Recent Audit Logs */}

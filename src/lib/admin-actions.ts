@@ -18,7 +18,7 @@ export async function banUser(userId: string, reason: string) {
   });
 
   if (!target) throw new Error("User not found");
-  if (target.role === "admin" || target.role === "superadmin") {
+  if (["admin", "superadmin", "developer"].includes(target.role)) {
     throw new Error("Cannot ban an admin");
   }
 
@@ -144,6 +144,30 @@ export async function adminDeleteReply(replyId: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Moderation words
+// ---------------------------------------------------------------------------
+
+export async function addModerationWord(word: string, type: "flag" | "ban") {
+  await requireAdmin();
+  const normalized = word.trim().toLowerCase();
+  if (!normalized) throw new Error("Word cannot be empty");
+
+  await db.moderationWord.upsert({
+    where: { word: normalized },
+    update: { type },
+    create: { word: normalized, type },
+  });
+
+  revalidatePath("/admin/forum");
+}
+
+export async function removeModerationWord(id: string) {
+  await requireAdmin();
+  await db.moderationWord.delete({ where: { id } });
+  revalidatePath("/admin/forum");
+}
+
+// ---------------------------------------------------------------------------
 // Role management (superadmin only)
 // ---------------------------------------------------------------------------
 
@@ -156,7 +180,7 @@ export async function promoteToAdmin(userId: string) {
   });
 
   if (!target) throw new Error("User not found");
-  if (target.role === "admin" || target.role === "superadmin") {
+  if (["admin", "superadmin", "developer"].includes(target.role)) {
     throw new Error("User is already an admin");
   }
 
@@ -186,8 +210,8 @@ export async function demoteFromAdmin(userId: string) {
   });
 
   if (!target) throw new Error("User not found");
-  if (target.role === "superadmin") {
-    throw new Error("Cannot demote a superadmin");
+  if (target.role === "superadmin" || target.role === "developer") {
+    throw new Error("Cannot demote a superadmin or developer");
   }
   if (target.role !== "admin") {
     throw new Error("User is not an admin");

@@ -117,7 +117,7 @@ export function Sidebar({ userName, userImage, userRole }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isAdmin = userRole === "admin" || userRole === "superadmin";
+  const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "developer";
 
   const sidebarContent = (
     <>
