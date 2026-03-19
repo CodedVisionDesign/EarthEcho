@@ -1,9 +1,9 @@
+import { signIn } from "next-auth/react";
+
 /**
  * Detects whether the app is running as an installed PWA (standalone mode).
- * In standalone mode, OAuth redirects break on iOS because the callback
- * opens in Safari instead of returning to the PWA webview.
  */
-export function isStandalonePWA(): boolean {
+function isStandalonePWA(): boolean {
   if (typeof window === "undefined") return false;
 
   // iOS Safari standalone mode
@@ -22,23 +22,17 @@ export function isStandalonePWA(): boolean {
 /**
  * Starts an OAuth sign-in flow that works in both browser and PWA standalone mode.
  *
- * In a normal browser tab, uses the standard next-auth signIn() redirect.
- * In standalone PWA mode, opens the OAuth flow in the system browser so
- * the redirect callback can complete successfully, then navigates back to the app.
+ * In a normal browser, uses the standard next-auth signIn() redirect.
+ * In standalone PWA mode on iOS, OAuth callbacks can't return to the webview,
+ * so we open the login page in the system browser where OAuth works normally.
  */
 export function startOAuthSignIn(provider: "google" | "facebook") {
   if (isStandalonePWA()) {
-    // In standalone PWA, open OAuth in system browser.
-    // The callback will land on /dashboard which re-opens the PWA.
-    window.open(
-      `/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent("/dashboard")}`,
-      "_blank"
-    );
+    // Open the login page in the system browser where OAuth redirects work.
+    // After successful auth, the user lands on /dashboard in the browser.
+    window.open(`/login`, "_blank");
   } else {
-    // Normal browser — use standard next-auth redirect
-    // Dynamic import to avoid pulling next-auth/react into the module scope
-    import("next-auth/react").then(({ signIn }) => {
-      signIn(provider, { callbackUrl: "/dashboard" });
-    });
+    // Normal browser — use standard next-auth signIn with CSRF protection
+    signIn(provider, { callbackUrl: "/dashboard" });
   }
 }
