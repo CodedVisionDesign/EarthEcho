@@ -11,6 +11,7 @@ const navLinks = [
   { name: "How it works", href: "#how-it-works" },
   { name: "Impact", href: "#impact" },
   { name: "Community", href: "#community" },
+  { name: "About Us", href: "/about" },
   { name: "Eco Apps", href: "/apps" },
 ];
 

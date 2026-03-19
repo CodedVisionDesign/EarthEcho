@@ -39,7 +39,7 @@ export function HeroSection() {
       </div>
 
       {/* Animated globe background */}
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] lg:w-[700px] lg:h-[700px] opacity-80 pointer-events-none z-[2]">
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] lg:w-[700px] lg:h-[700px] opacity-80 z-[2]">
         <AnimatedGlobe />
       </div>
 
@@ -69,7 +69,7 @@ export function HeroSection() {
         ))}
       </div>
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 py-32 lg:py-40">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 py-32 lg:py-40 pointer-events-none">
         {/* Eyebrow */}
         <div
           className={`mb-8 transition-all duration-700 ${
@@ -142,7 +142,7 @@ export function HeroSection() {
               size="lg"
               rightIcon={faArrowRight}
               href="/register"
-              className="rounded-full h-14 px-8 text-base"
+              className="rounded-full h-14 px-8 text-base pointer-events-auto"
             >
               Start tracking free
             </Button>
@@ -150,7 +150,7 @@ export function HeroSection() {
               variant="ghost"
               size="lg"
               href="#how-it-works"
-              className="rounded-full h-14 px-8 text-base border border-white/20 text-white hover:bg-white/10 hover:text-white"
+              className="rounded-full h-14 px-8 text-base border border-white/20 text-white hover:bg-white/10 hover:text-white pointer-events-auto"
             >
               See how it works
             </Button>

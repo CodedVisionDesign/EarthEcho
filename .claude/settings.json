@@ -53,7 +53,9 @@
       "Bash(grep -E \"\\\\.\\(mp4|webm|png|jpg|webp\\)$\")",
       "Bash(cat \"/c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/app/\\(auth\\)/layout.tsx\")",
       "Bash(ls -la /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/app/\\\\\\(main\\\\\\)/profile/)",
-      "Bash(grep -r \"age\\\\|dateOfBirth\\\\|dob\\\\|birth\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src --include=*.tsx --include=*.ts -i)"
+      "Bash(grep -r \"age\\\\|dateOfBirth\\\\|dob\\\\|birth\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src --include=*.tsx --include=*.ts -i)",
+      "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/tailwind.config -o -name tailwind.config.*)",
+      "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject -name tailwind.config.* -o -name next.config.*)"
     ]
   }
 }

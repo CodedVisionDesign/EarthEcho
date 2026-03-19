@@ -9,6 +9,7 @@ const footerLinks = {
     { name: "Features", href: "#features" },
     { name: "How it works", href: "#how-it-works" },
     { name: "Impact", href: "#impact" },
+    { name: "About Us", href: "/about" },
     { name: "Eco Apps", href: "/apps" },
   ],
   Product: [
