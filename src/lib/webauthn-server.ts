@@ -9,8 +9,8 @@ import type { AuthenticatorTransportFuture } from "@simplewebauthn/types";
 export function getWebAuthnConfig() {
   return {
     rpName: process.env.WEBAUTHN_RP_NAME || "Earth Echo",
-    rpID: process.env.WEBAUTHN_RP_ID || "localhost",
-    origin: process.env.WEBAUTHN_ORIGIN || "http://localhost:3002",
+    rpID: process.env.WEBAUTHN_RP_ID!,
+    origin: process.env.WEBAUTHN_ORIGIN!,
   };
 }
 

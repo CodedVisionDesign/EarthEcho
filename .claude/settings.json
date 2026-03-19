@@ -121,10 +121,19 @@
       "Bash(\"/c/Program Files/Android/Android Studio/jbr/bin/keytool\" -list -v -keystore \"c:/xampp/htdocs/CarbonFootprint/DashboardStudyProject/earthecho-upload.keystore\" -alias earthecho -storepass \"EarthEcho2025!\")",
       "Bash(npx cap:*)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3002/)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3002/offline)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3002/offline)",
+      "Bash(npx @capacitor/assets --help)",
+      "Bash(ls -la /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/app/*.png)",
+      "Bash(grep -r \"og:image\\\\|twitter:\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject --include=*.tsx --include=*.ts --include=*.html -n)",
+      "Bash(npx @capacitor/assets generate --android)",
+      "Bash(firebase --version)",
+      "Bash(npx sharp:*)",
+      "Bash(node -e \"try{require\\(''''sharp''''\\);console.log\\(''''sharp available''''\\)}catch{console.log\\(''''sharp not available''''\\)}\")",
+      "Bash(node -e \":*)"
     ],
     "additionalDirectories": [
-      "c:\\xampp\\htdocs\\CarbonFootprint\\DashboardStudyProject\\public\\assets"
+      "c:\\xampp\\htdocs\\CarbonFootprint\\DashboardStudyProject\\public\\assets",
+      "C:\\xampp\\htdocs\\CarbonFootprint\\DashboardStudyProject\\public"
     ]
   }
 }

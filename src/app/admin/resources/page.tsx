@@ -12,6 +12,12 @@ const RESOURCE_CATEGORIES = [
   { value: "transport", label: "Transport" },
   { value: "shopping", label: "Shopping" },
   { value: "food_waste", label: "Food Waste" },
+  { value: "recycling_tools", label: "Recycling Tools" },
+  { value: "wildlife", label: "Wildlife & Environment" },
+  { value: "ethical_shopping", label: "Ethical / Fair Trade" },
+  { value: "impact_investing", label: "Impact Investing" },
+  { value: "vegan", label: "Vegan & Plant-Based" },
+  { value: "reduce_waste", label: "Reduce Waste & Second-Hand" },
 ];
 
 export default async function AdminResourcesPage() {

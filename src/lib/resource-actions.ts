@@ -15,13 +15,14 @@ export async function createResource(formData: FormData) {
   const description = formData.get("description") as string;
   const url = formData.get("url") as string;
   const category = formData.get("category") as string;
+  const image = (formData.get("image") as string) || null;
 
   if (!name || !description || !url || !category) {
     return { error: "All fields are required" };
   }
 
   const resource = await db.resource.create({
-    data: { name, description, url, category, isActive: true },
+    data: { name, description, url, category, image, isActive: true },
   });
 
   await createAuditLog({
@@ -45,6 +46,7 @@ export async function updateResource(formData: FormData) {
   const description = formData.get("description") as string;
   const url = formData.get("url") as string;
   const category = formData.get("category") as string;
+  const image = (formData.get("image") as string) || null;
 
   if (!id || !name || !description || !url || !category) {
     return { error: "All fields are required" };
@@ -52,7 +54,7 @@ export async function updateResource(formData: FormData) {
 
   await db.resource.update({
     where: { id },
-    data: { name, description, url, category },
+    data: { name, description, url, category, image },
   });
 
   await createAuditLog({

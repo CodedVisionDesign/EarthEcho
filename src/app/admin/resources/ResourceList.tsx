@@ -26,6 +26,7 @@ interface Resource {
   description: string;
   url: string;
   category: string;
+  image: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -144,6 +145,16 @@ export function ResourceList({ resources, categories }: ResourceListProps) {
                 required
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest"
                 placeholder="https://..."
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate">Image URL (optional)</label>
+              <input
+                name="image"
+                type="url"
+                defaultValue={editingResource?.image ?? ""}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest"
+                placeholder="https://logo.clearbit.com/example.com"
               />
             </div>
             <div>

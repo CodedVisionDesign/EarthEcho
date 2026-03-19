@@ -162,7 +162,7 @@ export function AnimatedSplash({ onComplete, minDuration = 3200 }: AnimatedSplas
         {/* Logo */}
         <div className="ee-logo relative z-10 drop-shadow-[0_0_12px_rgba(82,183,136,0.2)]">
           <Image
-            src="/assets/ee-logo.webp"
+            src="/assets/ee-logo.webp?v=4"
             alt="EarthEcho"
             width={140}
             height={140}

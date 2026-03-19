@@ -831,7 +831,7 @@ export async function requestPasswordReset(input: { email: string }) {
   });
 
   // Build reset URL
-  const baseUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002";
+  const baseUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL;
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
   // Send email (best-effort)

@@ -48,7 +48,7 @@ export function Logo({
         style={{ width: s.icon, height: s.icon }}
       >
         <Image
-          src="/assets/ee-logo.webp"
+          src="/assets/ee-logo.webp?v=4"
           alt="EarthEcho logo"
           width={s.icon}
           height={s.icon}

@@ -1,16 +1,16 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = "earthecho-v2";
+const CACHE_NAME = "earthecho-v4";
 const OFFLINE_URL = "/offline";
 
 // Static assets to pre-cache on install
 const PRECACHE_URLS = [
   "/",
   "/offline",
-  "/icon.png",
-  "/icon-192.png",
-  "/assets/ee-logo.webp",
-  "/manifest.json",
+  "/icon.png?v=4",
+  "/icon-192.png?v=4",
+  "/assets/ee-logo.webp?v=4",
+  "/manifest.json?v=4",
 ];
 
 // ===== Install: pre-cache the app shell =====

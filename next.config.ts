@@ -24,8 +24,13 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["10.0.2.2", "192.168.1.65"],
+  ...(process.env.NODE_ENV === "development" && {
+    allowedDevOrigins: ["10.0.2.2", "192.168.1.65"],
+  }),
   images: {
+    localPatterns: [
+      { pathname: "/assets/**" },
+    ],
     remotePatterns: [
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
       { protocol: "https", hostname: "platform-lookaside.fbsbx.com" },

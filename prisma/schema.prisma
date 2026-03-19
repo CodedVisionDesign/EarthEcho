@@ -340,7 +340,8 @@ model Resource {
   name        String  @unique
   description String  @db.Text
   url         String  @db.Text
-  category    String // "energy", "water", "recycling", "transport", "shopping", "food_waste"
+  category    String // "energy", "water", "recycling", "transport", "shopping", "food_waste", "recycling_tools", "wildlife", "ethical_shopping", "impact_investing", "vegan", "reduce_waste"
+  image       String? @db.Text // optional logo/image URL
   isActive    Boolean @default(true)
 
   createdAt DateTime @default(now())
