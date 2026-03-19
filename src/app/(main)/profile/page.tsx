@@ -22,6 +22,7 @@ import { LinkedAccountsCard } from "@/components/profile/LinkedAccountsCard";
 import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
 import { PasskeyManager } from "@/components/profile/PasskeyManager";
 import { ImpactSummaryCard } from "@/components/profile/ImpactSummaryCard";
+import { DeleteAccountSection } from "@/components/profile/DeleteAccountSection";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 interface StatCardProps {
@@ -256,6 +257,7 @@ export default async function ProfilePage() {
               displayName={user.displayName ?? ""}
               bio={user.bio ?? ""}
               isPublic={user.isPublic}
+              dateOfBirth={user.dateOfBirth ? user.dateOfBirth.toISOString().split("T")[0] : ""}
             />
           </Card>
 
@@ -275,6 +277,9 @@ export default async function ProfilePage() {
 
           {/* Notification Preferences */}
           <NotificationPreferences />
+
+          {/* Delete Account */}
+          <DeleteAccountSection hasPassword={!!user.password} />
         </div>
       </div>
     </div>

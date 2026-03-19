@@ -44,7 +44,7 @@ export function CtaSection() {
           {/* Background image */}
           <div className="absolute inset-0 z-0">
             <Image
-              src="/assets/hero_bg.jpg"
+              src="/assets/hero_bg.webp"
               alt=""
               fill
               className="object-cover opacity-10"

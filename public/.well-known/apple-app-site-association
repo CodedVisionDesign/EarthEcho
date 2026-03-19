@@ -1,0 +1,25 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.com.earthecho.app",
+        "paths": [
+          "/dashboard",
+          "/track/*",
+          "/challenges/*",
+          "/badges/*",
+          "/forum/*",
+          "/leaderboard",
+          "/guides/*",
+          "/profile"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAMID.com.earthecho.app"
+    ]
+  }
+}

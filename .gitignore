@@ -4,4 +4,7 @@ node_modules
 .env.local
 .env.production
 CREDENTIALS.md
-node_modules
+
+# User uploads (keep directory structure via .gitkeep)
+/public/uploads/*
+!/public/uploads/**/.gitkeep

@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
-import { MagicCard } from "./MagicCard";
+import dynamic from "next/dynamic";
+
+const MagicCard = dynamic(
+  () => import("./MagicCard").then((m) => m.MagicCard),
+);
 
 const VARIANTS = {
   default:

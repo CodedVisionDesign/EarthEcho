@@ -55,7 +55,20 @@
       "Bash(ls -la /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/app/\\\\\\(main\\\\\\)/profile/)",
       "Bash(grep -r \"age\\\\|dateOfBirth\\\\|dob\\\\|birth\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src --include=*.tsx --include=*.ts -i)",
       "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/tailwind.config -o -name tailwind.config.*)",
-      "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject -name tailwind.config.* -o -name next.config.*)"
+      "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject -name tailwind.config.* -o -name next.config.*)",
+      "Bash(ls -lh public/assets/hero_bg.*)",
+      "Bash(ls -lh public/assets/auth_bg.*)",
+      "Bash(ffmpeg -i public/assets/auth_bg.mp4)",
+      "Bash(ffmpeg -y -i public/assets/auth_bg.mp4 -t 8 -vf \"scale=720:-2\" -r 24 -c:v libvpx-vp9 -b:v 400k -an -pix_fmt yuv420p public/assets/auth_bg_new.webm)",
+      "Bash(ffmpeg -y -i public/assets/auth_bg.mp4 -t 8 -vf \"scale=720:-2\" -r 24 -c:v libx264 -preset slow -crf 28 -an -pix_fmt yuv420p -movflags +faststart public/assets/auth_bg_new.mp4)",
+      "Bash(ls -lh public/assets/auth_bg*.*)",
+      "Bash(ls -lh public/assets/auth_bg*)",
+      "Bash(xargs cat:*)",
+      "Bash(grep -r \"customImage\\\\|avatar\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/lib/actions.ts /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/lib/*actions.ts)",
+      "Bash(node -e \"const path = require\\(''path''\\); console.log\\(path.join\\(process.cwd\\(\\), ''public'', ''uploads'', ''avatars''\\)\\)\")"
+    ],
+    "additionalDirectories": [
+      "c:\\xampp\\htdocs\\CarbonFootprint\\DashboardStudyProject\\public\\assets"
     ]
   }
 }

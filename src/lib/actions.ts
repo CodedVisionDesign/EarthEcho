@@ -591,6 +591,7 @@ export async function updateProfile(input: {
   displayName?: string;
   bio?: string;
   isPublic?: boolean;
+  dateOfBirth?: string;
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
@@ -600,12 +601,24 @@ export async function updateProfile(input: {
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  // GDPR data minimisation: only store DOB for users under 18
+  let dobData: { dateOfBirth?: Date | null } = {};
+  if (parsed.data.dateOfBirth) {
+    const dob = new Date(parsed.data.dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    dobData = age < 18 ? { dateOfBirth: dob } : { dateOfBirth: null };
+  }
+
   await db.user.update({
     where: { id: session.user.id },
     data: {
       ...(parsed.data.displayName !== undefined && { displayName: parsed.data.displayName }),
       ...(parsed.data.bio !== undefined && { bio: parsed.data.bio }),
       ...(parsed.data.isPublic !== undefined && { isPublic: parsed.data.isPublic }),
+      ...dobData,
     },
   });
 
@@ -624,6 +637,7 @@ export async function registerUser(input: {
   name: string;
   email: string;
   password: string;
+  dateOfBirth: string;
 }) {
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -639,16 +653,51 @@ export async function registerUser(input: {
 
   const hashedPassword = await bcrypt.hash(parsed.data.password, 12);
 
+  // Store DOB only for users under 18 (data minimisation per GDPR)
+  const dob = new Date(parsed.data.dateOfBirth);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+
   await db.user.create({
     data: {
       name: parsed.data.name,
       email: parsed.data.email,
       password: hashedPassword,
+      ...(age < 18 && { dateOfBirth: dob }),
     },
   });
 
   // Send welcome email (best-effort)
   sendWelcomeEmail(parsed.data.name, parsed.data.email).catch(() => {});
+
+  return { success: true };
+}
+
+// ==========================================
+// Account Deletion (Apple/Google Store requirement)
+// ==========================================
+
+export async function deleteOwnAccount(input: { password?: string }) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, email: true, name: true, password: true },
+  });
+  if (!user) return { error: "User not found" };
+
+  // If user has a password, require it for confirmation
+  if (user.password) {
+    if (!input.password) return { error: "Password is required to confirm account deletion" };
+    const isValid = await bcrypt.compare(input.password, user.password);
+    if (!isValid) return { error: "Incorrect password" };
+  }
+
+  // All relations have onDelete: Cascade — this removes all user data
+  await db.user.delete({ where: { id: session.user.id } });
 
   return { success: true };
 }

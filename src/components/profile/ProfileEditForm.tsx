@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { updateProfile } from "@/lib/actions";
@@ -9,25 +9,40 @@ interface ProfileEditFormProps {
   displayName: string;
   bio: string;
   isPublic: boolean;
+  dateOfBirth: string;
 }
 
 export function ProfileEditForm({
   displayName: initialDisplayName,
   bio: initialBio,
   isPublic: initialIsPublic,
+  dateOfBirth: initialDateOfBirth,
 }: ProfileEditFormProps) {
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [bio, setBio] = useState(initialBio);
   const [isPublic, setIsPublic] = useState(initialIsPublic);
+  const [dateOfBirth, setDateOfBirth] = useState(initialDateOfBirth);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Max date = 13 years ago (COPPA compliance)
+  const maxDate = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 13);
+    return d.toISOString().split("T")[0];
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage(null);
 
     startTransition(async () => {
-      const result = await updateProfile({ displayName, bio, isPublic });
+      const result = await updateProfile({
+        displayName,
+        bio,
+        isPublic,
+        ...(dateOfBirth && { dateOfBirth }),
+      });
       if (result.error) {
         setMessage({ type: "error", text: result.error });
       } else {
@@ -72,6 +87,28 @@ export function ProfileEditForm({
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-charcoal transition-colors focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
           placeholder="Tell us about yourself..."
         />
+      </div>
+
+      {/* Date of Birth */}
+      <div>
+        <label
+          htmlFor="dateOfBirth"
+          className="mb-1 block text-sm font-medium text-charcoal"
+        >
+          Date of Birth
+        </label>
+        <input
+          id="dateOfBirth"
+          type="date"
+          value={dateOfBirth}
+          onChange={(e) => setDateOfBirth(e.target.value)}
+          max={maxDate}
+          min="1900-01-01"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-charcoal transition-colors focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+        />
+        <p className="mt-1 text-xs text-slate">
+          Used for age verification. Only stored if you are under 18 (GDPR data minimisation).
+        </p>
       </div>
 
       {/* Public profile toggle */}

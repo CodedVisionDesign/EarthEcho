@@ -86,13 +86,32 @@ export const profileSchema = z.object({
   displayName: z.string().min(2).max(50).optional(),
   bio: z.string().max(500).optional(),
   isPublic: z.boolean().optional(),
-});
+  dateOfBirth: z.string().optional(),
+}).refine((data) => {
+  if (!data.dateOfBirth) return true;
+  const dob = new Date(data.dateOfBirth);
+  if (isNaN(dob.getTime())) return false;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age >= 13;
+}, { message: "You must be at least 13 years old", path: ["dateOfBirth"] });
 
 export const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-});
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+}).refine((data) => {
+  const dob = new Date(data.dateOfBirth);
+  if (isNaN(dob.getTime())) return false;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age >= 13;
+}, { message: "You must be at least 13 years old to create an account", path: ["dateOfBirth"] });
 
 export const loginSchema = z.object({
   email: z.string().email("Invalid email address"),

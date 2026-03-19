@@ -28,12 +28,11 @@ export function HeroSection() {
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/assets/hero_bg.jpg"
+          src="/assets/hero_bg.webp"
           alt="Pristine forest canopy with a turquoise river"
           fill
           className="object-cover"
           priority
-          unoptimized
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70" />
       </div>

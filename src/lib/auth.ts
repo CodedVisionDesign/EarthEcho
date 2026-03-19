@@ -30,12 +30,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      allowDangerousEmailAccountLinking: true,
     }),
     Facebook({
       clientId: process.env.FACEBOOK_CLIENT_ID,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       id: "passkey",
@@ -129,8 +127,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async signIn({ user, account, profile }) {
       // For OAuth providers, check if user already exists by email
-      // and pre-link the account if needed (workaround for allowDangerousEmailAccountLinking
-      // not being respected in next-auth v5 beta)
+      // and pre-link the account if needed. This runs BEFORE the adapter,
+      // so the Account record exists by the time PrismaAdapter looks it up.
+      // Safe because OAuth providers (Google/Facebook) verify email ownership.
       if (account && account.provider !== "credentials" && account.provider !== "passkey" && user.email) {
         try {
           const existingUser = await db.user.findUnique({

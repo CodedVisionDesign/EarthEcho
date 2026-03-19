@@ -10,6 +10,7 @@ import {
   faUser,
   faUserPlus,
   faCircleCheck,
+  faClock,
 } from "@/lib/fontawesome";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Input } from "@/components/ui/Input";
@@ -48,6 +49,7 @@ export function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -66,7 +68,7 @@ export function RegisterForm() {
     setLoading(true);
 
     try {
-      const result = await registerUser({ name, email, password });
+      const result = await registerUser({ name, email, password, dateOfBirth });
 
       if (result.error) {
         setError(result.error);
@@ -171,6 +173,17 @@ export function RegisterForm() {
             </div>
           )}
         </div>
+
+        <Input
+          label="Date of Birth"
+          type="date"
+          icon={faClock}
+          value={dateOfBirth}
+          onChange={(e) => setDateOfBirth(e.target.value)}
+          required
+          max={new Date(new Date().getFullYear() - 13, new Date().getMonth(), new Date().getDate()).toISOString().split("T")[0]}
+          min="1900-01-01"
+        />
 
         {/* GDPR Terms Checkbox */}
         <label className="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-0.5">

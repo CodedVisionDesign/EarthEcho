@@ -91,6 +91,7 @@ export function AvatarUpload({ currentImage, userName }: AvatarUploadProps) {
             width={80}
             height={80}
             className="h-full w-full object-cover"
+            unoptimized
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-forest text-2xl font-bold text-white">

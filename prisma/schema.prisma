@@ -24,6 +24,7 @@ model User {
   displayName String?
   bio         String?  @db.Text
   isPublic    Boolean  @default(true)
+  dateOfBirth DateTime?
 
   // Role-based access control
   role      String  @default("user") // "user", "admin", "superadmin", "developer"
