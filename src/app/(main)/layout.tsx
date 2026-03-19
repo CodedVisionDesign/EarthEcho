@@ -4,6 +4,7 @@ import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { TourShell } from "@/components/tour/TourShell";
 import { PushOptIn } from "@/components/pwa/PushOptIn";
+import { NativePushRegistrar } from "@/components/pwa/NativePushRegistrar";
 
 export default async function MainLayout({
   children,
@@ -48,6 +49,7 @@ export default async function MainLayout({
         </div>
 
         {session?.user && <PushOptIn />}
+        {session?.user && <NativePushRegistrar />}
       </div>
     </TourShell>
   );

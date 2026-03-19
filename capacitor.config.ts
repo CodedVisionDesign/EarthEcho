@@ -1,20 +1,32 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
+/**
+ * Capacitor configuration for EarthEcho.
+ *
+ * Because the app uses server actions, API routes, and next-auth (SSR),
+ * we cannot use static export. Instead, the native shell loads the
+ * hosted web app via `server.url`. Local assets in `webDir` are served
+ * as a fallback while the connection is established.
+ *
+ * Environment-based URLs:
+ *   - Development: http://localhost:3002 (livereload)
+ *   - Production:  https://earthecho.co.uk
+ */
+const isDev = process.env.NODE_ENV === "development";
+
 const config: CapacitorConfig = {
   appId: "com.earthecho.app",
   appName: "Earth Echo",
-  webDir: "out",
+  webDir: "public",
   server: {
-    // In development, point to the Next.js dev server
-    ...(process.env.NODE_ENV === "development" && {
-      url: "http://localhost:3002",
-      cleartext: true,
-    }),
+    url: isDev ? "http://localhost:3002" : "https://earthecho.co.uk",
+    cleartext: isDev,
+    androidScheme: "https",
   },
   plugins: {
     SplashScreen: {
-      launchAutoHide: false, // We hide it manually after our animated splash
-      backgroundColor: "#FFFFFF",
+      launchAutoHide: false,
+      backgroundColor: "#0a1a12",
       showSpinner: false,
       androidSplashResourceName: "splash",
       splashFullScreen: true,
@@ -26,12 +38,19 @@ const config: CapacitorConfig = {
       style: "LIGHT",
       backgroundColor: "#2D6A4F",
     },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"],
+    },
   },
   ios: {
     scheme: "EarthEcho",
     contentInset: "automatic",
+    preferredContentMode: "mobile",
+    allowsLinkPreview: false,
   },
   android: {
+    allowMixedContent: false,
+    orientation: "portrait",
     buildOptions: {
       keystorePath: undefined,
       keystoreAlias: undefined,

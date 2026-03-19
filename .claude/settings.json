@@ -110,7 +110,8 @@
       "Bash(grep -E \"\\\\.tsx$\")",
       "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/components/auth -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
       "Bash(find c:xampphtdocsCarbonFootprintDashboardStudyProjectsrcappadminusers -type f -name *.tsx -o -name *.ts)",
-      "Bash(find c:xampphtdocsCarbonFootprintDashboardStudyProjectsrclib -name *webauthn* -o -name *passkey*)"
+      "Bash(find c:xampphtdocsCarbonFootprintDashboardStudyProjectsrclib -name *webauthn* -o -name *passkey*)",
+      "Bash(node -e \"console.log\\(require\\(''crypto''\\).randomBytes\\(32\\).toString\\(''base64url''\\)\\)\")"
     ],
     "additionalDirectories": [
       "c:\\xampp\\htdocs\\CarbonFootprint\\DashboardStudyProject\\public\\assets"
