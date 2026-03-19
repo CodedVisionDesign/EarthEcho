@@ -38,7 +38,7 @@ export function AnimatedSplash({ onComplete, minDuration = 3200 }: AnimatedSplas
     const doneTimer = setTimeout(() => {
       setPhase("done");
       onComplete?.();
-    }, minDuration + 700);
+    }, minDuration + 800);
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(doneTimer);
@@ -46,6 +46,18 @@ export function AnimatedSplash({ onComplete, minDuration = 3200 }: AnimatedSplas
   }, [minDuration, onComplete, hideSplash]);
 
   if (phase === "done") return null;
+
+  // Solid backdrop that stays opaque while the animated overlay fades out.
+  // It fades slightly later (shorter duration) so the page content is revealed
+  // smoothly after the splash animation finishes — no flash of content mid-fade.
+  const backdrop = (
+    <div
+      className={`fixed inset-0 z-[9998] bg-[#0a1a12] transition-opacity duration-500 ${
+        phase === "fading" ? "opacity-0 delay-300" : "opacity-100"
+      }`}
+      aria-hidden="true"
+    />
+  );
 
   // Eco-themed floating icons — leaf, water drop, recycle, wind, seedling, bicycle, sun, globe
   const ecoIcons = [
@@ -79,6 +91,8 @@ export function AnimatedSplash({ onComplete, minDuration = 3200 }: AnimatedSplas
   }));
 
   return (
+    <>
+    {backdrop}
     <div
       className={`ee-splash fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700 ${
         phase === "fading" ? "opacity-0" : "opacity-100"
@@ -312,5 +326,6 @@ export function AnimatedSplash({ onComplete, minDuration = 3200 }: AnimatedSplas
         }
       `}</style>
     </div>
+    </>
   );
 }
