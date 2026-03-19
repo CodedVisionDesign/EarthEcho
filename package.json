@@ -17,6 +17,7 @@
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npx cap open android",
     "cap:sync": "npx cap sync",
+    "cap:sync:dev": "node -e \"process.env.NODE_ENV='development';require('child_process').execSync('npx cap sync android',{stdio:'inherit',env:{...process.env,NODE_ENV:'development'}})\"",
     "cap:run:android": "npx cap run android",
     "cap:run:ios": "npx cap run ios"
   },

@@ -111,7 +111,17 @@
       "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/components/auth -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
       "Bash(find c:xampphtdocsCarbonFootprintDashboardStudyProjectsrcappadminusers -type f -name *.tsx -o -name *.ts)",
       "Bash(find c:xampphtdocsCarbonFootprintDashboardStudyProjectsrclib -name *webauthn* -o -name *passkey*)",
-      "Bash(node -e \"console.log\\(require\\(''crypto''\\).randomBytes\\(32\\).toString\\(''base64url''\\)\\)\")"
+      "Bash(node -e \"console.log\\(require\\(''crypto''\\).randomBytes\\(32\\).toString\\(''base64url''\\)\\)\")",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files/Android/Android Studio/jbr/bin/**)",
+      "Read(//c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/$HOME/.android/**)",
+      "Bash(keytool)",
+      "Bash(\"/c/Program Files/Eclipse Adoptium/jdk-21.0.7.6-hotspot/bin/keytool\")",
+      "Bash(\"/c/Program Files/Android/Android Studio/jbr/bin/keytool\" -genkeypair -v -keystore \"c:/xampp/htdocs/CarbonFootprint/DashboardStudyProject/earthecho-upload.keystore\" -alias earthecho -keyalg RSA -keysize 2048 -validity 10000 -storepass EarthEcho2025! -keypass EarthEcho2025! -dname \"CN=Earth Echo, OU=Mobile, O=EarthEcho, L=London, ST=England, C=GB\")",
+      "Bash(\"/c/Program Files/Android/Android Studio/jbr/bin/keytool\" -list -v -keystore \"c:/xampp/htdocs/CarbonFootprint/DashboardStudyProject/earthecho-upload.keystore\" -alias earthecho -storepass \"EarthEcho2025!\")",
+      "Bash(npx cap:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3002/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3002/offline)"
     ],
     "additionalDirectories": [
       "c:\\xampp\\htdocs\\CarbonFootprint\\DashboardStudyProject\\public\\assets"

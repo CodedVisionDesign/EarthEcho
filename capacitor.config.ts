@@ -9,8 +9,11 @@ import type { CapacitorConfig } from "@capacitor/cli";
  * as a fallback while the connection is established.
  *
  * Environment-based URLs:
- *   - Development: http://localhost:3002 (livereload)
+ *   - Development: http://10.0.2.2:3002 (Android emulator alias for host localhost)
  *   - Production:  https://earthecho.co.uk
+ *
+ * Note: Android emulator cannot reach "localhost" — use 10.0.2.2 instead.
+ * For a physical device on the same WiFi, use your LAN IP (e.g., 192.168.x.x).
  */
 const isDev = process.env.NODE_ENV === "development";
 
@@ -19,7 +22,7 @@ const config: CapacitorConfig = {
   appName: "Earth Echo",
   webDir: "public",
   server: {
-    url: isDev ? "http://localhost:3002" : "https://earthecho.co.uk",
+    url: isDev ? "http://10.0.2.2:3002" : "https://earthecho.co.uk",
     cleartext: isDev,
     androidScheme: "https",
   },
@@ -50,10 +53,11 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: false,
-    orientation: "portrait",
+    // Orientation lock: set android:screenOrientation="portrait" in
+    // android/app/src/main/AndroidManifest.xml after running `npx cap add android`
     buildOptions: {
-      keystorePath: undefined,
-      keystoreAlias: undefined,
+      keystorePath: "earthecho-upload.keystore",
+      keystoreAlias: "earthecho",
     },
   },
 };

@@ -13,3 +13,7 @@ CREDENTIALS.md
 /ios
 /android
 /out
+
+# Android signing keystore (contains private key — NEVER commit)
+*.keystore
+*.jks
