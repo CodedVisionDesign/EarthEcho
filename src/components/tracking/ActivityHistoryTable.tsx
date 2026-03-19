@@ -188,7 +188,7 @@ interface SwipeableRowProps {
 }
 
 function SwipeableRow({ children, onDelete, className = "" }: SwipeableRowProps) {
-  const rowRef = useRef<HTMLTableRowElement>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
   const startX = useRef(0);
   const currentX = useRef(0);
   const isSwiping = useRef(false);
@@ -233,29 +233,24 @@ function SwipeableRow({ children, onDelete, className = "" }: SwipeableRowProps)
   }, [onDelete]);
 
   return (
-    <tr ref={rowRef} className={`relative overflow-hidden ${className}`}>
+    <div ref={rowRef} className={`relative overflow-hidden ${className}`}>
       {(offset < 0 || showDelete) && (
-        <td
-          colSpan={100}
-          className="pointer-events-none absolute top-0 bottom-0 right-0 p-0 md:hidden"
+        <div
+          className="pointer-events-none absolute top-0 bottom-0 right-0 md:hidden"
           style={{ zIndex: 0, width: `${SWIPE_THRESHOLD}px` }}
         >
-          <div className="flex h-full items-stretch justify-end">
-            <button
-              type="button"
-              onClick={handleDeleteClick}
-              className="pointer-events-auto inline-flex items-center justify-center bg-red-600 text-white transition-colors hover:bg-red-700"
-              style={{ width: `${SWIPE_THRESHOLD}px` }}
-              aria-label="Delete activity"
-            >
-              <FontAwesomeIcon icon={faTrashCan} className="h-4 w-4" />
-            </button>
-          </div>
-        </td>
+          <button
+            type="button"
+            onClick={handleDeleteClick}
+            className="pointer-events-auto flex h-full w-full items-center justify-center bg-red-600 text-white transition-colors hover:bg-red-700"
+            aria-label="Delete activity"
+          >
+            <FontAwesomeIcon icon={faTrashCan} className="h-4 w-4" />
+          </button>
+        </div>
       )}
-      <td
-        colSpan={100}
-        className="relative bg-inherit p-0 md:hidden"
+      <div
+        className="relative bg-inherit md:hidden"
         style={{
           transform: `translateX(${offset}px)`,
           transition: isSwiping.current ? "none" : "transform 0.25s ease-out",
@@ -265,11 +260,9 @@ function SwipeableRow({ children, onDelete, className = "" }: SwipeableRowProps)
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="flex w-full">
-          {children}
-        </div>
-      </td>
-    </tr>
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -664,8 +657,7 @@ export function ActivityHistoryTable({
             </span>
           </div>
 
-          <table className="w-full">
-            <tbody>
+          <div>
               {filtered.map((activity, i) => {
                 const isSelected = selectedIds.has(activity.id);
                 return (
@@ -689,8 +681,7 @@ export function ActivityHistoryTable({
                   </SwipeableRow>
                 );
               })}
-            </tbody>
-          </table>
+          </div>
 
           {/* Mobile summary */}
           <div className="border-t border-gray-200 bg-gray-50/50 px-4 py-3 text-xs text-slate">
