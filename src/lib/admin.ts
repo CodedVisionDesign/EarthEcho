@@ -34,6 +34,22 @@ export async function requireSuperAdmin() {
   return user;
 }
 
+export async function requireDeveloper() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, role: true, email: true, name: true, displayName: true, image: true },
+  });
+
+  if (!user || user.role !== "developer") {
+    redirect("/dashboard");
+  }
+
+  return user;
+}
+
 export async function createAuditLog(input: {
   adminId: string;
   action: string;

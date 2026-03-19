@@ -1,3 +1,7 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
 const COLORS = {
   forest: "bg-forest",
   ocean: "bg-ocean",
@@ -29,6 +33,8 @@ export function ProgressBar({
   className = "",
 }: ProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, value));
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   return (
     <div className={className}>
@@ -41,7 +47,7 @@ export function ProgressBar({
       >
         <div
           className={`${COLORS[color]} ${SIZES[size]} rounded-full transition-all duration-700 ease-out`}
-          style={{ width: `${clamped}%` }}
+          style={{ width: mounted ? `${clamped}%` : "0%" }}
         />
       </div>
       {showLabel && (

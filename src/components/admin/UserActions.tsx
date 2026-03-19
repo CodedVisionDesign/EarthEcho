@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBan, faCircleCheck, faUserShield, faSpinner, faRotateRight } from "@/lib/fontawesome";
-import { banUser, unbanUser, changeUserRole, adminSendPasswordReset } from "@/lib/admin-actions";
+import { faBan, faCircleCheck, faUserShield, faSpinner, faRotateRight, faTrashCan } from "@/lib/fontawesome";
+import { banUser, unbanUser, changeUserRole, adminSendPasswordReset, deleteUser } from "@/lib/admin-actions";
 
 interface UserActionsProps {
   userId: string;
@@ -53,8 +53,10 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
   const [isPending, startTransition] = useTransition();
   const [showBanModal, setShowBanModal] = useState(false);
   const [banReason, setBanReason] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const isSuperAdmin = currentUserRole === "superadmin" || currentUserRole === "developer";
+  const isDeveloper = currentUserRole === "developer";
   const isTargetAdmin = ["admin", "superadmin", "developer"].includes(userRole);
 
   function handleBan() {
@@ -127,6 +129,22 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
     });
   }
 
+  function handleDelete() {
+    startTransition(async () => {
+      try {
+        const result = await deleteUser(userId);
+        if (result.success) {
+          setShowDeleteModal(false);
+          router.refresh();
+        } else {
+          alert(result.error || "Failed to delete user");
+        }
+      } catch (e) {
+        alert(e instanceof Error ? e.message : "Failed to delete user");
+      }
+    });
+  }
+
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
@@ -169,6 +187,19 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
           )
         )}
 
+        {/* Delete user (developer only, not for developer accounts) */}
+        {isDeveloper && userRole !== "developer" && (
+          <button
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            disabled={isPending}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+          >
+            <FontAwesomeIcon icon={faTrashCan} className="h-3 w-3" />
+            Delete
+          </button>
+        )}
+
         {/* Role change (superadmin/developer only, not for developer accounts) */}
         {isSuperAdmin && userRole !== "developer" && (
           <div className="inline-flex items-center gap-1.5">
@@ -186,6 +217,39 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="mb-1 text-lg font-semibold text-charcoal">
+              Delete {userName}
+            </h3>
+            <p className="mb-4 text-sm text-slate">
+              This will <strong className="text-red-600">permanently delete</strong> this user and all their data including activities, points, forum posts, badges, and challenge progress. This cannot be undone.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-slate hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isPending}
+                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              >
+                {isPending && <FontAwesomeIcon icon={faSpinner} className="h-3 w-3" spin />}
+                Delete Permanently
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ban Modal */}
       {showBanModal && (

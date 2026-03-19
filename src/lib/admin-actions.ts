@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "./db";
-import { requireAdmin, requireSuperAdmin, createAuditLog } from "./admin";
+import { requireAdmin, requireSuperAdmin, requireDeveloper, createAuditLog } from "./admin";
 import { revalidatePath } from "next/cache";
 import { sendBanNotificationEmail, sendPasswordResetEmail, sendAdminInviteEmail } from "./email";
 import bcrypt from "bcryptjs";
@@ -395,4 +395,51 @@ export async function inviteAdmin(email: string, name: string) {
 
   revalidatePath("/admin/users");
   revalidatePath("/admin");
+}
+
+// ---------------------------------------------------------------------------
+// Delete user (developer only)
+// ---------------------------------------------------------------------------
+
+export async function deleteUser(userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await requireDeveloper();
+
+    if (userId === admin.id) {
+      return { success: false, error: "You cannot delete your own account" };
+    }
+
+    const target = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, role: true, displayName: true },
+    });
+
+    if (!target) return { success: false, error: "User not found" };
+    if (target.role === "developer") {
+      return { success: false, error: "Cannot delete a developer account" };
+    }
+
+    // Create audit log before deletion so we capture the target's details
+    await createAuditLog({
+      adminId: admin.id,
+      action: "delete_user",
+      targetId: userId,
+      targetType: "user",
+      details: {
+        targetEmail: target.email,
+        targetName: target.name || target.displayName,
+        targetRole: target.role,
+      },
+    });
+
+    // All relations have onDelete: Cascade - this removes all user data
+    await db.user.delete({ where: { id: userId } });
+
+    revalidatePath("/admin/users");
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (e) {
+    console.error("[ADMIN] Delete user failed:", e);
+    return { success: false, error: e instanceof Error ? e.message : "Failed to delete user" };
+  }
 }

@@ -21,6 +21,7 @@ const ACTION_LABELS: Record<string, { label: string; variant: "success" | "dange
   unpin_thread: { label: "Unpin Thread", variant: "neutral" },
   toggle_auto_generate: { label: "Toggle Auto-Generate", variant: "info" },
   update_challenge_template: { label: "Update Template", variant: "neutral" },
+  delete_user: { label: "Delete User", variant: "danger" },
 };
 
 function formatDate(date: Date): string {
@@ -42,10 +43,13 @@ export default async function AdminAuditPage({
   const { action, page } = await searchParams;
   const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
 
-  // Superadmin sees all logs, regular admin sees only their own
-  const baseWhere = (admin.role === "superadmin" || admin.role === "developer")
-    ? {}
-    : { adminId: admin.id };
+  // Developer sees all logs, superadmin sees all except developer logs, admin sees own only
+  const baseWhere =
+    admin.role === "developer"
+      ? {}
+      : admin.role === "superadmin"
+        ? { admin: { role: { not: "developer" } } }
+        : { adminId: admin.id };
 
   const where = {
     ...baseWhere,
@@ -79,7 +83,7 @@ export default async function AdminAuditPage({
           <div>
             <h1 className="text-xl font-bold text-charcoal">Audit Log</h1>
             <p className="text-sm text-slate">
-              {total} entries{admin.role !== "superadmin" && admin.role !== "developer" ? " (your actions)" : ""}
+              {total} entries{admin.role !== "superadmin" && admin.role !== "developer" ? " (your actions)" : admin.role === "superadmin" ? " (excludes developer actions)" : ""}
             </p>
           </div>
         </div>
