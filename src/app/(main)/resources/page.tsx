@@ -200,6 +200,20 @@ export default async function ResourcesPage({
         </div>
       </FadeIn>
 
+      {/* Cross-link to Eco App Directory */}
+      <div className="mb-6 flex items-center justify-between rounded-lg border border-forest/10 bg-forest/5 px-4 py-3">
+        <p className="text-sm text-charcoal">
+          Looking for eco-friendly mobile apps?
+        </p>
+        <a
+          href="/apps"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-forest transition-colors hover:text-forest-light"
+        >
+          Browse App Directory
+          <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="h-3 w-3" aria-hidden />
+        </a>
+      </div>
+
       {/* Category Tabs */}
       <div className="mb-8 flex flex-wrap gap-2">
         <a

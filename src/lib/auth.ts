@@ -15,10 +15,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   debug: process.env.NODE_ENV === "development",
   logger: {
     error(code, ...message) {
-      console.error("[AUTH ERROR]", code, ...message);
+      if (process.env.NODE_ENV === "development") console.error("[AUTH ERROR]", code, ...message);
     },
     warn(code, ...message) {
-      console.warn("[AUTH WARN]", code, ...message);
+      if (process.env.NODE_ENV === "development") console.warn("[AUTH WARN]", code, ...message);
     },
   },
   pages: {

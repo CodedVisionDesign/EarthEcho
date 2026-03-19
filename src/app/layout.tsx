@@ -5,6 +5,7 @@ import "@/lib/fontawesome";
 import "./globals.css";
 import { ServiceWorkerRegistrar } from "@/components/pwa/ServiceWorkerRegistrar";
 import { CapacitorSplash } from "@/components/pwa/CapacitorSplash";
+import { CookieConsent } from "@/components/CookieConsent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,6 +58,7 @@ export default function RootLayout({
       >
         <CapacitorSplash />
         {children}
+        <CookieConsent />
         <ServiceWorkerRegistrar />
       </body>
     </html>

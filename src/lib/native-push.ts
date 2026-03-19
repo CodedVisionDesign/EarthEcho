@@ -34,8 +34,8 @@ export async function registerNativePush() {
     });
 
     // Handle notification received while app is in foreground
-    PushNotifications.addListener("pushNotificationReceived", (notification) => {
-      console.log("[Native Push] Foreground:", notification);
+    PushNotifications.addListener("pushNotificationReceived", () => {
+      // Foreground notification received — no action needed
     });
 
     // Handle notification tapped

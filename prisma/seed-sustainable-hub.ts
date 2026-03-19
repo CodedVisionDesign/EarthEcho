@@ -141,6 +141,14 @@ const SUSTAINABLE_HUB_RESOURCES = [
 
   // 🔁 Reduce Waste & Second-Hand
   {
+    name: "Oddbox",
+    description:
+      "Rescues wonky and surplus fruit and veg that would otherwise go to waste, delivering seasonal produce boxes to your door across the UK.",
+    url: "https://www.oddbox.co.uk",
+    category: "reduce_waste",
+    image: "https://logo.clearbit.com/oddbox.co.uk",
+  },
+  {
     name: "Wonky Coffee",
     description:
       "Premium coffee made from beans that would otherwise be discarded for cosmetic imperfections — great taste, zero waste.",

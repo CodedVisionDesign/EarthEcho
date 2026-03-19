@@ -1,3 +1,4 @@
 {
-    "claudeCode.initialPermissionMode": "acceptEdits"
+    "claudeCode.initialPermissionMode": "acceptEdits",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

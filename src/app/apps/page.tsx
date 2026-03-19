@@ -568,6 +568,15 @@ export default function EcoAppsPage() {
             >
               Start Tracking Free
             </Button>
+            <p className="mt-4 text-sm text-slate">
+              Already a member?{" "}
+              <a
+                href="/resources"
+                className="font-semibold text-forest transition-colors hover:text-forest-light"
+              >
+                Explore our Sustainable Living Hub &rarr;
+              </a>
+            </p>
           </div>
         </FadeIn>
       </section>

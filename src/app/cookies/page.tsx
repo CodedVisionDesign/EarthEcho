@@ -118,11 +118,37 @@ export default function CookiePolicyPage() {
             </div>
           </Section>
 
-          <Section icon={faShieldHalved} title="3. Third-Party Cookies">
-            <p>
-              We do not use any third-party advertising, analytics, or tracking cookies. The only
-              third-party interaction occurs during OAuth sign-in with Google or Facebook, which is
-              handled server-side and does not set persistent third-party cookies on your device.
+          <Section icon={faShieldHalved} title="3. Analytics Cookies">
+            <p className="mb-3">
+              With your consent, we use Google Analytics to understand how our site is used.
+              These cookies are only set if you click &ldquo;Accept all&rdquo; on our cookie banner.
+            </p>
+            <div className="overflow-x-auto rounded-lg border border-white/[0.06]">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className="border-b border-white/[0.06] bg-white/[0.02]">
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40">Cookie</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40">Purpose</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40">Duration</th>
+                  </tr>
+                </thead>
+                <tbody className="text-white/60">
+                  <tr className="border-b border-white/[0.04]">
+                    <td className="px-4 py-3 font-mono text-xs text-leaf/80">_ga</td>
+                    <td className="px-4 py-3">Distinguishes unique users</td>
+                    <td className="px-4 py-3 text-white/40">2 years</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 font-mono text-xs text-leaf/80">_gid</td>
+                    <td className="px-4 py-3">Distinguishes unique users (short-lived)</td>
+                    <td className="px-4 py-3 text-white/40">24 hours</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3">
+              You can change your preference at any time by clearing your browser cookies and
+              revisiting the site.
             </p>
           </Section>
 
