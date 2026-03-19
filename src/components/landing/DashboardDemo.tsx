@@ -424,23 +424,33 @@ export function DashboardDemo() {
             </div>
           </div>
 
-          {/* Mobile tabs (browser window on small screens) */}
+          {/* Mobile view (browser window on small screens) — replicates mobile app layout */}
           <div className="flex w-full flex-col md:hidden">
-            <div className="flex border-b border-gray-200 bg-white">
-              {DEMO_NAV.map((item) => (
-                <button key={item.page} type="button" onClick={() => navigateTo(item.page)}
-                  className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[9px] font-medium transition-colors ${activePage === item.page ? "border-b-2 border-forest text-forest" : "text-slate/60"}`}>
-                  <FontAwesomeIcon icon={item.icon} className="h-3 w-3" aria-hidden />
-                  {item.label}
-                </button>
-              ))}
-            </div>
             <div className="relative flex-1 overflow-hidden">
               {PAGES.map((p) => (
-                <div key={p} className="absolute inset-0 overflow-y-auto transition-opacity duration-300 ease-in-out" style={{ maxHeight: "520px", opacity: activePage === p ? 1 : 0, pointerEvents: activePage === p ? "auto" : "none" }}>
-                  <PageContent page={p} state={sharedState} onLog={handleLog} compact={false} />
+                <div key={p} className="absolute inset-0 overflow-y-auto transition-opacity duration-300 ease-in-out" style={{ maxHeight: "470px", opacity: activePage === p ? 1 : 0, pointerEvents: activePage === p ? "auto" : "none" }}>
+                  <PageContent page={p} state={sharedState} onLog={handleLog} compact />
                 </div>
               ))}
+            </div>
+            {/* Bottom tab bar — mobile app style */}
+            <div className="border-t border-gray-200 bg-white/95 backdrop-blur-sm">
+              <div className="flex">
+                {DEMO_NAV.map((item) => (
+                  <button key={item.page} type="button" onClick={() => navigateTo(item.page)}
+                    className={`relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[9px] font-medium transition-colors ${activePage === item.page ? "text-forest" : "text-slate/40"}`}>
+                    <FontAwesomeIcon icon={item.icon} className="h-3.5 w-3.5" aria-hidden />
+                    {item.label}
+                    {activePage === item.page && (
+                      <motion.span
+                        layoutId="mobile-tab-indicator"
+                        className="absolute -bottom-px left-1/4 right-1/4 h-[2px] rounded-full bg-forest"
+                        transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
