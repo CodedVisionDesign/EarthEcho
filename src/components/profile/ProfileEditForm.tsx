@@ -107,7 +107,7 @@ export function ProfileEditForm({
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-charcoal transition-colors focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
         />
         <p className="mt-1 text-xs text-slate">
-          Used for age verification. Only stored if you are under 18 (GDPR data minimisation).
+          Used for age verification.
         </p>
       </div>
 
