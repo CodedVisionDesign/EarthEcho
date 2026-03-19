@@ -31,7 +31,7 @@ export default async function MainLayout({
 
         {/* Vertical flex column: scrollable main + pinned bottom nav */}
         <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-x-none">
             <div className="mx-auto max-w-6xl px-4 pt-16 pb-6 md:px-8 md:pt-8 md:pb-10">
               <ToastProvider>
                 {children}

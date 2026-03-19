@@ -16,7 +16,7 @@ export default async function AdminLayout({
   return (
     <div className="flex h-dvh flex-col bg-gray-50/50">
       <AdminNav role={admin.role} userName={admin.displayName || admin.name || admin.email || "Admin"} userImage={admin.image} />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-x-none">
         <div className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
           {children}
         </div>

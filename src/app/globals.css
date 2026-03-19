@@ -202,6 +202,11 @@
 
 html {
   scroll-behavior: smooth;
+  overscroll-behavior-x: none;
+}
+
+html, body {
+  overflow-x: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
