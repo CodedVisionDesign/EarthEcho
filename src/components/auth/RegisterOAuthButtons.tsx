@@ -16,31 +16,31 @@ export function RegisterOAuthButtons() {
   }, []);
 
   return (
-    <div className="mb-6 space-y-3">
+    <div className="mb-4 flex gap-3">
       <button
         type="button"
         onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-        className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-charcoal transition-all duration-200 hover:bg-gray-50 hover:shadow-sm"
+        className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-charcoal transition-all duration-200 hover:bg-gray-50 hover:shadow-sm"
       >
         <FontAwesomeIcon
           icon={faGoogle}
           className="h-4 w-4 text-[#4285F4]"
           aria-hidden
         />
-        Sign up with Google
+        Google
       </button>
       {!isPWA && (
         <button
           type="button"
           onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })}
-          className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#1877F2] bg-[#1877F2] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-[#166FE5]"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-[#1877F2] bg-[#1877F2] px-3 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-[#166FE5]"
         >
           <FontAwesomeIcon
             icon={faFacebook}
             className="h-4 w-4"
             aria-hidden
           />
-          Sign up with Facebook
+          Facebook
         </button>
       )}
     </div>

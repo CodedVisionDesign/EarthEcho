@@ -106,7 +106,11 @@
       "Bash(magick \"$SRC\" -resize 256x256 -strip -define webp:lossless=true \"$PUB/assets/logo.webp\")",
       "Bash(magick eelogo.png -resize 256x256 -strip -define webp:lossless=true \"public/assets/ee-logo.webp\")",
       "Bash(rm -f \"public/assets/logo.webp\")",
-      "Bash(SRC=\"eelogo.png\")"
+      "Bash(SRC=\"eelogo.png\")",
+      "Bash(grep -E \"\\\\.tsx$\")",
+      "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/components/auth -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
+      "Bash(find c:xampphtdocsCarbonFootprintDashboardStudyProjectsrcappadminusers -type f -name *.tsx -o -name *.ts)",
+      "Bash(find c:xampphtdocsCarbonFootprintDashboardStudyProjectsrclib -name *webauthn* -o -name *passkey*)"
     ],
     "additionalDirectories": [
       "c:\\xampp\\htdocs\\CarbonFootprint\\DashboardStudyProject\\public\\assets"

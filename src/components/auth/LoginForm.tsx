@@ -22,6 +22,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
 
   useEffect(() => {
@@ -30,6 +31,11 @@ export function LoginForm() {
       window.matchMedia("(display-mode: standalone)").matches;
     setIsPWA(standalone);
   }, []);
+
+  function triggerShake() {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -45,11 +51,13 @@ export function LoginForm() {
 
       if (result?.error) {
         setError("Invalid email or password");
+        triggerShake();
       } else {
         router.push("/dashboard");
       }
     } catch {
       setError("Invalid email or password");
+      triggerShake();
     } finally {
       setLoading(false);
     }
@@ -62,38 +70,38 @@ export function LoginForm() {
         <PasskeyLoginButton onError={(msg) => setError(msg)} />
       </div>
 
-      {/* OAuth Buttons - Facebook hidden in standalone PWA (OAuth redirects fail on iOS) */}
-      <div className="mb-6 space-y-3">
+      {/* OAuth Buttons - side by side, Facebook hidden in standalone PWA */}
+      <div className="mb-4 flex gap-3">
         <button
           type="button"
           onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-          className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-charcoal transition-all duration-200 hover:bg-gray-50 hover:shadow-sm"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-charcoal transition-all duration-200 hover:bg-gray-50 hover:shadow-sm"
         >
           <FontAwesomeIcon
             icon={faGoogle}
             className="h-4 w-4 text-[#4285F4]"
             aria-hidden
           />
-          Continue with Google
+          Google
         </button>
         {!isPWA && (
           <button
             type="button"
             onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })}
-            className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#1877F2] bg-[#1877F2] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-[#166FE5]"
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-[#1877F2] bg-[#1877F2] px-3 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-[#166FE5]"
           >
             <FontAwesomeIcon
               icon={faFacebook}
               className="h-4 w-4"
               aria-hidden
             />
-            Continue with Facebook
+            Facebook
           </button>
         )}
       </div>
 
       {/* Divider */}
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-4 flex items-center gap-3">
         <div className="h-px flex-1 bg-gray-400" />
         <span className="text-[11px] font-medium uppercase tracking-wider text-gray-600">
           or
@@ -103,39 +111,44 @@ export function LoginForm() {
 
       {/* Error message */}
       {error && (
-        <div className="mb-4 rounded-lg bg-coral/10 px-4 py-2.5 text-sm text-coral">
+        <div className="mb-3 rounded-lg bg-coral/10 px-4 py-2 text-sm text-coral">
           {error}
         </div>
       )}
 
       {/* Email/Password Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Email"
-          type="email"
-          icon={faEnvelope}
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <Input
-          label="Password"
-          type="password"
-          icon={faLock}
-          placeholder="Enter your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <div className="flex justify-end">
-          <Link
-            href="/forgot-password"
-            className="text-xs font-medium text-forest transition-colors hover:text-forest-dark hover:underline"
-          >
-            Forgot password?
-          </Link>
-        </div>
+      <form onSubmit={handleSubmit} className={`space-y-3 ${shake ? "animate-shake" : ""}`}>
+        <fieldset disabled={loading} className="space-y-3">
+          <Input
+            label="Email"
+            type="email"
+            icon={faEnvelope}
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoFocus
+            autoComplete="email"
+          />
+          <Input
+            label="Password"
+            type="password"
+            icon={faLock}
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
+          <div className="flex justify-end">
+            <Link
+              href="/forgot-password"
+              className="text-xs font-medium text-forest transition-colors hover:text-forest-dark hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        </fieldset>
         <Button
           type="submit"
           variant="primary"

@@ -22,14 +22,14 @@ export default async function LoginPage({
     <div className="w-full animate-scale-in">
       <Card
         variant="glass"
-        className="mx-auto w-full max-w-md p-8 md:flex md:min-h-screen md:max-w-none md:items-center md:justify-center md:rounded-none md:border-0 md:p-12 md:shadow-none"
+        className="mx-auto w-full max-w-md p-6 md:flex md:min-h-screen md:max-w-none md:items-center md:justify-center md:rounded-none md:border-0 md:p-8 md:shadow-none"
       >
         <div className="w-full max-w-md">
-          <div className="mb-6 text-center">
+          <div className="mb-4 text-center">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">
               Welcome Back
             </h1>
-            <p className="mt-1 text-sm text-gray-700">
+            <p className="mt-0.5 text-sm text-gray-700">
               Log in to track your environmental impact
             </p>
           </div>
@@ -43,7 +43,7 @@ export default async function LoginPage({
 
           <LoginForm />
 
-          <p className="mt-6 text-center text-sm text-gray-700">
+          <p className="mt-4 text-center text-sm text-gray-700">
             Don&apos;t have an account?{" "}
             <Link
               href="/register"

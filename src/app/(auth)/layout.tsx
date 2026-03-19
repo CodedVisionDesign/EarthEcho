@@ -32,7 +32,7 @@ export default function AuthLayout({
           {/* Soft glass overlay - also fixed */}
           <div className="absolute inset-0 z-[1] bg-gradient-to-b from-white/10 via-transparent to-white/20 backdrop-blur-[1px]" />
 
-          <main className="relative z-[2] flex min-h-screen w-full items-center justify-center overflow-y-auto px-4 pb-8 pt-24 md:px-0 md:py-0">
+          <main className="relative z-[2] flex min-h-screen w-full items-center justify-center overflow-y-auto px-4 pb-6 pt-20 md:px-0 md:py-0">
             <div className="w-full">
               {children}
             </div>

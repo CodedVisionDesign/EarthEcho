@@ -95,6 +95,7 @@ import {
   faArrowsUpDown,
   faFileExport,
   faClock,
+  faFingerprint,
 } from "@fortawesome/free-solid-svg-icons";
 
 // Brand icons
@@ -127,7 +128,7 @@ library.add(
   faEnvelopeOpenText, faRotateRight,
   faArrowUp, faArrowDown,
   faBell, faReply, faToggleOn, faToggleOff,
-  faHouse, faGlobe, faArrowsUpDown, faFileExport, faClock,
+  faHouse, faGlobe, faArrowsUpDown, faFileExport, faClock, faFingerprint,
   // Brands
   faGoogle, faFacebook, faApple, faGooglePlay
 );
@@ -153,6 +154,6 @@ export {
   faEnvelopeOpenText, faRotateRight,
   faArrowUp, faArrowDown,
   faBell, faReply, faToggleOn, faToggleOff,
-  faHouse, faGlobe, faArrowsUpDown, faFileExport, faClock,
+  faHouse, faGlobe, faArrowsUpDown, faFileExport, faClock, faFingerprint,
   faGoogle, faFacebook, faApple, faGooglePlay,
 };

@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUsers, faSearch, faShieldHalved, faUserShield, faBan, faUserPlus, faEnvelopeOpenText, faArrowUp, faArrowDown, faGoogle, faFacebook, faEnvelope, faApple, faRotateRight } from "@/lib/fontawesome";
+import { faUsers, faSearch, faShieldHalved, faUserShield, faBan, faUserPlus, faEnvelopeOpenText, faArrowUp, faArrowDown, faGoogle, faFacebook, faEnvelope, faApple, faRotateRight, faFingerprint } from "@/lib/fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -20,10 +20,11 @@ const ROLE_BADGE: Record<string, { variant: "success" | "info" | "warning" | "ne
 };
 
 const PROVIDER_CONFIG: Record<string, { icon: IconDefinition; color: string; label: string }> = {
-  google:      { icon: faGoogle,   color: "text-[#4285F4]", label: "Google" },
-  facebook:    { icon: faFacebook, color: "text-[#1877F2]", label: "Facebook" },
-  apple:       { icon: faApple,    color: "text-charcoal",  label: "Apple" },
-  credentials: { icon: faEnvelope, color: "text-slate",     label: "Email" },
+  google:      { icon: faGoogle,      color: "text-[#4285F4]", label: "Google" },
+  facebook:    { icon: faFacebook,    color: "text-[#1877F2]", label: "Facebook" },
+  apple:       { icon: faApple,       color: "text-charcoal",  label: "Apple" },
+  credentials: { icon: faEnvelope,    color: "text-slate",     label: "Email" },
+  passkey:     { icon: faFingerprint, color: "text-violet-500", label: "Passkey" },
 };
 
 type RoleFilter = "all" | "admins" | "users";
@@ -38,7 +39,7 @@ export default async function AdminUsersPage({
   const { q, page, role, sort, order, provider } = await searchParams;
   const search = q?.trim() ?? "";
   const roleFilter = (["all", "admins", "users"].includes(role ?? "") ? role : "all") as RoleFilter;
-  const providerFilter = (["google", "facebook", "apple", "credentials"].includes(provider ?? "") ? provider : null) as string | null;
+  const providerFilter = (["google", "facebook", "apple", "credentials", "passkey"].includes(provider ?? "") ? provider : null) as string | null;
   const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
 
   // Determine sort field and order
@@ -62,12 +63,14 @@ export default async function AdminUsersPage({
         ? { role: "user" }
         : {};
 
-  // Provider filter: credentials = has password, others = has matching account
+  // Provider filter: credentials = has password, passkey = has webauthn, others = has matching account
   const providerFilterWhere = providerFilter === "credentials"
     ? { password: { not: null } }
-    : providerFilter
-      ? { accounts: { some: { provider: providerFilter } } }
-      : {};
+    : providerFilter === "passkey"
+      ? { webauthnCredentials: { some: {} } }
+      : providerFilter
+        ? { accounts: { some: { provider: providerFilter } } }
+        : {};
 
   const where = { ...searchFilter, ...roleFilterWhere, ...providerFilterWhere };
 
@@ -79,7 +82,7 @@ export default async function AdminUsersPage({
     joined: { createdAt: sortOrder },
   };
 
-  const [users, total, providerCounts, emailPasswordCount] = await Promise.all([
+  const [users, total, providerCounts, emailPasswordCount, passkeyCount] = await Promise.all([
     db.user.findMany({
       where,
       select: {
@@ -97,6 +100,7 @@ export default async function AdminUsersPage({
         resetTokenExpiry: true,
         createdAt: true,
         accounts: { select: { provider: true } },
+        _count: { select: { webauthnCredentials: true } },
       },
       orderBy: orderByMap[sortField],
       take: PAGE_SIZE,
@@ -105,6 +109,7 @@ export default async function AdminUsersPage({
     db.user.count({ where }),
     db.account.groupBy({ by: ["provider"], _count: { provider: true } }),
     db.user.count({ where: { password: { not: null } } }),
+    db.user.count({ where: { webauthnCredentials: { some: {} } } }),
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -140,12 +145,13 @@ export default async function AdminUsersPage({
     return sortOrder === "asc" ? faArrowUp : faArrowDown;
   }
 
-  function getUserProviders(user: { password: string | null; accounts: { provider: string }[] }) {
+  function getUserProviders(user: { password: string | null; accounts: { provider: string }[]; _count: { webauthnCredentials: number } }) {
     const providers: string[] = [];
     if (user.password) providers.push("credentials");
     for (const a of user.accounts) {
       if (!providers.includes(a.provider)) providers.push(a.provider);
     }
+    if (user._count.webauthnCredentials > 0) providers.push("passkey");
     return providers;
   }
 
@@ -229,7 +235,9 @@ export default async function AdminUsersPage({
           const count =
             key === "credentials"
               ? emailPasswordCount
-              : providerCounts.find((p) => p.provider === key)?._count.provider ?? 0;
+              : key === "passkey"
+                ? passkeyCount
+                : providerCounts.find((p) => p.provider === key)?._count.provider ?? 0;
           if (count === 0) return null;
           const isActive = providerFilter === key;
           return (
