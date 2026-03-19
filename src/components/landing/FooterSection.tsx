@@ -3,6 +3,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode, faEnvelope } from "@/lib/fontawesome";
 import { Logo } from "@/components/ui/Logo";
+import { resetCookieConsent } from "@/components/CookieConsent";
 
 const footerLinks = {
   Explore: [
@@ -30,6 +31,7 @@ const footerLinks = {
     { name: "Privacy Policy", href: "/privacy" },
     { name: "Terms of Service", href: "/terms" },
     { name: "Cookie Policy", href: "/cookies" },
+    { name: "Manage Cookies", href: "#manage-cookies", action: "manage-cookies" },
   ],
 };
 
@@ -69,15 +71,26 @@ export function FooterSection() {
                 <ul className="space-y-4">
                   {links.map((link) => {
                     const isExternal = link.href.startsWith("http");
+                    const isAction = "action" in link && link.action === "manage-cookies";
                     return (
                       <li key={link.name}>
-                        <a
-                          href={link.href}
-                          className="text-sm text-white/50 hover:text-white transition-colors"
-                          {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                        >
-                          {link.name}
-                        </a>
+                        {isAction ? (
+                          <button
+                            type="button"
+                            onClick={() => resetCookieConsent()}
+                            className="text-sm text-white/50 hover:text-white transition-colors"
+                          >
+                            {link.name}
+                          </button>
+                        ) : (
+                          <a
+                            href={link.href}
+                            className="text-sm text-white/50 hover:text-white transition-colors"
+                            {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                          >
+                            {link.name}
+                          </a>
+                        )}
                       </li>
                     );
                   })}

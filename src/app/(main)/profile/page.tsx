@@ -23,6 +23,7 @@ import { NotificationPreferences } from "@/components/notifications/Notification
 import { PasskeyManager } from "@/components/profile/PasskeyManager";
 import { ImpactSummaryCard } from "@/components/profile/ImpactSummaryCard";
 import { DeleteAccountSection } from "@/components/profile/DeleteAccountSection";
+import { CookiePreferences } from "@/components/profile/CookiePreferences";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 interface StatCardProps {
@@ -277,6 +278,9 @@ export default async function ProfilePage() {
 
           {/* Notification Preferences */}
           <NotificationPreferences />
+
+          {/* Cookie Preferences */}
+          <CookiePreferences />
 
           {/* Delete Account */}
           <DeleteAccountSection hasPassword={!!user.password} />

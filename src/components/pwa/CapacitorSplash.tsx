@@ -13,9 +13,13 @@ import { AnimatedSplash } from "./AnimatedSplash";
  * Does NOT display for regular browser visits.
  *
  * Set NEXT_PUBLIC_SPLASH_PREVIEW=true in .env.local to force-show on web for testing.
+ *
+ * Renders a solid blocking layer during the initial "checking" frame to prevent
+ * page content (e.g. login screen) from flashing before the animated splash mounts.
+ * On regular browser visits this layer is removed after one frame and is imperceptible.
  */
 export function CapacitorSplash() {
-  const [showSplash, setShowSplash] = useState(false);
+  const [state, setState] = useState<"checking" | "show" | "hide">("checking");
 
   useEffect(() => {
     const isNative = !!(window as unknown as Record<string, unknown>).Capacitor;
@@ -23,10 +27,21 @@ export function CapacitorSplash() {
       window.matchMedia("(display-mode: standalone)").matches ||
       (navigator as unknown as Record<string, unknown>).standalone === true;
     const isPreview = process.env.NEXT_PUBLIC_SPLASH_PREVIEW === "true";
-    setShowSplash(isNative || isPWA || isPreview);
+    setState(isNative || isPWA || isPreview ? "show" : "hide");
   }, []);
 
-  if (!showSplash) return null;
+  if (state === "hide") return null;
+
+  // During "checking" render a solid blocker that matches the splash background.
+  // This covers the page for a single frame until useEffect resolves.
+  if (state === "checking") {
+    return (
+      <div
+        className="fixed inset-0 z-[9999] bg-[#0a1a12]"
+        aria-hidden="true"
+      />
+    );
+  }
 
   return <AnimatedSplash />;
 }

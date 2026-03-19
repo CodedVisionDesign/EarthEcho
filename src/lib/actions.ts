@@ -957,6 +957,39 @@ export async function createGuideComment(input: {
 }
 
 // ==========================================
+// Cookie Consent Actions (GDPR audit trail)
+// ==========================================
+
+export async function saveCookieConsent(input: { analytics: boolean }) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  await db.cookieConsent.upsert({
+    where: { userId: session.user.id },
+    create: {
+      userId: session.user.id,
+      analytics: input.analytics,
+    },
+    update: {
+      analytics: input.analytics,
+    },
+  });
+
+  return { success: true };
+}
+
+export async function getCookieConsent() {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  const record = await db.cookieConsent.findUnique({
+    where: { userId: session.user.id },
+  });
+
+  return record ? { analytics: record.analytics } : null;
+}
+
+// ==========================================
 // Internal Helpers
 // ==========================================
 
