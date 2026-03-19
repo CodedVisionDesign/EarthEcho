@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, type ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Logo } from "@/components/ui/Logo";
 import {
@@ -294,11 +294,38 @@ export function DashboardDemo() {
   const navigateTo = useCallback((page: DemoPage) => {
     setActivePage(page);
     setUrlPath(`earthecho.app/${page}`);
+    browserAutoRef.current = false; // pause browser auto-cycle on manual interaction
   }, []);
 
   const phoneNavigateTo = useCallback((page: DemoPage) => {
     setPhonePage(page);
+    phoneAutoRef.current = false; // pause phone auto-cycle on manual interaction
   }, []);
+
+  // Auto-cycle: phone rotates pages every 5s, browser every 7s
+  const PAGES: DemoPage[] = ["dashboard", "challenges", "leaderboard", "badges"];
+  const phoneAutoRef = useRef(true);
+  const browserAutoRef = useRef(true);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!phoneAutoRef.current) return;
+      setPhonePage((prev) => PAGES[(PAGES.indexOf(prev) + 1) % PAGES.length]);
+    }, 5000);
+    return () => clearInterval(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!browserAutoRef.current) return;
+      setActivePage((prev) => {
+        const next = PAGES[(PAGES.indexOf(prev) + 1) % PAGES.length];
+        setUrlPath(`earthecho.app/${next}`);
+        return next;
+      });
+    }, 7000);
+    return () => clearInterval(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLog = useCallback((category: string, label: string) => {
     setLoggedCount((c) => c + 1);
