@@ -31,7 +31,7 @@ const BACKGROUND = "#F0F7F4";
 
 function emailWrapper(content: string): string {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
-  const logoUrl = `${appUrl}/assets/logo.webp`;
+  const logoUrl = `${appUrl}/assets/ee-logo.webp`;
 
   return `
 <!DOCTYPE html>

@@ -8,3 +8,8 @@ CREDENTIALS.md
 # User uploads (keep directory structure via .gitkeep)
 /public/uploads/*
 !/public/uploads/**/.gitkeep
+
+# Capacitor native platforms (generated, not committed)
+/ios
+/android
+/out

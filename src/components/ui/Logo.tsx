@@ -48,11 +48,11 @@ export function Logo({
         style={{ width: s.icon, height: s.icon }}
       >
         <Image
-          src="/assets/logo.webp"
+          src="/assets/ee-logo.webp"
           alt="EarthEcho logo"
           width={s.icon}
           height={s.icon}
-          className="rounded-lg object-contain drop-shadow-[0_2px_4px_rgba(45,106,79,0.25)]"
+          className="object-contain drop-shadow-[0_2px_4px_rgba(45,106,79,0.25)]"
           priority
         />
       </span>
