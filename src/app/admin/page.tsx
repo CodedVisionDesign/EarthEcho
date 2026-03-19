@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUsers,
@@ -146,42 +147,49 @@ export default async function AdminDashboard() {
       value: totalUsers,
       icon: faUsers,
       gradient: "from-forest to-forest/80",
+      href: "/admin/users",
     },
     {
       label: "Active (7d)",
       value: activeUsers,
       icon: faBolt,
       gradient: "from-ocean to-ocean/80",
+      href: "/admin/users",
     },
     {
       label: "Activities Logged",
       value: totalActivities,
       icon: faChartLine,
       gradient: "from-sunshine/90 to-sunshine/70",
+      href: "/admin/audit",
     },
     {
       label: "Forum Threads",
       value: totalThreads,
       icon: faComments,
       gradient: "from-ocean/90 to-forest/70",
+      href: "/admin/forum",
     },
     {
       label: "Forum Replies",
       value: totalReplies,
       icon: faComments,
       gradient: "from-forest/80 to-ocean/60",
+      href: "/admin/forum",
     },
     {
       label: "Banned Users",
       value: bannedUsers,
       icon: faBan,
       gradient: "from-coral to-coral/80",
+      href: "/admin/users",
     },
     {
       label: "Active Challenges",
       value: activeChallenges,
       icon: faTrophy,
       gradient: "from-sunshine to-sunshine/80",
+      href: "/admin/challenges",
     },
     ...(pendingChallenges > 0
       ? [
@@ -190,6 +198,7 @@ export default async function AdminDashboard() {
             value: pendingChallenges,
             icon: faClipboardList,
             gradient: "from-amber-500 to-amber-500/80",
+            href: "/admin/challenges",
           },
         ]
       : []),
@@ -215,15 +224,17 @@ export default async function AdminDashboard() {
       {/* Stat Cards */}
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         {stats.map((stat) => (
-          <Card key={stat.label} variant="default" className="p-4">
-            <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br ${stat.gradient} text-white`}>
-              <FontAwesomeIcon icon={stat.icon} className="h-4 w-4" />
-            </div>
-            <p className="text-2xl font-bold text-charcoal">
-              {stat.value.toLocaleString()}
-            </p>
-            <p className="mt-0.5 text-xs text-slate">{stat.label}</p>
-          </Card>
+          <Link key={stat.label} href={stat.href} className="block">
+            <Card variant="default" className="p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
+              <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br ${stat.gradient} text-white`}>
+                <FontAwesomeIcon icon={stat.icon} className="h-4 w-4" />
+              </div>
+              <p className="text-2xl font-bold text-charcoal">
+                {stat.value.toLocaleString()}
+              </p>
+              <p className="mt-0.5 text-xs text-slate">{stat.label}</p>
+            </Card>
+          </Link>
         ))}
       </div>
 

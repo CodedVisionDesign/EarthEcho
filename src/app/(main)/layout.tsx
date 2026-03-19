@@ -15,7 +15,7 @@ export default async function MainLayout({
 
   return (
     <TourShell>
-      <div className="flex min-h-screen bg-gradient-to-br from-off-white via-leaf/5 to-ocean/5">
+      <div className="flex h-dvh bg-gradient-to-br from-off-white via-leaf/5 to-ocean/5">
         {/* Subtle decorative background orbs */}
         <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
           <div className="absolute -top-32 right-0 h-96 w-96 rounded-full bg-forest/[0.03] blur-3xl" />
@@ -29,21 +29,23 @@ export default async function MainLayout({
           userRole={userRole}
         />
 
-        {/* Main content — pb-20 on mobile for bottom tab bar clearance */}
-        <main className="relative z-10 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-6xl px-4 pt-16 pb-20 md:px-8 md:pt-8 md:pb-10">
-            <ToastProvider>
-              {children}
-            </ToastProvider>
-          </div>
-        </main>
+        {/* Vertical flex column: scrollable main + pinned bottom nav */}
+        <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
+          <main className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-6xl px-4 pt-16 pb-6 md:px-8 md:pt-8 md:pb-10">
+              <ToastProvider>
+                {children}
+              </ToastProvider>
+            </div>
+          </main>
 
-        {/* Mobile bottom tab bar */}
-        <BottomTabBar
-          userName={session?.user?.name ?? undefined}
-          userImage={session?.user?.image ?? undefined}
-          userRole={userRole}
-        />
+          {/* Mobile bottom tab bar — in flex flow, not fixed */}
+          <BottomTabBar
+            userName={session?.user?.name ?? undefined}
+            userImage={session?.user?.image ?? undefined}
+            userRole={userRole}
+          />
+        </div>
 
         {session?.user && <PushOptIn />}
       </div>

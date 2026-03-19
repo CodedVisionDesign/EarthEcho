@@ -83,7 +83,7 @@ export function BottomTabBar({ userName, userImage, userRole }: BottomTabBarProp
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+        className="shrink-0 md:hidden"
         style={{
           background: "rgba(255, 255, 255, 0.85)",
           backdropFilter: "blur(20px) saturate(1.4)",
