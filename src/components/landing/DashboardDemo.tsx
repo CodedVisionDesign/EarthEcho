@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Logo } from "@/components/ui/Logo";
 import {
@@ -34,11 +34,10 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { FadeIn, StaggerGroup, StaggerItem } from "@/components/ui/FadeIn";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 /* ── Types ──────────────────────────────────────────────── */
@@ -260,27 +259,9 @@ function PhoneClock() {
   return <span className="text-[8px] font-semibold text-charcoal">{time ?? "9:41"}</span>;
 }
 
-/* ── Animated page wrapper ─────────────────────────────── */
-
-function AnimatedPage({ pageKey, children, prefersReduced }: { pageKey: string; children: ReactNode; prefersReduced: boolean }) {
-  if (prefersReduced) return <div>{children}</div>;
-  return (
-    <motion.div
-      key={pageKey}
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 /* ── Main component ─────────────────────────────────────── */
 
 export function DashboardDemo() {
-  const prefersReduced = useReducedMotion() ?? false;
   const [activePage, setActivePage] = useState<DemoPage>("dashboard");
   const [phonePage, setPhonePage] = useState<DemoPage>("dashboard");
   const [metrics, setMetrics] = useState(INITIAL_METRICS);
@@ -373,7 +354,7 @@ export function DashboardDemo() {
   return (
     <div className="flex items-end justify-center gap-6 lg:gap-8">
       {/* ── Browser window ─────────────────────────────────── */}
-      <FadeIn variant="slide-left" duration={0.7} className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1">
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
         {/* Chrome bar */}
         <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-3">
@@ -381,11 +362,7 @@ export function DashboardDemo() {
           <div className="h-3 w-3 rounded-full bg-amber-400" />
           <div className="h-3 w-3 rounded-full bg-green-400" />
           <div className="ml-3 flex-1 rounded-md bg-white px-3 py-1 text-xs text-slate">
-            <AnimatePresence mode="wait">
-              <motion.span key={urlPath} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="block">
-                {urlPath}
-              </motion.span>
-            </AnimatePresence>
+            {urlPath}
           </div>
         </div>
 
@@ -458,29 +435,29 @@ export function DashboardDemo() {
                 </button>
               ))}
             </div>
-            <div className="flex-1 overflow-y-auto">
-              <AnimatePresence mode="wait">
-                <AnimatedPage pageKey={`mobile-${activePage}`} prefersReduced={prefersReduced}>
-                  <PageContent page={activePage} state={sharedState} onLog={handleLog} compact={false} />
-                </AnimatedPage>
-              </AnimatePresence>
+            <div className="relative flex-1 overflow-hidden">
+              {PAGES.map((p) => (
+                <div key={p} className="absolute inset-0 overflow-y-auto transition-opacity duration-300 ease-in-out" style={{ maxHeight: "520px", opacity: activePage === p ? 1 : 0, pointerEvents: activePage === p ? "auto" : "none" }}>
+                  <PageContent page={p} state={sharedState} onLog={handleLog} compact={false} />
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Desktop content */}
-          <div className="hidden flex-1 overflow-y-auto md:block">
-            <AnimatePresence mode="wait">
-              <AnimatedPage pageKey={`desktop-${activePage}`} prefersReduced={prefersReduced}>
-                <PageContent page={activePage} state={sharedState} onLog={handleLog} compact={false} />
-              </AnimatedPage>
-            </AnimatePresence>
+          <div className="relative hidden flex-1 overflow-hidden md:block">
+            {PAGES.map((p) => (
+              <div key={p} className="absolute inset-0 overflow-y-auto transition-opacity duration-300 ease-in-out" style={{ maxHeight: "560px", opacity: activePage === p ? 1 : 0, pointerEvents: activePage === p ? "auto" : "none" }}>
+                <PageContent page={p} state={sharedState} onLog={handleLog} compact={false} />
+              </div>
+            ))}
           </div>
         </div>
       </div>
-      </FadeIn>
+      </div>
 
       {/* ── iPhone mockup ──────────────────────────────────── */}
-      <FadeIn variant="slide-right" delay={0.2} duration={0.7} className="hidden w-[220px] shrink-0 xl:block">
+      <div className="hidden w-[220px] shrink-0 xl:block">
         <div className="relative mx-auto w-[220px] animate-gentle-float rounded-[2.5rem] border-[6px] border-gray-800 bg-gray-800 shadow-2xl">
           {/* Dynamic Island */}
           <div className="absolute left-1/2 top-2 z-30 h-[18px] w-[72px] -translate-x-1/2 rounded-full bg-black" />
@@ -500,12 +477,12 @@ export function DashboardDemo() {
             </div>
 
             {/* Content */}
-            <div className="h-[420px] overflow-y-auto">
-              <AnimatePresence mode="wait">
-                <AnimatedPage pageKey={`phone-${phonePage}`} prefersReduced={prefersReduced}>
-                  <PageContent page={phonePage} state={sharedState} onLog={handleLog} compact />
-                </AnimatedPage>
-              </AnimatePresence>
+            <div className="relative h-[420px] overflow-hidden">
+              {PAGES.map((p) => (
+                <div key={p} className="absolute inset-0 h-[420px] overflow-y-auto transition-opacity duration-300 ease-in-out" style={{ opacity: phonePage === p ? 1 : 0, pointerEvents: phonePage === p ? "auto" : "none" }}>
+                  <PageContent page={p} state={sharedState} onLog={handleLog} compact />
+                </div>
+              ))}
             </div>
 
             {/* Tab bar */}
@@ -530,7 +507,7 @@ export function DashboardDemo() {
             </div>
           </div>
         </div>
-      </FadeIn>
+      </div>
     </div>
   );
 }
@@ -579,52 +556,46 @@ function DashboardPage({ state, onLog, compact }: { state: DemoState; onLog: (c:
       </div>
 
       {/* Metrics */}
-      <StaggerGroup as="div" stagger={compact ? 0.04 : 0.06} itemVariant="scale" className={`mb-2 grid gap-1.5 ${compact ? "grid-cols-2" : "grid-cols-2 gap-2 lg:grid-cols-3"}`}>
+      <div className={`mb-2 grid gap-1.5 ${compact ? "grid-cols-2" : "grid-cols-2 gap-2 lg:grid-cols-3"}`}>
         {(compact ? metrics.slice(0, 4) : metrics).map((m) => (
-          <StaggerItem key={m.label} variant="scale">
-            <DemoMetricCard {...m} compact={compact} />
-          </StaggerItem>
+          <DemoMetricCard key={m.label} {...m} compact={compact} />
         ))}
-      </StaggerGroup>
+      </div>
 
       {/* Desktop charts */}
       {!compact && (
-        <StaggerGroup as="div" stagger={0.1} itemVariant="scale" className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          <StaggerItem variant="scale">
-            <ChartCard title="This Week's Impact" subtitle="Your daily savings across categories">
-              <div>
-                <ResponsiveContainer width="100%" height={144}>
-                  <AreaChart data={weeklyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                    <XAxis dataKey="day" tick={{ fontSize: 9, fill: "#6C757D" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 9, fill: "#6C757D" }} axisLine={false} tickLine={false} width={25} />
-                    <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #E5E7EB", fontSize: "10px" }} />
-                    <Area type="monotone" dataKey="water" name="Water (L)" stroke="#1B4965" fill="#1B4965" fillOpacity={0.1} strokeWidth={2} animationDuration={400} />
-                    <Area type="monotone" dataKey="carbon" name="Carbon (kg)" stroke="#2D6A4F" fill="#2D6A4F" fillOpacity={0.1} strokeWidth={2} animationDuration={400} />
-                    <Area type="monotone" dataKey="plastic" name="Plastic (items)" stroke="#FFB703" fill="#FFB703" fillOpacity={0.1} strokeWidth={2} animationDuration={400} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </ChartCard>
-          </StaggerItem>
-          <StaggerItem variant="scale">
-            <ChartCard title="Transport CO2 Comparison" subtitle="kg CO2 per 10km journey">
-              <div>
-                <ResponsiveContainer width="100%" height={144}>
-                  <BarChart data={TRANSPORT_DATA} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 9, fill: "#6C757D" }} axisLine={false} tickLine={false} unit=" kg" />
-                    <YAxis type="category" dataKey="mode" tick={{ fontSize: 9, fill: "#6C757D" }} axisLine={false} tickLine={false} width={40} />
-                    <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #E5E7EB", fontSize: "10px" }} formatter={(value) => [`${value} kg CO2`, "Emissions"]} />
-                    <Bar dataKey="co2" radius={[0, 4, 4, 0]} barSize={12}>
-                      {TRANSPORT_DATA.map((entry) => (<Cell key={entry.mode} fill={entry.color} />))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </ChartCard>
-          </StaggerItem>
-        </StaggerGroup>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <ChartCard title="This Week's Impact" subtitle="Your daily savings across categories">
+            <div>
+              <ResponsiveContainer width="100%" height={144}>
+                <AreaChart data={weeklyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis dataKey="day" tick={{ fontSize: 9, fill: "#6C757D" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: "#6C757D" }} axisLine={false} tickLine={false} width={25} />
+                  <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #E5E7EB", fontSize: "10px" }} />
+                  <Area type="monotone" dataKey="water" name="Water (L)" stroke="#1B4965" fill="#1B4965" fillOpacity={0.1} strokeWidth={2} animationDuration={400} />
+                  <Area type="monotone" dataKey="carbon" name="Carbon (kg)" stroke="#2D6A4F" fill="#2D6A4F" fillOpacity={0.1} strokeWidth={2} animationDuration={400} />
+                  <Area type="monotone" dataKey="plastic" name="Plastic (items)" stroke="#FFB703" fill="#FFB703" fillOpacity={0.1} strokeWidth={2} animationDuration={400} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </ChartCard>
+          <ChartCard title="Transport CO2 Comparison" subtitle="kg CO2 per 10km journey">
+            <div>
+              <ResponsiveContainer width="100%" height={144}>
+                <BarChart data={TRANSPORT_DATA} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 9, fill: "#6C757D" }} axisLine={false} tickLine={false} unit=" kg" />
+                  <YAxis type="category" dataKey="mode" tick={{ fontSize: 9, fill: "#6C757D" }} axisLine={false} tickLine={false} width={40} />
+                  <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #E5E7EB", fontSize: "10px" }} formatter={(value) => [`${value} kg CO2`, "Emissions"]} />
+                  <Bar dataKey="co2" radius={[0, 4, 4, 0]} barSize={12}>
+                    {TRANSPORT_DATA.map((entry) => (<Cell key={entry.mode} fill={entry.color} />))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </ChartCard>
+        </div>
       )}
 
       {/* Phone chart */}
@@ -665,7 +636,7 @@ function ChallengesPage({ state, onLog, compact }: { state: DemoState; onLog: (c
         </div>
       </div>
 
-      <StaggerGroup as="div" stagger={0.06} itemVariant="fade-up" className={`grid gap-2 ${compact ? "grid-cols-1" : "grid-cols-1 gap-2.5 lg:grid-cols-2"}`}>
+      <div className={`grid gap-2 ${compact ? "grid-cols-1" : "grid-cols-1 gap-2.5 lg:grid-cols-2"}`}>
         {(compact ? MOCK_CHALLENGES.slice(0, 2) : MOCK_CHALLENGES).map((ch) => {
           const extra = challengeProgress[ch.category] || 0;
           const curr = ch.baseProgress + extra;
@@ -673,57 +644,55 @@ function ChallengesPage({ state, onLog, compact }: { state: DemoState; onLog: (c
           const done = pct >= 100;
 
           return (
-            <StaggerItem key={ch.title} variant="fade-up">
-              <Card variant="interactive" className={`relative overflow-hidden ${compact ? "p-2" : "p-3"}`}>
-                <div className="mb-1.5 flex items-start justify-between gap-1">
-                  <div className="flex items-center gap-1.5">
-                    <div className={`flex items-center justify-center rounded-lg ${ch.iconBg} ${compact ? "h-5 w-5" : "h-7 w-7"}`}>
-                      <FontAwesomeIcon icon={ch.icon} className={`${ch.iconColor} ${compact ? "h-2 w-2" : "h-3 w-3"}`} aria-hidden />
-                    </div>
-                    <div>
-                      <h3 className={`font-semibold text-charcoal ${compact ? "text-[8px]" : "text-[11px]"}`}>{ch.title}</h3>
-                      {!compact && <p className="text-[9px] text-slate">{ch.description}</p>}
-                    </div>
+            <Card key={ch.title} variant="interactive" className={`relative overflow-hidden ${compact ? "p-2" : "p-3"}`}>
+              <div className="mb-1.5 flex items-start justify-between gap-1">
+                <div className="flex items-center gap-1.5">
+                  <div className={`flex items-center justify-center rounded-lg ${ch.iconBg} ${compact ? "h-5 w-5" : "h-7 w-7"}`}>
+                    <FontAwesomeIcon icon={ch.icon} className={`${ch.iconColor} ${compact ? "h-2 w-2" : "h-3 w-3"}`} aria-hidden />
                   </div>
-                  {!compact && <Badge variant="neutral" size="sm"><span className="text-[8px]">{ch.participants} joined</span></Badge>}
-                </div>
-
-                <div className={`mb-1 flex items-center justify-between ${compact ? "text-[7px]" : "text-[9px]"}`}>
-                  <span className="text-slate">{ch.startDate} – {ch.endDate}</span>
-                  {done ? <span className="font-medium text-forest">Complete!</span> : <span className="font-medium text-charcoal">{curr} / {ch.target}</span>}
-                </div>
-                <ProgressBar value={pct} color={done ? "forest" : "ocean"} size="sm" />
-
-                {ch.joined && !done && (
-                  <motion.button type="button" onClick={() => onLog(ch.category, ch.title)}
-                    whileTap={{ scale: 0.94 }}
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    className={`mt-1.5 inline-flex items-center gap-0.5 rounded-md bg-forest/10 font-medium text-forest transition-colors hover:bg-forest/20 ${compact ? "px-1.5 py-0.5 text-[7px]" : "gap-1 px-2 py-1 text-[9px]"}`}>
-                    <FontAwesomeIcon icon={faPlus} className={compact ? "h-1.5 w-1.5" : "h-2 w-2"} />
-                    Log progress
-                  </motion.button>
-                )}
-                {!ch.joined && (
-                  <motion.button type="button" onClick={() => onLog(ch.category, ch.title)}
-                    whileTap={{ scale: 0.94 }}
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    className={`mt-1.5 inline-flex items-center rounded-md bg-forest font-medium text-white transition-colors hover:bg-forest-dark ${compact ? "px-1.5 py-0.5 text-[7px]" : "gap-1 px-2.5 py-1 text-[9px]"}`}>
-                    Join Challenge
-                  </motion.button>
-                )}
-                {done && (
-                  <div className={`mt-1.5 flex items-center gap-1 font-medium text-forest ${compact ? "text-[7px]" : "text-[9px]"}`}>
-                    <FontAwesomeIcon icon={faCircleCheck} className={compact ? "h-2 w-2" : "h-3 w-3"} />
-                    Complete! +50 pts
+                  <div>
+                    <h3 className={`font-semibold text-charcoal ${compact ? "text-[8px]" : "text-[11px]"}`}>{ch.title}</h3>
+                    {!compact && <p className="text-[9px] text-slate">{ch.description}</p>}
                   </div>
-                )}
-              </Card>
-            </StaggerItem>
+                </div>
+                {!compact && <Badge variant="neutral" size="sm"><span className="text-[8px]">{ch.participants} joined</span></Badge>}
+              </div>
+
+              <div className={`mb-1 flex items-center justify-between ${compact ? "text-[7px]" : "text-[9px]"}`}>
+                <span className="text-slate">{ch.startDate} – {ch.endDate}</span>
+                {done ? <span className="font-medium text-forest">Complete!</span> : <span className="font-medium text-charcoal">{curr} / {ch.target}</span>}
+              </div>
+              <ProgressBar value={pct} color={done ? "forest" : "ocean"} size="sm" />
+
+              {ch.joined && !done && (
+                <motion.button type="button" onClick={() => onLog(ch.category, ch.title)}
+                  whileTap={{ scale: 0.94 }}
+                  whileHover={{ scale: 1.03 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  className={`mt-1.5 inline-flex items-center gap-0.5 rounded-md bg-forest/10 font-medium text-forest transition-colors hover:bg-forest/20 ${compact ? "px-1.5 py-0.5 text-[7px]" : "gap-1 px-2 py-1 text-[9px]"}`}>
+                  <FontAwesomeIcon icon={faPlus} className={compact ? "h-1.5 w-1.5" : "h-2 w-2"} />
+                  Log progress
+                </motion.button>
+              )}
+              {!ch.joined && (
+                <motion.button type="button" onClick={() => onLog(ch.category, ch.title)}
+                  whileTap={{ scale: 0.94 }}
+                  whileHover={{ scale: 1.03 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  className={`mt-1.5 inline-flex items-center rounded-md bg-forest font-medium text-white transition-colors hover:bg-forest-dark ${compact ? "px-1.5 py-0.5 text-[7px]" : "gap-1 px-2.5 py-1 text-[9px]"}`}>
+                  Join Challenge
+                </motion.button>
+              )}
+              {done && (
+                <div className={`mt-1.5 flex items-center gap-1 font-medium text-forest ${compact ? "text-[7px]" : "text-[9px]"}`}>
+                  <FontAwesomeIcon icon={faCircleCheck} className={compact ? "h-2 w-2" : "h-3 w-3"} />
+                  Complete! +50 pts
+                </div>
+              )}
+            </Card>
           );
         })}
-      </StaggerGroup>
+      </div>
     </div>
   );
 }
@@ -776,14 +745,9 @@ function LeaderboardPage({ state, compact }: { state: DemoState; compact: boolea
               )}
             </tr>
           </thead>
-          <motion.tbody
-            initial="hidden"
-            animate="visible"
-            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.04 } } }}
-          >
+          <tbody>
             {rows.map((e) => (
-              <motion.tr key={e.name}
-                variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
+              <tr key={e.name}
                 className={`border-b border-gray-50 transition-colors ${e.isYou ? "bg-forest/5" : "hover:bg-gray-50"}`}>
                 <td className={`font-bold text-charcoal ${compact ? "px-2 py-1 text-[8px]" : "px-3 py-2 text-[11px]"}`}>
                   {e.rank <= 3 ? (
@@ -813,9 +777,9 @@ function LeaderboardPage({ state, compact }: { state: DemoState; compact: boolea
                     </td>
                   </>
                 )}
-              </motion.tr>
+              </tr>
             ))}
-          </motion.tbody>
+          </tbody>
         </table>
       </Card>
 
@@ -850,32 +814,30 @@ function BadgesPage({ compact }: { compact: boolean }) {
       {cats.map((cat) => (
         <div key={cat} className={compact ? "mb-2" : "mb-3"}>
           <h3 className={`mb-1 font-semibold uppercase tracking-wider text-slate/60 ${compact ? "text-[7px]" : "text-[10px] mb-1.5"}`}>{cat}</h3>
-          <StaggerGroup as="div" stagger={0.06} itemVariant="scale" className={`grid gap-1.5 ${compact ? "grid-cols-1" : "grid-cols-1 gap-2 lg:grid-cols-2"}`}>
+          <div className={`grid gap-1.5 ${compact ? "grid-cols-1" : "grid-cols-1 gap-2 lg:grid-cols-2"}`}>
             {display.filter((b) => b.category === cat).map((badge) => (
-              <StaggerItem key={badge.name} variant="scale">
-                <Card variant="default" className={`${compact ? "p-1.5" : "p-2.5"} ${!badge.earned ? "opacity-70" : ""}`}>
-                  <div className={`flex items-start ${compact ? "gap-1.5" : "gap-2.5"}`}>
-                    <div className={`flex shrink-0 items-center justify-center rounded-lg ${badge.earned ? "bg-forest/10" : "bg-gray-100"} ${compact ? "h-6 w-6" : "h-8 w-8"}`}>
-                      <FontAwesomeIcon icon={badge.icon} className={`${badge.earned ? "text-forest" : "text-gray-400"} ${compact ? "h-2.5 w-2.5" : "h-3.5 w-3.5"}`} aria-hidden />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1">
-                        <span className={`font-semibold text-charcoal ${compact ? "text-[8px]" : "text-[11px]"}`}>{badge.name}</span>
-                        <span className={`rounded-full px-1 py-0.5 font-medium ${RARITY_COLORS[badge.rarity]} ${compact ? "text-[6px]" : "text-[8px] px-1.5"}`}>{badge.rarity}</span>
-                      </div>
-                      <p className={`text-slate ${compact ? "text-[7px]" : "text-[9px]"}`}>{badge.description}</p>
-                      {badge.earned && badge.earnedDate && (
-                        <p className={`text-forest ${compact ? "mt-0.5 text-[6px]" : "mt-0.5 text-[8px]"}`}>Earned {badge.earnedDate}</p>
-                      )}
-                      {!badge.earned && badge.progress !== undefined && (
-                        <div className="mt-1"><ProgressBar value={badge.progress} color="ocean" size="sm" showLabel /></div>
-                      )}
-                    </div>
+              <Card key={badge.name} variant="default" className={`${compact ? "p-1.5" : "p-2.5"} ${!badge.earned ? "opacity-70" : ""}`}>
+                <div className={`flex items-start ${compact ? "gap-1.5" : "gap-2.5"}`}>
+                  <div className={`flex shrink-0 items-center justify-center rounded-lg ${badge.earned ? "bg-forest/10" : "bg-gray-100"} ${compact ? "h-6 w-6" : "h-8 w-8"}`}>
+                    <FontAwesomeIcon icon={badge.icon} className={`${badge.earned ? "text-forest" : "text-gray-400"} ${compact ? "h-2.5 w-2.5" : "h-3.5 w-3.5"}`} aria-hidden />
                   </div>
-                </Card>
-              </StaggerItem>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1">
+                      <span className={`font-semibold text-charcoal ${compact ? "text-[8px]" : "text-[11px]"}`}>{badge.name}</span>
+                      <span className={`rounded-full px-1 py-0.5 font-medium ${RARITY_COLORS[badge.rarity]} ${compact ? "text-[6px]" : "text-[8px] px-1.5"}`}>{badge.rarity}</span>
+                    </div>
+                    <p className={`text-slate ${compact ? "text-[7px]" : "text-[9px]"}`}>{badge.description}</p>
+                    {badge.earned && badge.earnedDate && (
+                      <p className={`text-forest ${compact ? "mt-0.5 text-[6px]" : "mt-0.5 text-[8px]"}`}>Earned {badge.earnedDate}</p>
+                    )}
+                    {!badge.earned && badge.progress !== undefined && (
+                      <div className="mt-1"><ProgressBar value={badge.progress} color="ocean" size="sm" showLabel /></div>
+                    )}
+                  </div>
+                </div>
+              </Card>
             ))}
-          </StaggerGroup>
+          </div>
         </div>
       ))}
     </div>
@@ -939,7 +901,7 @@ function DemoMetricCard({ icon, label, humanValue, comparison, iconBg, iconColor
           <FontAwesomeIcon icon={icon} className={`${iconColor} ${compact ? "h-2 w-2" : "h-3 w-3"}`} aria-hidden />
         </div>
         <div className={`font-medium uppercase tracking-wider text-slate/60 ${compact ? "text-[6px]" : "mb-0.5 text-[8px]"}`}>{label}</div>
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout">
           <motion.div
             key={humanValue}
             initial={{ scale: 1.08, color: "#2D6A4F" }}
