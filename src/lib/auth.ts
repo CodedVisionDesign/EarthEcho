@@ -178,6 +178,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               console.warn("[AUTH] Account link upsert failed:", linkError);
             }
 
+            // Auto-verify email for OAuth users (providers verify email ownership)
+            await db.user.updateMany({
+              where: { id: existingUser.id, emailVerified: null },
+              data: { emailVerified: new Date() },
+            });
+
             // Refresh profile image for existing users
             if (account.provider === "google" && profile?.picture) {
               await db.user.update({
@@ -235,6 +241,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Don't block sign-in if audit logging fails
       }
 
+      // Ensure all OAuth users have emailVerified set (covers new users created by adapter)
+      if (account && account.provider !== "credentials" && account.provider !== "passkey" && user.email) {
+        try {
+          await db.user.updateMany({
+            where: { email: user.email, emailVerified: null },
+            data: { emailVerified: new Date() },
+          });
+        } catch {
+          // Non-blocking
+        }
+      }
+
       return true;
     },
     async session({ session, token }) {
@@ -247,6 +265,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.role) {
         (session.user as unknown as Record<string, unknown>).role = token.role;
       }
+      (session.user as unknown as Record<string, unknown>).emailVerified = !!token.emailVerified;
       // Expose ban status so middleware/authorized callback and client can react
       if (token.banned) {
         (session.user as unknown as Record<string, unknown>).banned = true;
@@ -264,11 +283,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.sub) {
         const dbUser = await db.user.findUnique({
           where: { id: token.sub },
-          select: { customImage: true, image: true, role: true, banned: true, banReason: true },
+          select: { customImage: true, image: true, role: true, banned: true, banReason: true, emailVerified: true },
         });
         if (dbUser) {
           token.picture = dbUser.customImage || dbUser.image || token.picture;
           token.role = dbUser.role;
+          token.emailVerified = !!dbUser.emailVerified;
           // If user was banned after login, propagate to session
           if (dbUser.banned) {
             token.banned = true;

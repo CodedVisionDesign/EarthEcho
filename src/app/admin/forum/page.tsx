@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { AdminPinButton } from "@/components/admin/AdminPinButton";
 import { ModerationWords } from "@/components/admin/ModerationWords";
+import { ForumAgeSetting } from "@/components/admin/ForumAgeSetting";
 import Link from "next/link";
 
 type SortOption = "newest" | "oldest" | "most_replies" | "least_replies";
@@ -32,7 +33,7 @@ export default async function AdminForumPage({
 
   const categoryFilter = currentCategory !== "all" ? { category: currentCategory } : {};
 
-  const [threads, recentReplies, moderationWords] = await Promise.all([
+  const [threads, recentReplies, moderationWords, forumMinAgeSetting] = await Promise.all([
     db.thread.findMany({
       take: 50,
       where: categoryFilter,
@@ -53,7 +54,10 @@ export default async function AdminForumPage({
     db.moderationWord.findMany({
       orderBy: { createdAt: "desc" },
     }),
+    db.appSetting.findUnique({ where: { key: "forum_min_age" } }),
   ]);
+
+  const forumMinAge = forumMinAgeSetting ? Math.max(13, Math.min(18, parseInt(forumMinAgeSetting.value, 10) || 16)) : 16;
 
   // Check threads/replies for flagged words
   const flagWords = moderationWords.filter((w) => w.type === "flag").map((w) => w.word.toLowerCase());
@@ -88,6 +92,15 @@ export default async function AdminForumPage({
           <strong>Flag words</strong> highlight posts for admin review. <strong>Auto-block words</strong> prevent posts containing them from being published.
         </p>
         <ModerationWords words={moderationWords} />
+      </Card>
+
+      {/* Forum Age Restriction */}
+      <Card variant="default" className="mb-8 p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <FontAwesomeIcon icon={faShieldHalved} className="h-4 w-4 text-forest" />
+          <h2 className="text-base font-semibold text-charcoal">Forum Age Restriction</h2>
+        </div>
+        <ForumAgeSetting currentAge={forumMinAge} />
       </Card>
 
       {/* Sort & Filter Controls */}

@@ -134,6 +134,54 @@ export async function sendEmail(
 }
 
 // ---------------------------------------------------------------------------
+// sendEmailVerification
+// ---------------------------------------------------------------------------
+
+export async function sendEmailVerification(
+  name: string,
+  email: string,
+  verifyUrl: string,
+): Promise<void> {
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:22px;color:${TEXT_PRIMARY};">
+      Verify Your Email Address
+    </h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      Hi ${name},
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      Please verify your email address to unlock all EarthEcho features, including
+      posting on the community forum.
+    </p>
+    ${buttonHtml(verifyUrl, "Verify My Email")}
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:24px 0 0;background-color:#FFF8E1;border-radius:8px;border:1px solid #FFE082;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#F57F17;">
+            &#9888; Important
+          </p>
+          <ul style="margin:0;padding:0 0 0 18px;font-size:13px;line-height:1.7;color:${TEXT_SECONDARY};">
+            <li>This link expires in <strong>24 hours</strong>.</li>
+            <li>If you did not create an EarthEcho account, please ignore this email.</li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:${TEXT_SECONDARY};">
+      If the button above doesn't work, copy and paste the following URL into your browser:
+    </p>
+    <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:${BRAND_GREEN};word-break:break-all;">
+      ${verifyUrl}
+    </p>`;
+
+  await sendEmail(
+    email,
+    "Verify your EarthEcho email address",
+    emailWrapper(body),
+  );
+}
+
+// ---------------------------------------------------------------------------
 // sendWelcomeEmail
 // ---------------------------------------------------------------------------
 
@@ -354,6 +402,36 @@ export async function sendAdminInviteEmail(
 // ---------------------------------------------------------------------------
 // Email HTML generators (for previews)
 // ---------------------------------------------------------------------------
+
+export function getEmailVerificationHtml(name: string): string {
+  const verifyUrl = "https://earthecho.co.uk/verify-email?token=example-token";
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:22px;color:${TEXT_PRIMARY};">
+      Verify Your Email Address
+    </h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      Hi ${name},
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_SECONDARY};">
+      Please verify your email address to unlock all EarthEcho features, including
+      posting on the community forum.
+    </p>
+    ${buttonHtml(verifyUrl, "Verify My Email")}
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:24px 0 0;background-color:#FFF8E1;border-radius:8px;border:1px solid #FFE082;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#F57F17;">
+            &#9888; Important
+          </p>
+          <ul style="margin:0;padding:0 0 0 18px;font-size:13px;line-height:1.7;color:${TEXT_SECONDARY};">
+            <li>This link expires in <strong>24 hours</strong>.</li>
+            <li>If you did not create an EarthEcho account, please ignore this email.</li>
+          </ul>
+        </td>
+      </tr>
+    </table>`;
+  return emailWrapper(body);
+}
 
 export function getWelcomeEmailHtml(name: string): string {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
