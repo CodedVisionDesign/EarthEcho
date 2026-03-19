@@ -137,7 +137,7 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
             onClick={handlePasswordReset}
             disabled={isPending}
             className="inline-flex items-center gap-1.5 rounded-lg bg-sunshine/10 px-3 py-1.5 text-xs font-medium text-sunshine transition-colors hover:bg-sunshine/20 disabled:opacity-50"
-            title={resetPending ? "A reset link was already sent — clicking will cancel it and send a new one" : undefined}
+            title={resetPending ? "A reset link was already sent - clicking will cancel it and send a new one" : undefined}
           >
             {isPending ? <FontAwesomeIcon icon={faSpinner} className="h-3 w-3" spin /> : <FontAwesomeIcon icon={faRotateRight} className="h-3 w-3" />}
             {resetPending ? "Resend Reset" : "Reset Password"}
@@ -195,7 +195,7 @@ export function UserActions({ userId, userName, userRole, userEmail, hasPassword
               Ban {userName}
             </h3>
             <p className="mb-4 text-sm text-slate">
-              This will immediately suspend the user&apos;s account — they will be redirected to a suspension page and signed out. A notification email will be sent explaining the reason.
+              This will immediately suspend the user&apos;s account - they will be redirected to a suspension page and signed out. A notification email will be sent explaining the reason.
             </p>
 
             {/* Reason Templates */}

@@ -248,7 +248,7 @@ export function transportToHuman(co2SavedKg: number): HumanMetric {
 
   return {
     value: `${co2SavedKg.toFixed(2)} kg CO₂ saved`,
-    comparison: `Every kilometre counts — ${co2SavedKg.toFixed(2)} kg CO₂ kept out of the atmosphere`,
+    comparison: `Every kilometre counts - ${co2SavedKg.toFixed(2)} kg CO₂ kept out of the atmosphere`,
     icon: "sparkle",
     tooltip: `Saved ${co2SavedKg.toFixed(2)}kg CO₂ vs driving a petrol car`,
   };

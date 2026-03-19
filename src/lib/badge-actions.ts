@@ -71,7 +71,7 @@ const badgeSchema = z.object({
     } catch {
       return false;
     }
-  }, "Invalid criteria JSON — must include a valid type with required fields"),
+  }, "Invalid criteria JSON - must include a valid type with required fields"),
 });
 
 // ---------------------------------------------------------------------------

@@ -62,7 +62,7 @@ export function LoginForm() {
         <PasskeyLoginButton onError={(msg) => setError(msg)} />
       </div>
 
-      {/* OAuth Buttons — Facebook hidden in standalone PWA (OAuth redirects fail on iOS) */}
+      {/* OAuth Buttons - Facebook hidden in standalone PWA (OAuth redirects fail on iOS) */}
       <div className="mb-6 space-y-3">
         <button
           type="button"

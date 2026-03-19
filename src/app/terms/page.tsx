@@ -125,7 +125,7 @@ export default function TermsOfServicePage() {
           <Section icon={faBookOpen} title="5. Content">
             <p>
               You retain ownership of content you submit (forum posts, tracking data). By submitting
-              content, you grant Earth Echo a non-exclusive license to display it within the platform
+              content, you grant Earth Echo a non-exclusive licence to display it within the platform
               (e.g., leaderboard rankings, community forums).
             </p>
           </Section>

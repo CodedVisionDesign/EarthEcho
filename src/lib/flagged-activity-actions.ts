@@ -75,7 +75,7 @@ export async function reviewFlaggedActivity(input: {
         }),
       ]);
     } else {
-      // Activity already deleted — just update the flag
+      // Activity already deleted - just update the flag
       await db.flaggedActivity.update({
         where: { id: input.id },
         data: {

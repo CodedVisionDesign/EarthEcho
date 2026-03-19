@@ -24,7 +24,7 @@ export function plasticToHuman(items: number): HumanMetric {
     const kg = Math.round(items * 0.005);
     return {
       value: `${kg}kg of plastic avoided`,
-      comparison: `That's ${kg}kg of plastic kept out of landfill — heavier than a bowling ball`,
+      comparison: `That's ${kg}kg of plastic kept out of landfill - heavier than a bowling ball`,
       icon: "weight",
       tooltip: `${items.toLocaleString()} items × 5g average weight = ${kg}kg total plastic avoided`,
     };
@@ -62,7 +62,7 @@ export function plasticToHuman(items: number): HumanMetric {
   }
 
   if (items >= 10) {
-    // Express as plastic bottles saved — most relatable
+    // Express as plastic bottles saved - most relatable
     return {
       value: `${items} plastic bottles`,
       comparison: `That's ${items} single-use plastic bottles kept out of the ocean`,
@@ -73,7 +73,7 @@ export function plasticToHuman(items: number): HumanMetric {
 
   return {
     value: `${items} item${items !== 1 ? "s" : ""}`,
-    comparison: `Every item counts — ${items} fewer piece${items !== 1 ? "s" : ""} of single-use plastic`,
+    comparison: `Every item counts - ${items} fewer piece${items !== 1 ? "s" : ""} of single-use plastic`,
     icon: "leaf",
     tooltip: `${items} single-use plastic item${items !== 1 ? "s" : ""} avoided`,
   };

@@ -13,7 +13,7 @@ export const CATEGORY_MAX_VALUES: Record<string, number> = {
 // Maximum points a user can earn per calendar day
 export const DAILY_POINT_CAP = 500;
 
-// Anomaly thresholds (~50% of max) — activities above these are flagged for admin review
+// Anomaly thresholds (~50% of max) - activities above these are flagged for admin review
 export const ANOMALY_THRESHOLDS: Record<string, number> = {
   WATER: 1000,
   CARBON: 50,

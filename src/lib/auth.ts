@@ -144,7 +144,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (existingUser) {
             // Atomically link the OAuth account if not already linked.
             // Uses upsert to avoid TOCTOU race conditions (e.g. double-clicks).
-            // Only runs for EXISTING users — new users are handled by PrismaAdapter.
+            // Only runs for EXISTING users - new users are handled by PrismaAdapter.
             try {
               await db.account.upsert({
                 where: {
@@ -175,7 +175,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 },
               });
             } catch (linkError) {
-              // Log but don't block sign-in — worst case the adapter handles it
+              // Log but don't block sign-in - worst case the adapter handles it
               console.warn("[AUTH] Account link upsert failed:", linkError);
             }
 
@@ -200,7 +200,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               }
             }
           }
-          // New user — adapter will create both the user and account records
+          // New user - adapter will create both the user and account records
         } catch (error) {
           console.error("[AUTH] signIn callback error:", error);
           // Don't block sign-in if account linking or profile image update fails
@@ -258,7 +258,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
     async jwt({ token, user }) {
-      // On initial sign-in, user object is available — persist the id
+      // On initial sign-in, user object is available - persist the id
       if (user) {
         token.sub = user.id;
       }

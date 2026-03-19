@@ -56,7 +56,7 @@ export function ImpactSummaryCard({
         className={`absolute inset-y-0 left-0 w-[3px] rounded-l-2xl ${accentBorder} transition-all duration-300 group-hover:w-1`}
       />
 
-      {/* Trend badge — top right */}
+      {/* Trend badge - top right */}
       {trend !== undefined && trend !== 0 && (
         <div className="absolute right-3 top-3">
           <Tooltip

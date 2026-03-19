@@ -211,7 +211,7 @@ export default async function ProfilePage() {
                       <div
                         key={ub.badge.id}
                         className="flex flex-col items-center gap-1"
-                        title={`${ub.badge.name} — ${ub.badge.description}`}
+                        title={`${ub.badge.name} - ${ub.badge.description}`}
                       >
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sunshine/15">
                           <FontAwesomeIcon

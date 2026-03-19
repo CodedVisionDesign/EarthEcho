@@ -284,7 +284,7 @@ export function BadgeForm({ mode, badgeId, initialData }: BadgeFormProps) {
           </select>
 
           {noExtraFields && (
-            <p className="text-xs text-slate">No additional configuration needed — badge is earned automatically.</p>
+            <p className="text-xs text-slate">No additional configuration needed - badge is earned automatically.</p>
           )}
 
           {needsDays && (

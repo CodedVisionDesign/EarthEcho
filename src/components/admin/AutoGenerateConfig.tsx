@@ -65,7 +65,7 @@ export function AutoGenerateConfig({ globalEnabled, templates }: AutoGenerateCon
           <div>
             <p className="text-sm font-semibold text-charcoal">Auto-Generation</p>
             <p className="text-xs text-slate">
-              {enabled ? "Enabled — challenges auto-created monthly as Pending Review" : "Disabled — challenges created manually only"}
+              {enabled ? "Enabled - challenges auto-created monthly as Pending Review" : "Disabled - challenges created manually only"}
             </p>
           </div>
         </div>

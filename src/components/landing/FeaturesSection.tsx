@@ -28,7 +28,7 @@ const features = [
     number: "04",
     title: "Community Forum",
     description:
-      "Share tips, celebrate wins, and cheer each other on. You're not doing this alone — join a community making real changes.",
+      "Share tips, celebrate wins, and cheer each other on. You're not doing this alone - join a community making real changes.",
     visual: "community",
   },
 ];

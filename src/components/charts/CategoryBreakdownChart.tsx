@@ -23,7 +23,7 @@ export function CategoryBreakdownChart({ data, totalPoints }: CategoryBreakdownC
 
   if (!hasData) return null;
 
-  // Normalize values for the donut — show proportional contribution
+  // Normalize values for the donut - show proportional contribution
   // Use percentage of total across categories
   const totalValue = data.reduce((sum, d) => sum + d.total, 0);
   const chartData = data

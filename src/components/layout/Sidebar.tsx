@@ -231,7 +231,7 @@ export function Sidebar({ userName, userImage, userRole }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile top bar — glass bar with logo + notification bell (navigation via BottomTabBar) */}
+      {/* Mobile top bar - glass bar with logo + notification bell (navigation via BottomTabBar) */}
       <div
         className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between px-4 py-3 md:hidden"
         style={{

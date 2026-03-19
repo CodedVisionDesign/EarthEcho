@@ -15,7 +15,7 @@ export default function AuthLayout({
       <div className="flex min-h-screen w-full">
         {/* Decorative side panel (hidden on mobile) */}
         <div className="relative hidden w-1/2 shrink-0 overflow-hidden bg-black md:block">
-          {/* Galaxy background — base layer */}
+          {/* Galaxy background - base layer */}
           <div className="absolute inset-0 z-0">
             <Galaxy
               mouseRepulsion
@@ -34,7 +34,7 @@ export default function AuthLayout({
             />
           </div>
 
-          {/* Animated rings — layered on top of galaxy */}
+          {/* Animated rings - layered on top of galaxy */}
           <div className="absolute inset-0 z-[1]">
             <MagicRings
               color="#52b788"
@@ -60,14 +60,14 @@ export default function AuthLayout({
             />
           </div>
 
-          {/* Globe — absolutely centred on the rings origin */}
+          {/* Globe - absolutely centred on the rings origin */}
           <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
             <div className="pointer-events-auto">
               <EcoGlobe size={340} />
             </div>
           </div>
 
-          {/* Text — pinned to bottom of panel */}
+          {/* Text - pinned to bottom of panel */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 pb-12 text-center">
             <h2 className="mb-2 text-3xl font-bold text-white drop-shadow-lg">
               Track Your Impact
@@ -80,9 +80,9 @@ export default function AuthLayout({
           </div>
         </div>
 
-        {/* Form side — fills exactly the other half */}
+        {/* Form side - fills exactly the other half */}
         <div className="relative w-full shrink-0 overflow-hidden bg-black md:w-1/2">
-          {/* Background video — covers entire panel */}
+          {/* Background video - covers entire panel */}
           <video
             autoPlay
             loop
@@ -94,7 +94,7 @@ export default function AuthLayout({
             <source src="/assets/auth_bg.webm" type="video/webm" />
             <source src="/assets/auth_bg.mp4" type="video/mp4" />
           </video>
-          {/* Soft glass overlay — also fixed */}
+          {/* Soft glass overlay - also fixed */}
           <div className="absolute inset-0 z-[1] bg-gradient-to-b from-white/10 via-transparent to-white/20 backdrop-blur-[1px]" />
 
           <main className="relative z-[2] flex min-h-screen w-full items-center justify-center overflow-y-auto px-4 pb-8 pt-24 md:px-0 md:py-0">

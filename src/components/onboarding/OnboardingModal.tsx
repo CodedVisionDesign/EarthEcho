@@ -260,7 +260,7 @@ export function OnboardingModal({ userName }: OnboardingModalProps) {
               </p>
               <div className="space-y-3 text-left">
                 {[
-                  { icon: "📝", text: "Log your first eco-action", sub: "Water, carbon, transport — anything counts!" },
+                  { icon: "📝", text: "Log your first eco-action", sub: "Water, carbon, transport - anything counts!" },
                   { icon: "🏅", text: "Join a monthly challenge", sub: "Compete with the community for extra points" },
                   { icon: "💬", text: "Say hello in the forum", sub: "Introduce yourself and get tips from others" },
                 ].map((item) => (

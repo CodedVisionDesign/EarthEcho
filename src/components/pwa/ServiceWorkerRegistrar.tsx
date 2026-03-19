@@ -30,7 +30,7 @@ export function ServiceWorkerRegistrar() {
         }
       })
       .catch(() => {
-        // Service worker registration failed — non-critical
+        // Service worker registration failed - non-critical
       });
   }, []);
 

@@ -7,7 +7,7 @@ import { subscribeToPush } from "@/lib/notification-actions";
 
 const DISMISSED_KEY = "push-optin-dismissed";
 const DISMISS_DAYS = 14;
-/** Delay before showing the banner (ms) — avoids clashing with onboarding modal */
+/** Delay before showing the banner (ms) - avoids clashing with onboarding modal */
 const DISPLAY_DELAY_MS = 5000;
 /** Maximum time to wait for the server to save the subscription */
 const SUBSCRIBE_TIMEOUT_MS = 10000;
@@ -85,7 +85,7 @@ export function PushOptIn() {
         }
         setShow(false);
       } catch {
-        // User denied, timeout, or server error — hide the prompt
+        // User denied, timeout, or server error - hide the prompt
         handleDismiss();
       }
     });
@@ -102,7 +102,7 @@ export function PushOptIn() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-charcoal">Enable notifications?</p>
           <p className="mt-0.5 text-xs leading-relaxed text-slate">
-            Get notified about replies, badges, and challenges — even when the app is closed.
+            Get notified about replies, badges, and challenges - even when the app is closed.
           </p>
           <div className="mt-3 flex items-center gap-2">
             <button

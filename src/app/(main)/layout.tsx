@@ -39,7 +39,7 @@ export default async function MainLayout({
             </div>
           </main>
 
-          {/* Mobile bottom tab bar — in flex flow, not fixed */}
+          {/* Mobile bottom tab bar - in flex flow, not fixed */}
           <BottomTabBar
             userName={session?.user?.name ?? undefined}
             userImage={session?.user?.image ?? undefined}

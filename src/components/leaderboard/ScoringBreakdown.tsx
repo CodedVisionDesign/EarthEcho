@@ -98,7 +98,7 @@ export function ScoringBreakdown() {
 
   return (
     <Card variant="default" className="mt-8 overflow-hidden">
-      {/* Header — always visible, acts as toggle */}
+      {/* Header - always visible, acts as toggle */}
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}

@@ -16,7 +16,7 @@ interface MagicCardProps {
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
-  /** RGB string e.g. "45, 106, 79" — defaults to forest green */
+  /** RGB string e.g. "45, 106, 79" - defaults to forest green */
   glowColor?: string;
   enableTilt?: boolean;
   enableRipple?: boolean;

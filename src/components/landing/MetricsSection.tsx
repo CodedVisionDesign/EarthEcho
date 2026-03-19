@@ -127,7 +127,7 @@ export function MetricsSection() {
           </div>
           <p className="text-lg text-slate max-w-md leading-relaxed">
             We don&apos;t just show litres and kilograms. We show you what
-            your impact really means — in terms you can picture.
+            your impact really means - in terms you can picture.
           </p>
         </div>
 

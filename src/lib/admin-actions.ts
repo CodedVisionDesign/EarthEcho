@@ -292,7 +292,7 @@ export async function adminSendPasswordReset(userId: string): Promise<{ success:
 
     if (!target) return { success: false, error: "User not found" };
     if (!target.email) return { success: false, error: "User has no email address" };
-    if (!target.password) return { success: false, error: "User uses social login — no password to reset" };
+    if (!target.password) return { success: false, error: "User uses social login - no password to reset" };
 
     // Generate a reset token
     const token = crypto.randomBytes(48).toString("hex");

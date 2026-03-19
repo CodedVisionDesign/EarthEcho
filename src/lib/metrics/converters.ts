@@ -54,7 +54,7 @@ function recyclingToHuman(kgRecycled: number): HumanMetric {
     const trees = Math.round(kgRecycled / TREE_EQUIVALENT);
     return {
       value: `${trees} trees saved`,
-      comparison: `Your recycling has saved the equivalent of ${trees} trees — a small woodland`,
+      comparison: `Your recycling has saved the equivalent of ${trees} trees - a small woodland`,
       icon: "tree",
       tooltip: `${kgRecycled.toLocaleString()}kg ÷ 60kg of paper per tree = ${trees} trees saved`,
     };
@@ -140,7 +140,7 @@ function fashionToHuman(items: number): HumanMetric {
     const suitcases = Math.round(items / 20);
     return {
       value: `${suitcases} suitcase${suitcases >= 2 ? "s" : ""} of secondhand clothes`,
-      comparison: `${items} items saved ${kgSaved}kg CO₂ — like taking a car off the road for ${Math.round(kgSaved / 4.6)} days`,
+      comparison: `${items} items saved ${kgSaved}kg CO₂ - like taking a car off the road for ${Math.round(kgSaved / 4.6)} days`,
       icon: "suitcase",
       tooltip: `${baseTooltip}. Car-free days: ${kgSaved}kg ÷ 4.6kg daily car CO₂`,
     };

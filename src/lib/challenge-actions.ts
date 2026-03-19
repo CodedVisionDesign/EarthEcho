@@ -397,7 +397,7 @@ export async function archiveChallenge(challengeId: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Quick Create (superadmin bypass — creates as APPROVED or ACTIVE)
+// Quick Create (superadmin bypass - creates as APPROVED or ACTIVE)
 // ---------------------------------------------------------------------------
 
 export async function quickCreateChallenge(input: {

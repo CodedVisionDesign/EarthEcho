@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { GlobeInstance } from "globe.gl";
 
-// Eco hotspots — cities with active green initiatives
+// Eco hotspots - cities with active green initiatives
 const ECO_POINTS = [
   { lat: 51.5, lng: -0.1, label: "London", size: 0.6 },
   { lat: 48.9, lng: 2.35, label: "Paris", size: 0.5 },
@@ -130,7 +130,7 @@ export default function EcoGlobe({ size = 280 }: { size?: number }) {
       controls.autoRotateSpeed = 0.6;
       controls.enableZoom = false;
 
-      // Set initial view — show Europe/Africa
+      // Set initial view - show Europe/Africa
       globe.pointOfView({ lat: 25, lng: 10, altitude: 2.0 });
     });
 

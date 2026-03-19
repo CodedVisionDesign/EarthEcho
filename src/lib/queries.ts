@@ -344,7 +344,7 @@ export async function getActiveChallenges() {
       data: { isActive: false, status: "COMPLETED" },
     });
   } catch {
-    // Neon HTTP adapter may not support updateMany — skip deactivation
+    // Neon HTTP adapter may not support updateMany - skip deactivation
   }
 
   return db.challenge.findMany({
@@ -517,7 +517,7 @@ export async function getForumThreads(
       : {}),
   };
 
-  // Build sort order — pinned threads always float to top
+  // Build sort order - pinned threads always float to top
   const sortOrder: Record<ForumSort, object[]> = {
     latest: [{ isPinned: "desc" }, { createdAt: "desc" }],
     popular: [{ isPinned: "desc" }, { replies: { _count: "desc" } }, { createdAt: "desc" }],

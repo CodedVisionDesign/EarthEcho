@@ -161,7 +161,7 @@ export default async function AnalyticsPage({
         <div>
           <h1 className="text-xl font-bold text-charcoal">Community Analytics</h1>
           <p className="text-sm text-slate">
-            {rangeLabels[range] ?? "Last 30 Days"} — Platform-wide environmental impact
+            {rangeLabels[range] ?? "Last 30 Days"} - Platform-wide environmental impact
           </p>
         </div>
       </div>

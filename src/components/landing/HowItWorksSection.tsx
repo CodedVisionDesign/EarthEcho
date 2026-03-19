@@ -11,7 +11,7 @@ const steps = [
     icon: faUserPlus,
     title: "Create your account",
     description:
-      "Sign up in seconds with email or Google. No credit card, no catches — just a free account to start your journey.",
+      "Sign up in seconds with email or Google. No credit card, no catches - just a free account to start your journey.",
     detail: "Average signup time: 12 seconds",
   },
   {

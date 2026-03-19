@@ -22,7 +22,7 @@ const COLORS = ["#1B4965", "#2D6A4F", "#FFB703", "#52B788", "#E63946", "#457B9D"
 const TOOLTIP_STYLE = { borderRadius: "8px", border: "1px solid #E5E7EB", fontSize: "12px" };
 const AXIS_TICK = { fontSize: 11, fill: "#6C757D" };
 
-// Stacked Area — Impact Over Time
+// Stacked Area - Impact Over Time
 interface ImpactPoint {
   date: string;
   [category: string]: string | number;
@@ -58,7 +58,7 @@ export function ImpactOverTimeChart({ data, categories }: { data: ImpactPoint[];
   );
 }
 
-// Donut — Category Breakdown
+// Donut - Category Breakdown
 interface CategorySlice {
   name: string;
   value: number;
@@ -102,7 +102,7 @@ export function CategoryBreakdownDonut({ data }: { data: CategorySlice[] }) {
   );
 }
 
-// Horizontal Bar — Top Contributors
+// Horizontal Bar - Top Contributors
 interface Contributor {
   name: string;
   total: number;
@@ -135,7 +135,7 @@ export function TopContributorsChart({ data }: { data: Contributor[] }) {
   );
 }
 
-// Line — Activity Growth Trend
+// Line - Activity Growth Trend
 interface GrowthPoint {
   date: string;
   count: number;
@@ -168,7 +168,7 @@ export function ActivityGrowthChart({ data }: { data: GrowthPoint[] }) {
   );
 }
 
-// Bar — Transport Mode Comparison
+// Bar - Transport Mode Comparison
 interface TransportMode {
   mode: string;
   co2Saved: number;
@@ -195,7 +195,7 @@ export function TransportModeChart({ data }: { data: TransportMode[] }) {
   );
 }
 
-// Bar — Activity Type Breakdown
+// Bar - Activity Type Breakdown
 interface ActivityType {
   type: string;
   total: number;

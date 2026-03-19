@@ -29,7 +29,7 @@ export function PasskeyLoginButton({ onError }: PasskeyLoginButtonProps) {
     setLoading(true);
 
     try {
-      // Trigger biometric prompt (discoverable credentials — no email needed)
+      // Trigger biometric prompt (discoverable credentials - no email needed)
       const { userId, token } = await authenticateWithPasskey();
 
       // Use the one-time token to sign in via next-auth

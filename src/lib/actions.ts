@@ -127,7 +127,7 @@ export async function logActivity(input: {
       const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const lastDate = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
       const diffDays = Math.round((nowDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays === 0) { /* Same day — keep streak, don't increment */ }
+      if (diffDays === 0) { /* Same day - keep streak, don't increment */ }
       else if (diffDays === 1) newStreak += 1;
       else newStreak = 1; // Streak broken
     } else {
@@ -756,7 +756,7 @@ export async function requestPasswordReset(input: { email: string }) {
     where: { email, createdAt: { gte: oneHourAgo } },
   });
   if (recentRequests >= 3) {
-    // Return success to prevent enumeration — silently rate limit
+    // Return success to prevent enumeration - silently rate limit
     return { success: true };
   }
 

@@ -24,7 +24,7 @@ interface CreateNotificationInput {
 
 /**
  * Creates an in-app notification, sends push notification, and optionally sends email.
- * Respects user notification preferences. Never throws — failures are silently logged.
+ * Respects user notification preferences. Never throws - failures are silently logged.
  */
 export async function createNotification(input: CreateNotificationInput) {
   try {

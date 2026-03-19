@@ -453,7 +453,7 @@ async function main() {
     challenges.push(await prisma.challenge.create({ data }));
   }
 
-  // Participants — active challenges
+  // Participants - active challenges
   await prisma.challengeParticipant.create({ data: { userId: demoUser.id, challengeId: challenges[0].id, progress: 3 } });
   await prisma.challengeParticipant.create({ data: { userId: demoUser.id, challengeId: challenges[1].id, progress: 42 } });
   await prisma.challengeParticipant.create({ data: { userId: demoUser.id, challengeId: challenges[2].id, progress: 12 } });
@@ -462,7 +462,7 @@ async function main() {
   await prisma.challengeParticipant.create({ data: { userId: user3.id, challengeId: challenges[1].id, progress: 25 } });
   await prisma.challengeParticipant.create({ data: { userId: user4.id, challengeId: challenges[0].id, progress: 5 } });
   await prisma.challengeParticipant.create({ data: { userId: user4.id, challengeId: challenges[1].id, progress: 68 } });
-  // Participants — past challenges
+  // Participants - past challenges
   await prisma.challengeParticipant.create({ data: { userId: demoUser.id, challengeId: challenges[3].id, progress: 500 } });
   await prisma.challengeParticipant.create({ data: { userId: user2.id, challengeId: challenges[3].id, progress: 320 } });
   await prisma.challengeParticipant.create({ data: { userId: user4.id, challengeId: challenges[4].id, progress: 5 } });
@@ -728,7 +728,7 @@ async function main() {
     {
       category: "WATER",
       titlePattern: "{month} Water Saver Sprint",
-      description: "Save {target} litres of water this month through mindful daily habits — shorter showers, full loads, and reusable bottles.",
+      description: "Save {target} litres of water this month through mindful daily habits - shorter showers, full loads, and reusable bottles.",
       targetValue: 500,
     },
     {
