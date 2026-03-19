@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -22,6 +22,14 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isPWA, setIsPWA] = useState(false);
+
+  useEffect(() => {
+    const standalone =
+      ("standalone" in navigator && (navigator as unknown as { standalone: boolean }).standalone === true) ||
+      window.matchMedia("(display-mode: standalone)").matches;
+    setIsPWA(standalone);
+  }, []);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -54,7 +62,7 @@ export function LoginForm() {
         <PasskeyLoginButton onError={(msg) => setError(msg)} />
       </div>
 
-      {/* OAuth Buttons */}
+      {/* OAuth Buttons — Facebook hidden in standalone PWA (OAuth redirects fail on iOS) */}
       <div className="mb-6 space-y-3">
         <button
           type="button"
@@ -68,18 +76,20 @@ export function LoginForm() {
           />
           Continue with Google
         </button>
-        <button
-          type="button"
-          onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })}
-          className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#1877F2] bg-[#1877F2] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-[#166FE5]"
-        >
-          <FontAwesomeIcon
-            icon={faFacebook}
-            className="h-4 w-4"
-            aria-hidden
-          />
-          Continue with Facebook
-        </button>
+        {!isPWA && (
+          <button
+            type="button"
+            onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })}
+            className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#1877F2] bg-[#1877F2] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-[#166FE5]"
+          >
+            <FontAwesomeIcon
+              icon={faFacebook}
+              className="h-4 w-4"
+              aria-hidden
+            />
+            Continue with Facebook
+          </button>
+        )}
       </div>
 
       {/* Divider */}
