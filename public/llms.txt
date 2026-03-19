@@ -1,0 +1,46 @@
+# Earth Echo
+
+> Track and reduce your environmental impact with human-readable metrics, gamification, and community support.
+
+Earth Echo is a carbon footprint and environmental impact tracking platform. Users log their daily activities across six categories — carbon emissions, water usage, plastic consumption, recycling, transport, and sustainable shopping — and receive personalised insights, badges, and challenges to encourage greener habits.
+
+## Core Features
+
+- **Activity Tracking**: Log carbon, water, plastic, recycling, transport, and shopping impacts with intuitive forms and real-time feedback.
+- **Dashboard**: Personalised overview with impact summaries, streak tracking, weekly trends, and comparison to community averages.
+- **Badges & Achievements**: Earn badges for milestones (e.g., 7-day streaks, first log, zero-waste days).
+- **Challenges**: Join community challenges with deadlines and leaderboards.
+- **Leaderboard**: Global and period-filtered rankings by points, badges, and streaks.
+- **Community Forum**: Discuss sustainability topics, share tips, and support each other.
+- **Guides**: Curated sustainability guides on reducing waste, saving water, and lowering carbon footprint.
+- **Eco App Directory**: Curated list of third-party eco-friendly apps and tools.
+
+## Tech Stack
+
+- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS 4, TypeScript
+- **Backend**: Next.js Server Actions, API Routes
+- **Database**: MySQL/MariaDB via Prisma ORM
+- **Authentication**: Auth.js v5 (Google, Facebook, email/password, WebAuthn/passkeys)
+- **Native Apps**: Capacitor 8 (Android, iOS planned)
+- **Push Notifications**: Web Push (VAPID) + Firebase Cloud Messaging (native)
+- **Hosting**: Ubuntu VPS (earthecho.co.uk)
+
+## Public Pages
+
+- [Home](https://earthecho.co.uk/) — Landing page with feature overview and demo
+- [About](https://earthecho.co.uk/about) — Meet the founders
+- [Eco Apps](https://earthecho.co.uk/apps) — Curated eco-friendly app directory
+- [Privacy Policy](https://earthecho.co.uk/privacy) — GDPR-compliant privacy policy
+- [Terms of Service](https://earthecho.co.uk/terms) — Terms of use
+- [Cookie Policy](https://earthecho.co.uk/cookies) — Cookie usage and consent
+- [Data Deletion](https://earthecho.co.uk/data-deletion) — Request data deletion (GDPR)
+
+## Contact
+
+- Website: https://earthecho.co.uk
+- Email: contact@earthecho.co.uk
+
+## Documentation
+
+- [llms.txt](https://earthecho.co.uk/llms.txt) — This file
+- [llms-full.md](https://earthecho.co.uk/llms-full.md) — Extended documentation

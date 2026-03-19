@@ -1,0 +1,24 @@
+# Earth Echo — https://earthecho.co.uk
+# Robots exclusion protocol
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /track/
+Disallow: /profile
+Disallow: /badges
+Disallow: /challenges
+Disallow: /leaderboard
+Disallow: /forum
+Disallow: /banned
+Disallow: /offline
+Disallow: /_next/
+Disallow: /reset-password
+
+# Sitemap
+Sitemap: https://earthecho.co.uk/sitemap.xml
+
+# LLM context
+# See https://earthecho.co.uk/llms.txt
