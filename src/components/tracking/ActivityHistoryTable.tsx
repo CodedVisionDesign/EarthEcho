@@ -237,13 +237,14 @@ function SwipeableRow({ children, onDelete, className = "" }: SwipeableRowProps)
       <td
         colSpan={100}
         className="pointer-events-none absolute inset-0 p-0 md:hidden"
-        style={{ zIndex: 0 }}
+        style={{ zIndex: 0, width: `${SWIPE_THRESHOLD}px` }}
       >
         <div className="flex h-full items-stretch justify-end">
           <button
             type="button"
             onClick={handleDeleteClick}
-            className="pointer-events-auto flex w-20 items-center justify-center bg-red-600 text-white transition-colors hover:bg-red-700"
+            className="pointer-events-auto inline-flex items-center justify-center bg-red-600 text-white transition-colors hover:bg-red-700"
+            style={{ width: `${SWIPE_THRESHOLD}px` }}
             aria-label="Delete activity"
           >
             <FontAwesomeIcon icon={faTrashCan} className="h-4 w-4" />
