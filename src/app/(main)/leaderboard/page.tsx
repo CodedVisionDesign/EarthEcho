@@ -319,17 +319,6 @@ export default async function LeaderboardPage({
             You also earn <strong className="text-charcoal">100 bonus points</strong> for
             completing a challenge.
           </p>
-
-          <div className="mt-4 rounded-lg border border-amber-100 bg-amber-50/60 px-4 py-3">
-            <p className="text-xs leading-relaxed text-amber-800">
-              <strong>Study project notice:</strong> This app is a university
-              study project and is not a commercial product. Leaderboard
-              rankings are based on self-reported activity logs and are not
-              independently verified. The scoring system is designed to
-              encourage engagement and learning, not to provide certified
-              environmental impact data.
-            </p>
-          </div>
         </Card>
       </FadeIn>
     </div>
