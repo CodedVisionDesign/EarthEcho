@@ -18,6 +18,7 @@ import {
   UserGrowthChart,
   CategoryBreakdownChart,
   ActivityTrendChart,
+  CommunityImpactChart,
 } from "@/components/admin/AdminCharts";
 
 function timeAgo(date: Date): string {
@@ -70,6 +71,7 @@ export default async function AdminDashboard() {
     usersByMonth,
     activitiesByCategory,
     recentDailyActivities,
+    impactByCategory,
   ] = await Promise.all([
     db.user.count(),
     db.user.count({
@@ -104,6 +106,11 @@ export default async function AdminDashboard() {
       where: { createdAt: { gte: fourteenDaysAgo } },
       select: { createdAt: true },
       orderBy: { createdAt: "asc" },
+    }),
+    // Community impact: total values per category
+    db.activity.groupBy({
+      by: ["category"],
+      _sum: { value: true },
     }),
   ]);
 
@@ -140,6 +147,28 @@ export default async function AdminDashboard() {
     if (dailyMap.has(key)) dailyMap.set(key, (dailyMap.get(key) ?? 0) + 1);
   }
   const activityTrendData = Array.from(dailyMap.entries()).map(([day, activities]) => ({ day, activities }));
+
+  // Process community impact data
+  const IMPACT_META: Record<string, { label: string; unit: string; icon: string; color: string; conversion?: (v: number) => string }> = {
+    WATER: { label: "Water Saved", unit: "litres", icon: "💧", color: "#1B4965", conversion: (v) => `${Math.round(v / 150).toLocaleString()} bathtubs` },
+    CARBON: { label: "Carbon Reduced", unit: "kg CO₂", icon: "🌍", color: "#2D6A4F", conversion: (v) => `${Math.round(v / 21.7).toLocaleString()} transatlantic flights` },
+    PLASTIC: { label: "Plastic Avoided", unit: "items", icon: "🛍️", color: "#FFB703", conversion: (v) => `${Math.round(v * 0.012).toLocaleString()} kg of plastic` },
+    RECYCLING: { label: "Recycling", unit: "kg", icon: "♻️", color: "#52B788", conversion: (v) => `${Math.round(v / 1000).toLocaleString()} tonnes diverted` },
+    TRANSPORT: { label: "Green Transport", unit: "km", icon: "🚗", color: "#457B9D", conversion: (v) => `${Math.round(v / 40075).toLocaleString()}x around the Earth` },
+    FASHION: { label: "Fashion Impact", unit: "items", icon: "👗", color: "#E63946", conversion: (v) => `${Math.round(v * 8).toLocaleString()} kg CO₂ saved` },
+  };
+
+  const impactData = impactByCategory.map((c) => {
+    const meta = IMPACT_META[c.category] ?? { label: c.category, unit: "", icon: "📊", color: "#6C757D" };
+    return {
+      category: meta.label,
+      total: Math.round(c._sum.value ?? 0),
+      unit: meta.unit,
+      icon: meta.icon,
+      color: meta.color,
+      conversion: meta.conversion?.(c._sum.value ?? 0) ?? "",
+    };
+  });
 
   const stats = [
     {
@@ -237,6 +266,30 @@ export default async function AdminDashboard() {
           </Link>
         ))}
       </div>
+
+      {/* Community Impact */}
+      {impactData.length > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-4 text-lg font-semibold text-charcoal">Community Impact</h2>
+          <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            {impactData.map((item) => (
+              <Card key={item.category} variant="default" className="p-4">
+                <div className="mb-2 text-2xl">{item.icon}</div>
+                <p className="text-lg font-bold text-charcoal">
+                  {item.total.toLocaleString()}
+                </p>
+                <p className="text-xs text-slate">{item.unit} {item.category.toLowerCase()}</p>
+                {item.conversion && (
+                  <p className="mt-1 text-[10px] font-medium text-forest">
+                    ≈ {item.conversion}
+                  </p>
+                )}
+              </Card>
+            ))}
+          </div>
+          <CommunityImpactChart data={impactData} />
+        </div>
+      )}
 
       {/* Charts Row */}
       <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">

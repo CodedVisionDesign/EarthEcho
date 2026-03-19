@@ -1,9 +1,17 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBookOpen } from "@/lib/fontawesome";
-import { GUIDE_LIST } from "@/lib/guides";
+import { db } from "@/lib/db";
+import { dbGuideToGuide } from "@/lib/guide-helpers";
 import { GuideCard } from "@/components/guides/GuideCard";
 
-export default function GuidesPage() {
+export default async function GuidesPage() {
+  const dbGuides = await db.guide.findMany({
+    where: { isPublished: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const guides = dbGuides.map(dbGuideToGuide);
+
   return (
     <div>
       {/* Header */}
@@ -29,7 +37,7 @@ export default function GuidesPage() {
 
       {/* Guide Cards Grid */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {GUIDE_LIST.map((guide) => (
+        {guides.map((guide) => (
           <GuideCard key={guide.slug} guide={guide} />
         ))}
       </div>

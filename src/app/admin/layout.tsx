@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/admin";
 import { AdminNav } from "@/components/admin/AdminNav";
-import { BottomTabBar } from "@/components/layout/BottomTabBar";
+import { AdminBottomTabBar } from "@/components/admin/AdminBottomTabBar";
 
 export const metadata = {
   title: "Admin | EarthEcho",
@@ -21,11 +21,7 @@ export default async function AdminLayout({
           {children}
         </div>
       </main>
-      <BottomTabBar
-        userName={admin.displayName || admin.name || undefined}
-        userImage={admin.image ?? undefined}
-        userRole={admin.role}
-      />
+      <AdminBottomTabBar />
     </div>
   );
 }

@@ -37,11 +37,41 @@ const badgeSchema = z.object({
   criteria: z.string().refine((v) => {
     try {
       const parsed = JSON.parse(v);
-      return parsed.type && VALID_CRITERIA_TYPES.includes(parsed.type);
+      if (!parsed.type || !VALID_CRITERIA_TYPES.includes(parsed.type)) return false;
+
+      // Validate required numeric fields per criteria type (OWASP: input validation)
+      const posInt = (n: unknown, max = 1_000_000) =>
+        typeof n === "number" && Number.isFinite(n) && n > 0 && n <= max;
+      const isStr = (s: unknown) => typeof s === "string" && (s as string).length > 0;
+
+      switch (parsed.type) {
+        case "streak":
+        case "car_free_streak":
+        case "flight_free_streak":
+          return posInt(parsed.days, 3650);
+        case "total":
+          return isStr(parsed.category) && posInt(parsed.value);
+        case "transport_distance":
+          return isStr(parsed.mode) && posInt(parsed.km);
+        case "transport_count":
+          return isStr(parsed.mode) && posInt(parsed.count, 100_000);
+        case "challenges_completed":
+          return posInt(parsed.count, 1000);
+        case "reactions_received":
+          return isStr(parsed.reaction) && posInt(parsed.count, 100_000);
+        case "posts_count":
+          return posInt(parsed.count, 100_000);
+        case "first_activity":
+        case "first_post":
+        case "profile_complete":
+          return true;
+        default:
+          return false;
+      }
     } catch {
       return false;
     }
-  }, "Invalid criteria JSON — must include a valid type"),
+  }, "Invalid criteria JSON — must include a valid type with required fields"),
 });
 
 // ---------------------------------------------------------------------------
@@ -266,7 +296,7 @@ export async function searchUsersForGrant(query: string) {
         { displayName: { contains: query } },
       ],
     },
-    select: { id: true, name: true, email: true, displayName: true },
+    select: { id: true, name: true, displayName: true },
     take: 10,
   });
 }

@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@/lib/fontawesome";
-import { GUIDES } from "@/lib/guides";
+import { db } from "@/lib/db";
+import { dbGuideToGuide } from "@/lib/guide-helpers";
 import { getGuideComments } from "@/lib/queries";
 import { auth } from "@/lib/auth";
 import { GuideArticle } from "@/components/guides/GuideArticle";
@@ -14,11 +15,16 @@ interface PageProps {
 
 export default async function GuidePage({ params }: PageProps) {
   const { slug } = await params;
-  const guide = GUIDES[slug];
 
-  if (!guide) {
+  const dbGuide = await db.guide.findUnique({
+    where: { slug },
+  });
+
+  if (!dbGuide || !dbGuide.isPublished) {
     notFound();
   }
+
+  const guide = dbGuideToGuide(dbGuide);
 
   const [comments, session] = await Promise.all([
     getGuideComments(slug),
@@ -45,8 +51,4 @@ export default async function GuidePage({ params }: PageProps) {
       />
     </div>
   );
-}
-
-export function generateStaticParams() {
-  return Object.keys(GUIDES).map((slug) => ({ slug }));
 }

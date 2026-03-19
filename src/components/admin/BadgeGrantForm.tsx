@@ -14,7 +14,7 @@ export function BadgeGrantForm({ badgeId }: BadgeGrantFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<{ id: string; name: string | null; email: string | null; displayName: string | null }[]>([]);
+  const [results, setResults] = useState<{ id: string; name: string | null; displayName: string | null }[]>([]);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -89,7 +89,7 @@ export function BadgeGrantForm({ badgeId }: BadgeGrantFormProps) {
             <div key={user.id} className="flex items-center justify-between px-3 py-2">
               <div>
                 <p className="text-sm font-medium text-charcoal">{user.displayName || user.name || "Unknown"}</p>
-                <p className="text-xs text-slate">{user.email}</p>
+                <p className="text-xs text-slate">ID: {user.id.slice(0, 8)}...</p>
               </div>
               <button
                 onClick={() => handleGrant(user.id)}

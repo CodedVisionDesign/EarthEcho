@@ -17,10 +17,13 @@ import {
   profileSchema,
   registerSchema,
   guideCommentSchema,
+  DAILY_POINT_CAP,
+  ANOMALY_THRESHOLDS,
 } from "./validations";
 import { calculateCO2Saved } from "./metrics/transport";
 import { sendWelcomeEmail, sendPasswordResetEmail } from "./email";
 import { createNotification, notifyMany } from "./notifications";
+import { isRateLimited } from "./rate-limit";
 
 // ==========================================
 // Activity Actions
@@ -40,6 +43,7 @@ export async function logActivity(input: {
   if (!session?.user?.id) return { error: "Not authenticated" };
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
+  if (isRateLimited(`activity:${session.user.id}`, 20, 60_000)) return { error: "Too many requests. Please slow down." };
 
   const parsed = activitySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -66,11 +70,50 @@ export async function logActivity(input: {
     },
   });
 
-  // Award points based on impact
-  const points = calculatePointsForCategory(data.category, data.value);
-  await db.pointTransaction.create({
-    data: { userId: session.user.id, points, reason: `Logged ${data.category.toLowerCase()} activity` },
+  // Anomaly flagging: flag suspicious values for admin review (non-blocking)
+  const anomalyThreshold = ANOMALY_THRESHOLDS[data.category];
+  if (anomalyThreshold && data.value > anomalyThreshold) {
+    db.flaggedActivity.create({
+      data: {
+        activityId: activity.id,
+        userId: session.user.id,
+        reason: `Value ${data.value} exceeds anomaly threshold of ${anomalyThreshold} for ${data.category}`,
+        category: data.category,
+        value: data.value,
+      },
+    }).catch(() => {});
+  }
+
+  // Daily point cap enforcement (OWASP: business logic abuse prevention)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(todayStart);
+  todayEnd.setDate(todayEnd.getDate() + 1);
+
+  const todayPoints = await db.pointTransaction.aggregate({
+    where: {
+      userId: session.user.id,
+      createdAt: { gte: todayStart, lt: todayEnd },
+      points: { gt: 0 },
+    },
+    _sum: { points: true },
   });
+
+  const earnedToday = todayPoints._sum.points ?? 0;
+  const rawPoints = calculatePointsForCategory(data.category, data.value);
+  const cappedPoints = earnedToday >= DAILY_POINT_CAP
+    ? 0
+    : Math.min(rawPoints, DAILY_POINT_CAP - earnedToday);
+
+  const cappedMessage = cappedPoints < rawPoints
+    ? "Daily points limit reached. Your activity is still recorded for streaks and challenges."
+    : undefined;
+
+  if (cappedPoints > 0) {
+    await db.pointTransaction.create({
+      data: { userId: session.user.id, points: cappedPoints, reason: `Logged ${data.category.toLowerCase()} activity` },
+    });
+  }
 
   // Update user points and streak
   const user = await db.user.findUnique({ where: { id: session.user.id } });
@@ -94,7 +137,7 @@ export async function logActivity(input: {
     await db.user.update({
       where: { id: session.user.id },
       data: {
-        totalPoints: { increment: points },
+        ...(cappedPoints > 0 && { totalPoints: { increment: cappedPoints } }),
         streakDays: newStreak,
         lastActiveAt: now,
       },
@@ -144,7 +187,7 @@ export async function logActivity(input: {
   revalidatePath("/dashboard");
   revalidatePath(`/track/${data.category.toLowerCase()}`);
 
-  return { success: true, activity, newBadge, pointsEarned: points };
+  return { success: true, activity, newBadge, pointsEarned: cappedPoints, cappedMessage };
 }
 
 export async function updateActivity(input: {
@@ -160,6 +203,7 @@ export async function updateActivity(input: {
   if (!session?.user?.id) return { error: "Not authenticated" };
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
+  if (isRateLimited(`update-activity:${session.user.id}`, 15, 60_000)) return { error: "Too many requests. Please slow down." };
 
   const parsed = updateActivitySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -197,6 +241,7 @@ export async function deleteActivity(id: string) {
   if (!session?.user?.id) return { error: "Not authenticated" };
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
+  if (isRateLimited(`delete-activity:${session.user.id}`, 10, 60_000)) return { error: "Too many requests. Please slow down." };
 
   const existing = await db.activity.findUnique({ where: { id } });
   if (!existing || existing.userId !== session.user.id) return { error: "Activity not found" };
@@ -213,6 +258,7 @@ export async function bulkDeleteActivities(ids: string[]) {
   if (!session?.user?.id) return { error: "Not authenticated" };
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
+  if (isRateLimited(`bulk-delete:${session.user.id}`, 3, 60_000)) return { error: "Too many requests. Please slow down." };
   if (ids.length === 0) return { error: "No activities selected" };
   if (ids.length > 100) return { error: "Cannot delete more than 100 at once" };
 
@@ -283,6 +329,7 @@ export async function createThread(input: {
   if (!session?.user?.id) return { error: "Not authenticated" };
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
+  if (isRateLimited(`thread:${session.user.id}`, 5, 60_000)) return { error: "Too many requests. Please slow down." };
 
   const parsed = threadSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -314,6 +361,7 @@ export async function createReply(input: { threadId: string; content: string; pa
   if (!session?.user?.id) return { error: "Not authenticated" };
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
+  if (isRateLimited(`reply:${session.user.id}`, 10, 60_000)) return { error: "Too many requests. Please slow down." };
 
   const parsed = replySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -402,6 +450,7 @@ export async function toggleReaction(input: { replyId: string; type: string }) {
   if (!session?.user?.id) return { error: "Not authenticated" };
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
+  if (isRateLimited(`reaction:${session.user.id}`, 30, 60_000)) return { error: "Too many requests. Please slow down." };
 
   const parsed = reactionSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -841,6 +890,7 @@ export async function createGuideComment(input: {
   if (!session?.user?.id) return { error: "Not authenticated" };
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
+  if (isRateLimited(`guide-comment:${session.user.id}`, 5, 60_000)) return { error: "Too many requests. Please slow down." };
 
   const parsed = guideCommentSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };

@@ -1,25 +1,57 @@
 import { z } from "zod";
 
+// Maximum realistic single-activity values per category (OWASP: input validation)
+export const CATEGORY_MAX_VALUES: Record<string, number> = {
+  WATER: 2000,      // 2,000 litres (large household daily max)
+  CARBON: 100,      // 100 kg CO₂ offset in a single activity
+  PLASTIC: 200,     // 200 items avoided
+  RECYCLING: 500,   // 500 kg recycled
+  TRANSPORT: 500,   // 500 km green travel in one go
+  FASHION: 50,      // 50 sustainable fashion items
+};
+
+// Maximum points a user can earn per calendar day
+export const DAILY_POINT_CAP = 500;
+
+// Anomaly thresholds (~50% of max) — activities above these are flagged for admin review
+export const ANOMALY_THRESHOLDS: Record<string, number> = {
+  WATER: 1000,
+  CARBON: 50,
+  PLASTIC: 100,
+  RECYCLING: 250,
+  TRANSPORT: 300,
+  FASHION: 25,
+};
+
 export const activitySchema = z.object({
   category: z.enum(["WATER", "CARBON", "PLASTIC", "RECYCLING", "TRANSPORT", "FASHION"]),
   type: z.string().min(1, "Activity type is required"),
-  value: z.number().positive("Value must be positive"),
+  value: z.number().positive("Value must be positive").max(10000, "Value exceeds maximum allowed"),
   unit: z.string().min(1),
   note: z.string().optional(),
   date: z.string().optional(), // ISO date string, defaults to now
   // Transport-specific
   transportMode: z.string().optional(),
-  distanceKm: z.number().positive().optional(),
+  distanceKm: z.number().positive().max(5000, "Distance exceeds maximum allowed").optional(),
+}).superRefine((data, ctx) => {
+  const max = CATEGORY_MAX_VALUES[data.category];
+  if (max && data.value > max) {
+    ctx.addIssue({
+      code: "custom",
+      message: `Value for ${data.category} cannot exceed ${max}`,
+      path: ["value"],
+    });
+  }
 });
 
 export const updateActivitySchema = z.object({
   id: z.string().min(1),
   type: z.string().min(1).optional(),
-  value: z.number().positive().optional(),
+  value: z.number().positive().max(10000, "Value exceeds maximum allowed").optional(),
   note: z.string().optional(),
   date: z.string().optional(),
   transportMode: z.string().optional(),
-  distanceKm: z.number().positive().optional(),
+  distanceKm: z.number().positive().max(5000, "Distance exceeds maximum allowed").optional(),
 });
 
 export const threadSchema = z.object({

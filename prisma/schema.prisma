@@ -349,6 +349,34 @@ model Resource {
 }
 
 // ==========================================
+// Guides
+// ==========================================
+
+model Guide {
+  id              String  @id @default(cuid())
+  slug            String  @unique
+  title           String
+  subtitle        String  @db.Text
+  icon            String  @default("faBookOpen") // FontAwesome icon name
+  category        String // "energy", "water", "waste", "food", etc.
+  categoryLabel   String
+  readTimeMinutes Int     @default(5)
+  introduction    String  @db.Text
+  sections        String  @db.LongText // JSON array of GuideSection
+  quickTips       String  @db.LongText // JSON array of strings
+  sources         String  @db.LongText // JSON array of { name, url }
+  lastUpdated     String
+  isPublished     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([isPublished])
+  @@map("guides")
+}
+
+// ==========================================
 // Guide Comments
 // ==========================================
 
@@ -534,4 +562,27 @@ model WebAuthnChallenge {
   @@index([challenge])
   @@index([expiresAt])
   @@map("webauthn_challenges")
+}
+
+// ==========================================
+// Flagged Activities (anomaly detection)
+// ==========================================
+
+model FlaggedActivity {
+  id         String    @id @default(cuid())
+  activityId String
+  userId     String
+  reason     String    @db.Text
+  category   String
+  value      Float
+  status     String    @default("PENDING") // PENDING, REVIEWED, DISMISSED
+  reviewedBy String?
+  reviewedAt DateTime?
+  reviewNote String?   @db.Text
+
+  createdAt  DateTime  @default(now())
+
+  @@index([status])
+  @@index([userId])
+  @@map("flagged_activities")
 }

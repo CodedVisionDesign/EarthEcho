@@ -25,9 +25,7 @@ export async function POST(req: Request) {
         <h2 style="color:#2D6A4F;">EarthEcho SMTP Smoke Test</h2>
         <p>If you're reading this, your email configuration is working correctly.</p>
         <ul style="line-height:1.8;">
-          <li><strong>SMTP Host:</strong> ${process.env.SMTP_HOST}</li>
-          <li><strong>SMTP Port:</strong> ${process.env.SMTP_PORT}</li>
-          <li><strong>SMTP User:</strong> ${process.env.SMTP_USER}</li>
+          <li><strong>Status:</strong> Connected</li>
           <li><strong>Sent at:</strong> ${new Date().toISOString()}</li>
         </ul>
         <p style="color:#888;font-size:12px;">Triggered by admin: ${admin.email}</p>

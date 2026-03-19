@@ -27,7 +27,18 @@
       "Bash(tasklist)",
       "Bash(findstr node:*)",
       "Bash(taskkill /F /IM node.exe)",
-      "Bash(taskkill /IM node.exe /F)"
+      "Bash(taskkill /IM node.exe /F)",
+      "Bash(find \"c:\\\\xampp\\\\htdocs\\\\CarbonFootprint\\\\DashboardStudyProject\\\\src\\\\app\\\\\\(main\\)\\\\track\" -type f -name \"*.tsx\")",
+      "Bash(gh pr:*)",
+      "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/app -path *guides* -type f -name *.tsx)",
+      "Bash(grep -r Resource /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src --include=*.ts --include=*.tsx)",
+      "Bash(ls -la /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/app/\\\\\\(main\\\\\\)/guides/)",
+      "Bash(cat \"/c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/app/\\(main\\)/guides/[slug]/page.tsx\")",
+      "Bash(npx tsx:*)",
+      "Bash(find c:/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src -maxdepth 3 -type f \\\\\\(-name *.test.* -o -name *.spec.* \\\\\\))",
+      "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject -maxdepth 1 -type f -name *.json -o -name *.ts -o -name *.js)",
+      "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src -type f -name *auth* -o -name *forgot* -o -name *reset*)",
+      "Bash(echo \"EXIT: $?\")"
     ]
   }
 }

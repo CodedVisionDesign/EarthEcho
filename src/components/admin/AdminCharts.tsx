@@ -91,6 +91,51 @@ export function CategoryBreakdownChart({ data }: { data: CategoryBreakdown[] }) 
   );
 }
 
+interface ImpactData {
+  category: string;
+  total: number;
+  unit: string;
+  icon: string;
+  color: string;
+}
+
+export function CommunityImpactChart({ data }: { data: ImpactData[] }) {
+  return (
+    <Card variant="default" className="p-5">
+      <h3 className="mb-1 text-sm font-semibold text-charcoal">Community Impact Breakdown</h3>
+      <p className="mb-4 text-xs text-slate">Total contributions by category</p>
+      <div>
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={data} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
+            <XAxis type="number" tick={{ fontSize: 11, fill: "#6C757D" }} axisLine={false} tickLine={false} />
+            <YAxis
+              type="category"
+              dataKey="category"
+              tick={{ fontSize: 11, fill: "#6C757D" }}
+              axisLine={false}
+              tickLine={false}
+              width={90}
+            />
+            <Tooltip
+              contentStyle={{ borderRadius: "8px", border: "1px solid #E5E7EB", fontSize: "12px" }}
+              formatter={(value, _name, props) => {
+                const payload = (props as unknown as { payload: ImpactData }).payload;
+                return [`${Number(value).toLocaleString()} ${payload.unit}`, payload.category];
+              }}
+            />
+            <Bar dataKey="total" name="Total" radius={[0, 4, 4, 0]}>
+              {data.map((entry, index) => (
+                <Cell key={index} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </Card>
+  );
+}
+
 export function ActivityTrendChart({ data }: { data: ActivityTrendData[] }) {
   return (
     <Card variant="default" className="p-5">

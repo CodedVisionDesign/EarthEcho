@@ -43,8 +43,19 @@ export function ForgotPasswordForm() {
           </svg>
         </div>
         <h2 className="mb-2 text-lg font-semibold text-charcoal">Check your email</h2>
+        <p className="mb-4 text-sm text-slate">
+          If an account exists with that email, we&apos;ve sent a password reset
+          link. The link is valid for <strong className="text-charcoal">1 hour</strong>.
+        </p>
         <p className="mb-6 text-sm text-slate">
-          If an account exists with that email, we&apos;ve sent password reset instructions. The link expires in 1 hour.
+          Please check your junk or spam folder if you don&apos;t see it in your
+          inbox. If you&apos;re still having trouble, contact us at{" "}
+          <a
+            href="mailto:contact@earthecho.co.uk"
+            className="font-medium text-forest transition-colors hover:text-forest-dark hover:underline"
+          >
+            contact@earthecho.co.uk
+          </a>
         </p>
         <Link
           href="/login"

@@ -6,7 +6,12 @@ import { db } from "@/lib/db";
 // Protected by a secret key to prevent unauthorized access
 export async function POST(request: Request) {
   const authHeader = request.headers.get("authorization");
-  const expectedKey = process.env.CRON_SECRET || "earthecho-cleanup-key";
+  const expectedKey = process.env.CRON_SECRET;
+
+  if (!expectedKey) {
+    console.error("[CLEANUP] CRON_SECRET environment variable is not set");
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+  }
 
   if (authHeader !== `Bearer ${expectedKey}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
