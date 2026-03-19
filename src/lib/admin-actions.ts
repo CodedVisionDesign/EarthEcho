@@ -443,3 +443,27 @@ export async function deleteUser(userId: string): Promise<{ success: boolean; er
     return { success: false, error: e instanceof Error ? e.message : "Failed to delete user" };
   }
 }
+
+// ---------------------------------------------------------------------------
+// App Settings
+// ---------------------------------------------------------------------------
+
+export async function updateForumMinAge(age: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireAdmin();
+
+    const clampedAge = Math.max(13, Math.min(18, Math.floor(age)));
+
+    await db.appSetting.upsert({
+      where: { key: "forum_min_age" },
+      create: { key: "forum_min_age", value: String(clampedAge) },
+      update: { value: String(clampedAge) },
+    });
+
+    revalidatePath("/admin/forum");
+    return { success: true };
+  } catch (e) {
+    console.error("[ADMIN] Update forum min age failed:", e);
+    return { success: false, error: e instanceof Error ? e.message : "Failed to update setting" };
+  }
+}

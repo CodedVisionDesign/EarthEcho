@@ -24,6 +24,7 @@ import { PasskeyManager } from "@/components/profile/PasskeyManager";
 import { ImpactSummaryCard } from "@/components/profile/ImpactSummaryCard";
 import { DeleteAccountSection } from "@/components/profile/DeleteAccountSection";
 import { CookiePreferences } from "@/components/profile/CookiePreferences";
+import { EmailVerificationCard } from "@/components/profile/EmailVerificationCard";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 interface StatCardProps {
@@ -248,6 +249,12 @@ export default async function ProfilePage() {
 
           {/* Impact Summary */}
           <ImpactSummaryCard categoryBreakdown={profile.categoryBreakdown} />
+
+          {/* Email Verification */}
+          <EmailVerificationCard
+            email={user.email || ""}
+            isVerified={!!user.emailVerified}
+          />
 
           {/* Edit profile form */}
           <Card variant="default" className="p-6">

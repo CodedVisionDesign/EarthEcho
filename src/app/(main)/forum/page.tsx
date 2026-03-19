@@ -10,6 +10,7 @@ import { getForumThreads, resolveUserImage } from "@/lib/queries";
 import type { ForumSort } from "@/lib/queries";
 import { ForumNewThreadToggle } from "@/components/forum/ForumNewThreadToggle";
 import { ForumSearchBar } from "@/components/forum/ForumSearchBar";
+import { ForumEligibilityBanner } from "@/components/forum/ForumEligibilityBanner";
 import { SocialTabBar } from "@/components/navigation/SocialTabBar";
 
 const CATEGORIES = [
@@ -128,6 +129,9 @@ export default async function ForumPage({
           </div>
         </div>
       </FadeIn>
+
+      {/* Eligibility banner (email / age gate) */}
+      <ForumEligibilityBanner />
 
       {/* Search + New Thread */}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">

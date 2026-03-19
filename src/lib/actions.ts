@@ -21,7 +21,7 @@ import {
   ANOMALY_THRESHOLDS,
 } from "./validations";
 import { calculateCO2Saved } from "./metrics/transport";
-import { sendWelcomeEmail, sendPasswordResetEmail } from "./email";
+import { sendWelcomeEmail, sendPasswordResetEmail, sendEmailVerification } from "./email";
 import { createNotification, notifyMany } from "./notifications";
 import { isRateLimited } from "./rate-limit";
 
@@ -331,6 +331,9 @@ export async function createThread(input: {
   if (banned) return { error: banned };
   if (isRateLimited(`thread:${session.user.id}`, 5, 60_000)) return { error: "Too many requests. Please slow down." };
 
+  const eligibility = await checkForumEligibility(session.user.id);
+  if (eligibility) return { error: eligibility };
+
   const parsed = threadSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
@@ -362,6 +365,9 @@ export async function createReply(input: { threadId: string; content: string; pa
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
   if (isRateLimited(`reply:${session.user.id}`, 10, 60_000)) return { error: "Too many requests. Please slow down." };
+
+  const eligibility = await checkForumEligibility(session.user.id);
+  if (eligibility) return { error: eligibility };
 
   const parsed = replySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -508,6 +514,9 @@ export async function editThread(input: { id: string; title?: string; content?: 
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
 
+  const eligibility = await checkForumEligibility(session.user.id);
+  if (eligibility) return { error: eligibility };
+
   const parsed = editThreadSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
@@ -549,6 +558,9 @@ export async function editReply(input: { id: string; content: string }) {
   if (!session?.user?.id) return { error: "Not authenticated" };
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
+
+  const eligibility = await checkForumEligibility(session.user.id);
+  if (eligibility) return { error: eligibility };
 
   const parsed = editReplySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -671,6 +683,127 @@ export async function registerUser(input: {
 
   // Send welcome email (best-effort)
   sendWelcomeEmail(parsed.data.name, parsed.data.email).catch(() => {});
+
+  // Send verification email (best-effort)
+  const verifyToken = crypto.randomBytes(32).toString("hex");
+  db.verificationToken.create({
+    data: {
+      identifier: parsed.data.email,
+      token: verifyToken,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    },
+  }).then(() => {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
+    sendEmailVerification(parsed.data.name, parsed.data.email, `${appUrl}/verify-email?token=${verifyToken}`).catch(() => {});
+  }).catch(() => {});
+
+  return { success: true };
+}
+
+// ==========================================
+// Email Verification Actions
+// ==========================================
+
+/** Calculate a user's age from their DOB */
+function calculateAge(dob: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age;
+}
+
+/** Read the configurable minimum forum posting age from AppSetting (default 16) */
+async function getForumMinAge(): Promise<number> {
+  const setting = await db.appSetting.findUnique({ where: { key: "forum_min_age" } });
+  const parsed = setting ? parseInt(setting.value, 10) : NaN;
+  return isNaN(parsed) ? 16 : Math.max(13, Math.min(18, parsed));
+}
+
+/** Check email verification + age gate for forum/guide posting. Returns error string or null. */
+async function checkForumEligibility(userId: string): Promise<string | null> {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { emailVerified: true, dateOfBirth: true },
+  });
+  if (!user) return "User not found";
+
+  if (!user.emailVerified) {
+    return "Please verify your email before posting. You can resend the verification email from your profile page.";
+  }
+
+  // Age gate: dateOfBirth is only stored for under-18s (GDPR data minimisation)
+  // If null, user is 18+ and always passes
+  if (user.dateOfBirth) {
+    const minAge = await getForumMinAge();
+    const age = calculateAge(user.dateOfBirth);
+    if (age < minAge) {
+      return `You must be at least ${minAge} years old to post on the forum.`;
+    }
+  }
+
+  return null;
+}
+
+export async function sendVerificationEmail() {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+  if (isRateLimited(`verify-email:${session.user.id}`, 1, 60_000)) {
+    return { error: "Please wait 60 seconds before requesting another verification email." };
+  }
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { email: true, name: true, emailVerified: true },
+  });
+  if (!user?.email) return { error: "No email address on account" };
+  if (user.emailVerified) return { error: "Email is already verified" };
+
+  // Delete any existing tokens for this email
+  await db.verificationToken.deleteMany({ where: { identifier: user.email } });
+
+  // Create new token (32 bytes hex, 24h expiry)
+  const token = crypto.randomBytes(32).toString("hex");
+  await db.verificationToken.create({
+    data: {
+      identifier: user.email,
+      token,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    },
+  });
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://earthecho.co.uk";
+  const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+
+  await sendEmailVerification(user.name || "there", user.email, verifyUrl);
+  return { success: true };
+}
+
+export async function verifyEmail(token: string) {
+  if (!token) return { error: "Invalid verification link" };
+
+  const record = await db.verificationToken.findFirst({
+    where: { token },
+  });
+
+  if (!record) return { error: "Invalid or expired verification link. Please request a new one from your profile page." };
+  if (record.expires < new Date()) {
+    await db.verificationToken.delete({
+      where: { identifier_token: { identifier: record.identifier, token: record.token } },
+    });
+    return { error: "This verification link has expired. Please request a new one from your profile page." };
+  }
+
+  // Mark user as verified
+  await db.user.updateMany({
+    where: { email: record.identifier, emailVerified: null },
+    data: { emailVerified: new Date() },
+  });
+
+  // Delete used token
+  await db.verificationToken.delete({
+    where: { identifier_token: { identifier: record.identifier, token: record.token } },
+  });
 
   return { success: true };
 }
@@ -940,6 +1073,9 @@ export async function createGuideComment(input: {
   const banned = await checkBanned(session.user.id);
   if (banned) return { error: banned };
   if (isRateLimited(`guide-comment:${session.user.id}`, 5, 60_000)) return { error: "Too many requests. Please slow down." };
+
+  const eligibility = await checkForumEligibility(session.user.id);
+  if (eligibility) return { error: eligibility };
 
   const parsed = guideCommentSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
