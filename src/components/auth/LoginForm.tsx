@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -11,7 +11,6 @@ import {
   faRightToBracket,
   faGoogle,
   faFacebook,
-  faArrowUpRightFromSquare,
 } from "@/lib/fontawesome";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -23,23 +22,6 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isIOSPWA, setIsIOSPWA] = useState(false);
-
-  useEffect(() => {
-    // Detect iOS standalone PWA mode where OAuth redirects can't return
-    const standalone = "standalone" in navigator && (navigator as unknown as { standalone: boolean }).standalone === true;
-    setIsIOSPWA(standalone);
-  }, []);
-
-  function handleOAuth(provider: "google" | "facebook") {
-    if (isIOSPWA) {
-      // In iOS standalone PWA, OAuth redirects break. Open Safari instead.
-      // Cookies are shared, so the session will be available when user returns to the app.
-      window.location.href = `/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent("/dashboard")}`;
-    } else {
-      signIn(provider, { callbackUrl: "/dashboard" });
-    }
-  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -72,19 +54,11 @@ export function LoginForm() {
         <PasskeyLoginButton onError={(msg) => setError(msg)} />
       </div>
 
-      {/* iOS PWA notice */}
-      {isIOSPWA && (
-        <div className="mb-4 rounded-lg border border-ocean/20 bg-ocean/5 px-4 py-3 text-xs text-slate">
-          <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="mr-1.5 h-3 w-3 text-ocean" />
-          Social login will open in Safari. Once signed in, return to the app.
-        </div>
-      )}
-
       {/* OAuth Buttons */}
       <div className="mb-6 space-y-3">
         <button
           type="button"
-          onClick={() => handleOAuth("google")}
+          onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
           className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-charcoal transition-all duration-200 hover:bg-gray-50 hover:shadow-sm"
         >
           <FontAwesomeIcon
@@ -96,7 +70,7 @@ export function LoginForm() {
         </button>
         <button
           type="button"
-          onClick={() => handleOAuth("facebook")}
+          onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })}
           className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#1877F2] bg-[#1877F2] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-[#166FE5]"
         >
           <FontAwesomeIcon
