@@ -1,4 +1,4 @@
-import { getCurrentUser, getUserActivities, getUserCategoryTotal, getUserCategoryDailyTrend } from "@/lib/queries";
+import { getCurrentUser, getUserActivities, getUserCategoryTotal, getUserCategoryDailyTrend, getUserCategoryTrend } from "@/lib/queries";
 import { toHumanReadable, type MetricCategory } from "@/lib/metrics/converters";
 import { CATEGORIES } from "@/lib/categories";
 import { faCar } from "@/lib/fontawesome";
@@ -13,11 +13,12 @@ export default async function TransportTrackingPage() {
   const category = "TRANSPORT" as const;
   const config = CATEGORIES[category];
 
-  const [activities, total, trendData, transportModes] = await Promise.all([
+  const [activities, total, trendData, transportModes, weekTrend] = await Promise.all([
     getUserActivities(user.id, category, { limit: 50 }),
     getUserCategoryTotal(user.id, category),
     getUserCategoryDailyTrend(user.id, category, 30),
     db.transportMode.findMany({ orderBy: { co2PerKm: "asc" } }),
+    getUserCategoryTrend(user.id, category),
   ]);
 
   const humanMetric = toHumanReadable(category as MetricCategory, total);
@@ -44,6 +45,9 @@ export default async function TransportTrackingPage() {
         iconBg="bg-ocean/10"
         iconColor="text-ocean"
         gradient="from-ocean via-ocean/90 to-forest/60"
+        rawTotal={total}
+        trend={weekTrend}
+        unit={config.unit}
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ActivityLogForm

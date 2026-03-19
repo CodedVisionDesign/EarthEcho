@@ -1,38 +1,55 @@
 "use client";
 
+import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowTrendUp, faArrowTrendDown, faCircleInfo } from "@/lib/fontawesome";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import {
+  AreaChart,
+  Area,
+  ResponsiveContainer,
+} from "recharts";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
 interface ImpactSummaryCardProps {
   icon: IconDefinition;
   label: string;
   humanValue: string;
+  numericValue?: number;
   comparison: string;
   iconBg: string;
   iconColor: string;
   accentBorder: string;
+  accentColor?: string;
   trend?: number;
   tooltip?: string;
   calculationTooltip?: string;
+  href?: string;
+  sparklineData?: number[];
 }
 
 export function ImpactSummaryCard({
   icon,
   label,
   humanValue,
+  numericValue,
   comparison,
   iconBg,
   iconColor,
   accentBorder,
+  accentColor = "#2D6A4F",
   trend,
   tooltip,
   calculationTooltip,
+  href,
+  sparklineData,
 }: ImpactSummaryCardProps) {
-  return (
+  const hasSparkline = sparklineData && sparklineData.length > 0 && sparklineData.some((v) => v > 0);
+
+  const cardContent = (
     <Card variant="interactive" className="group relative overflow-visible p-5">
       {/* Accent left border */}
       <div
@@ -86,7 +103,11 @@ export function ImpactSummaryCard({
           {label}
         </div>
         <div className="mb-1.5 text-xl font-bold text-charcoal">
-          {humanValue}
+          {numericValue !== undefined && numericValue > 0 ? (
+            <AnimatedCounter value={numericValue} duration={1200} separator="," />
+          ) : (
+            humanValue
+          )}
         </div>
         <div className="flex items-center justify-center gap-1 text-xs text-slate">
           <span>{comparison}</span>
@@ -103,7 +124,44 @@ export function ImpactSummaryCard({
             </Tooltip>
           )}
         </div>
+
+        {/* Mini sparkline */}
+        {hasSparkline && (
+          <div className="mt-3 h-8 w-full opacity-60 transition-opacity duration-300 group-hover:opacity-100">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={sparklineData.map((v, i) => ({ i, v }))}>
+                <Area
+                  type="monotone"
+                  dataKey="v"
+                  stroke={accentColor}
+                  fill={accentColor}
+                  fillOpacity={0.15}
+                  strokeWidth={1.5}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
+
+      {/* Clickable indicator */}
+      {href && (
+        <div className="absolute bottom-2 right-3 text-[10px] font-medium text-slate/0 transition-all duration-300 group-hover:text-slate/40">
+          View details &rarr;
+        </div>
+      )}
     </Card>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
 }

@@ -22,6 +22,7 @@ import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
 import { TourStarter } from "@/components/tour/TourStarter";
 import { TourTriggerButton } from "@/components/tour/TourTriggerButton";
 import { GettingStartedGuide } from "@/components/dashboard/GettingStartedGuide";
+import { PersonalStatsWidget } from "@/components/dashboard/PersonalStatsWidget";
 import { ImpactSummaryCard } from "@/components/charts/ImpactSummaryCard";
 import { WeeklyTrendChart } from "@/components/charts/WeeklyTrendChart";
 import { TransportComparisonChart } from "@/components/charts/TransportComparisonChart";
@@ -39,17 +40,20 @@ import {
   getUserChallengeProgress,
   getRecentActivities,
   getUserBadgesWithProgress,
+  getUserCategorySparkline,
+  getUserActivityCount,
+  getUserRank,
 } from "@/lib/queries";
 import { toHumanReadable, type MetricCategory } from "@/lib/metrics/converters";
 import { CATEGORIES as TRACK_CATEGORIES, type ActivityCategory } from "@/lib/categories";
 
-const CATEGORY_ICON_MAP: Record<string, { icon: IconDefinition; iconBg: string; iconColor: string; accentBorder: string }> = {
-  WATER: { icon: faDroplet, iconBg: "bg-ocean/10", iconColor: "text-ocean", accentBorder: "bg-ocean" },
-  CARBON: { icon: faEarthAmericas, iconBg: "bg-forest/10", iconColor: "text-forest", accentBorder: "bg-forest" },
-  PLASTIC: { icon: faBagShopping, iconBg: "bg-sunshine/15", iconColor: "text-amber-600", accentBorder: "bg-sunshine" },
-  RECYCLING: { icon: faRecycle, iconBg: "bg-leaf/10", iconColor: "text-leaf", accentBorder: "bg-leaf" },
-  TRANSPORT: { icon: faCar, iconBg: "bg-ocean/10", iconColor: "text-ocean", accentBorder: "bg-ocean" },
-  FASHION: { icon: faShirt, iconBg: "bg-forest/10", iconColor: "text-forest", accentBorder: "bg-forest" },
+const CATEGORY_ICON_MAP: Record<string, { icon: IconDefinition; iconBg: string; iconColor: string; accentBorder: string; accentColor: string }> = {
+  WATER: { icon: faDroplet, iconBg: "bg-ocean/10", iconColor: "text-ocean", accentBorder: "bg-ocean", accentColor: "#1B4965" },
+  CARBON: { icon: faEarthAmericas, iconBg: "bg-forest/10", iconColor: "text-forest", accentBorder: "bg-forest", accentColor: "#2D6A4F" },
+  PLASTIC: { icon: faBagShopping, iconBg: "bg-sunshine/15", iconColor: "text-amber-600", accentBorder: "bg-sunshine", accentColor: "#FFB703" },
+  RECYCLING: { icon: faRecycle, iconBg: "bg-leaf/10", iconColor: "text-leaf", accentBorder: "bg-leaf", accentColor: "#52B788" },
+  TRANSPORT: { icon: faCar, iconBg: "bg-ocean/10", iconColor: "text-ocean", accentBorder: "bg-ocean", accentColor: "#1B4965" },
+  FASHION: { icon: faShirt, iconBg: "bg-forest/10", iconColor: "text-forest", accentBorder: "bg-forest", accentColor: "#2D6A4F" },
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -115,37 +119,45 @@ export default async function DashboardPage() {
 
   const categories: ActivityCategory[] = ["WATER", "CARBON", "PLASTIC", "RECYCLING", "TRANSPORT", "FASHION"];
 
-  const [totalsAndTrends, weeklyTrend, challengeProgress, recentActivities, allBadges] = await Promise.all([
+  const [totalsAndTrends, weeklyTrend, challengeProgress, recentActivities, allBadges, totalActivityCount, userRank] = await Promise.all([
     Promise.all(
       categories.map(async (cat) => {
-        const [total, trend] = await Promise.all([
+        const [total, trend, sparkline] = await Promise.all([
           getUserCategoryTotal(user.id, cat),
           getUserCategoryTrend(user.id, cat),
+          getUserCategorySparkline(user.id, cat, 7),
         ]);
-        return { category: cat, total, trend };
+        return { category: cat, total, trend, sparkline };
       })
     ),
     getUserWeeklyTrend(user.id),
     getUserChallengeProgress(user.id),
     getRecentActivities(user.id, 5),
     getUserBadgesWithProgress(user.id),
+    getUserActivityCount(user.id),
+    getUserRank(user.id),
   ]);
 
   // Build impact cards from real data
-  const impactCards = totalsAndTrends.map(({ category, total, trend }) => {
+  const impactCards = totalsAndTrends.map(({ category, total, trend, sparkline }) => {
     const icons = CATEGORY_ICON_MAP[category];
     const humanMetric = toHumanReadable(category as MetricCategory, total);
+    const trackConfig = TRACK_CATEGORIES[category];
     return {
       icon: icons.icon,
       label: CATEGORY_LABELS[category],
       humanValue: humanMetric.value,
+      numericValue: total,
       comparison: humanMetric.comparison,
       iconBg: icons.iconBg,
       iconColor: icons.iconColor,
       accentBorder: icons.accentBorder,
+      accentColor: icons.accentColor,
       trend,
       tooltip: CATEGORY_TOOLTIPS[category],
       calculationTooltip: humanMetric.tooltip,
+      href: trackConfig.trackingPath,
+      sparklineData: sparkline,
     };
   });
 
@@ -225,6 +237,20 @@ export default async function DashboardPage() {
           </div>
         </div>
       </FadeIn>
+
+      {/* Personal Stats */}
+      {!hasNoActivities && (
+        <FadeIn className="mb-8" delay={0.05}>
+          <PersonalStatsWidget
+            totalActivities={totalActivityCount}
+            streakDays={user.streakDays}
+            totalPoints={user.totalPoints}
+            badgesEarned={allBadges.filter((b) => b.earned).length}
+            totalBadges={allBadges.length}
+            rank={userRank}
+          />
+        </FadeIn>
+      )}
 
       {/* Impact Cards Grid */}
       <div data-tour-step="impact-cards">

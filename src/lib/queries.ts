@@ -578,6 +578,37 @@ export async function getUserProfile(userId: string) {
 }
 
 // ==========================================
+// Sparkline Data (7-day daily totals for a category)
+// ==========================================
+
+export async function getUserCategorySparkline(
+  userId: string,
+  category: ActivityCategory,
+  days: number = 7
+): Promise<number[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - (days - 1));
+  since.setHours(0, 0, 0, 0);
+
+  const activities = await db.activity.findMany({
+    where: { userId, category, date: { gte: since } },
+    select: { date: true, value: true },
+  });
+
+  const dayValues: number[] = Array(days).fill(0);
+  for (const a of activities) {
+    const dayIndex = Math.floor(
+      (a.date.getTime() - since.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    if (dayIndex >= 0 && dayIndex < days) {
+      dayValues[dayIndex] += a.value;
+    }
+  }
+
+  return dayValues;
+}
+
+// ==========================================
 // Recent Activity
 // ==========================================
 

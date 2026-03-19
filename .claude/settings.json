@@ -21,7 +21,13 @@
       "Bash(find /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject -name .env* -o -name env.example)",
       "Bash(grep -r \"setError\\\\|error\\\\|toast\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/components/auth/*.tsx)",
       "Bash(grep -A 5 \"callbackUrl\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/components/auth/*.tsx)",
-      "Bash(ssh root@your-vps-ip \"cat /var/www/earthecho/.env\")"
+      "Bash(ssh root@your-vps-ip \"cat /var/www/earthecho/.env\")",
+      "Bash(grep -r \"gamification\\\\|streak\\\\|points\" /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/lib --include=*.ts -l)",
+      "Bash(wc -l /c/xampp/htdocs/CarbonFootprint/DashboardStudyProject/src/lib/*.ts)",
+      "Bash(tasklist)",
+      "Bash(findstr node:*)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(taskkill /IM node.exe /F)"
     ]
   }
 }

@@ -99,7 +99,22 @@ export async function logActivity(input: {
         lastActiveAt: now,
       },
     });
+
+    // Streak milestone notifications
+    const streakMilestones = [7, 14, 30, 60, 100, 365];
+    if (streakMilestones.includes(newStreak) && newStreak !== user.streakDays) {
+      createNotification({
+        userId: session.user.id,
+        type: "badge",
+        title: `${newStreak}-Day Streak!`,
+        body: `Amazing! You've logged activities for ${newStreak} days in a row. Keep the momentum going!`,
+        href: "/dashboard",
+      }).catch(() => {});
+    }
   }
+
+  // Category milestone notifications
+  await checkCategoryMilestone(session.user.id, data.category, data.value);
 
   // Check and award badges
   const newBadge = await checkAndAwardBadges(session.user.id);
@@ -993,6 +1008,45 @@ async function checkAndAwardBadges(userId: string): Promise<{ name: string; icon
   }
 
   return null;
+}
+
+// ==========================================
+// Category Milestone Check
+// ==========================================
+
+const CATEGORY_MILESTONES: Record<string, { thresholds: number[]; unit: string }> = {
+  WATER: { thresholds: [50, 100, 500, 1000, 5000], unit: "litres of water" },
+  CARBON: { thresholds: [10, 50, 100, 500, 1000], unit: "kg CO\u2082" },
+  PLASTIC: { thresholds: [25, 50, 100, 500, 1000], unit: "plastic items" },
+  RECYCLING: { thresholds: [10, 50, 100, 500, 1000], unit: "kg recycled" },
+  TRANSPORT: { thresholds: [50, 100, 500, 1000, 5000], unit: "green km" },
+  FASHION: { thresholds: [10, 25, 50, 100, 500], unit: "sustainable fashion items" },
+};
+
+async function checkCategoryMilestone(userId: string, category: string, addedValue: number) {
+  const milestoneConfig = CATEGORY_MILESTONES[category];
+  if (!milestoneConfig) return;
+
+  const result = await db.activity.aggregate({
+    where: { userId, category },
+    _sum: { value: true },
+  });
+
+  const newTotal = result._sum.value ?? 0;
+  const previousTotal = newTotal - addedValue;
+
+  for (const threshold of milestoneConfig.thresholds) {
+    if (newTotal >= threshold && previousTotal < threshold) {
+      createNotification({
+        userId,
+        type: "badge",
+        title: `Milestone Reached!`,
+        body: `You've hit ${threshold} ${milestoneConfig.unit}! That's a real impact.`,
+        href: `/track/${category.toLowerCase() === "fashion" ? "shopping" : category.toLowerCase()}`,
+      }).catch(() => {});
+      break; // Only notify for the highest milestone crossed
+    }
+  }
 }
 
 async function updateChallengeProgress(userId: string, category: string, value: number) {

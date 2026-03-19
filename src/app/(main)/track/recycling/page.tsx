@@ -1,4 +1,4 @@
-import { getCurrentUser, getUserActivities, getUserCategoryTotal, getUserCategoryDailyTrend } from "@/lib/queries";
+import { getCurrentUser, getUserActivities, getUserCategoryTotal, getUserCategoryDailyTrend, getUserCategoryTrend } from "@/lib/queries";
 import { toHumanReadable, type MetricCategory } from "@/lib/metrics/converters";
 import { CATEGORIES } from "@/lib/categories";
 import { faRecycle } from "@/lib/fontawesome";
@@ -12,10 +12,11 @@ export default async function RecyclingTrackingPage() {
   const category = "RECYCLING" as const;
   const config = CATEGORIES[category];
 
-  const [activities, total, trendData] = await Promise.all([
+  const [activities, total, trendData, weekTrend] = await Promise.all([
     getUserActivities(user.id, category, { limit: 50 }),
     getUserCategoryTotal(user.id, category),
     getUserCategoryDailyTrend(user.id, category, 30),
+    getUserCategoryTrend(user.id, category),
   ]);
 
   const humanMetric = toHumanReadable(category as MetricCategory, total);
@@ -42,6 +43,9 @@ export default async function RecyclingTrackingPage() {
         iconBg="bg-leaf/10"
         iconColor="text-leaf"
         gradient="from-leaf via-leaf/90 to-forest"
+        rawTotal={total}
+        trend={weekTrend}
+        unit={config.unit}
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ActivityLogForm
