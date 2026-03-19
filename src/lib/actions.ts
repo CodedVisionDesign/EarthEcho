@@ -111,7 +111,26 @@ export async function logActivity(input: {
         href: "/dashboard",
       }).catch(() => {});
     }
+
+    // Welcome back notification (3+ days inactive)
+    if (lastActive) {
+      const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const lastDate = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
+      const inactiveDays = Math.round((nowDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (inactiveDays >= 3) {
+        createNotification({
+          userId: session.user.id,
+          type: "system",
+          title: "Welcome Back!",
+          body: `Great to see you again after ${inactiveDays} days! Every action counts toward a greener planet.`,
+          href: "/dashboard",
+        }).catch(() => {});
+      }
+    }
   }
+
+  // First activity in a new category notification
+  await checkFirstCategoryActivity(session.user.id, data.category);
 
   // Category milestone notifications
   await checkCategoryMilestone(session.user.id, data.category, data.value);
@@ -125,7 +144,7 @@ export async function logActivity(input: {
   revalidatePath("/dashboard");
   revalidatePath(`/track/${data.category.toLowerCase()}`);
 
-  return { success: true, activity, newBadge };
+  return { success: true, activity, newBadge, pointsEarned: points };
 }
 
 export async function updateActivity(input: {
@@ -1079,5 +1098,33 @@ async function updateChallengeProgress(userId: string, category: string, value: 
         await checkAndAwardBadges(userId);
       }
     }
+  }
+}
+
+const CATEGORY_NAMES: Record<string, string> = {
+  WATER: "Water Conservation",
+  CARBON: "Carbon Reduction",
+  PLASTIC: "Plastic Avoidance",
+  RECYCLING: "Recycling",
+  TRANSPORT: "Eco Transport",
+  FASHION: "Sustainable Fashion",
+};
+
+async function checkFirstCategoryActivity(userId: string, category: string) {
+  // Count how many activities this user has in this category
+  const count = await db.activity.count({
+    where: { userId, category },
+  });
+
+  // If this is the first activity (count === 1 since we just created one), notify
+  if (count === 1) {
+    const label = CATEGORY_NAMES[category] ?? category;
+    createNotification({
+      userId,
+      type: "badge",
+      title: `New Category Unlocked!`,
+      body: `You logged your first ${label} activity! Explore more ways to make an impact in this category.`,
+      href: `/track/${category.toLowerCase() === "fashion" ? "shopping" : category.toLowerCase()}`,
+    }).catch(() => {});
   }
 }

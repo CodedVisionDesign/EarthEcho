@@ -1,4 +1,4 @@
-import { getCurrentUser, getUserActivities, getUserCategoryTotal, getUserCategoryDailyTrend, getUserCategoryTrend } from "@/lib/queries";
+import { getCurrentUser, getUserActivities, getUserCategoryTotal, getUserCategoryDailyTrend, getUserCategoryTrend, getUserActivityTypeBreakdown } from "@/lib/queries";
 import { toHumanReadable, type MetricCategory } from "@/lib/metrics/converters";
 import { CATEGORIES } from "@/lib/categories";
 import { faCar } from "@/lib/fontawesome";
@@ -7,18 +7,20 @@ import { RunningTotalBanner } from "@/components/tracking/RunningTotalBanner";
 import { ActivityLogForm } from "@/components/tracking/ActivityLogForm";
 import { ActivityHistoryTable } from "@/components/tracking/ActivityHistoryTable";
 import { CategoryChart } from "@/components/tracking/CategoryChart";
+import { ActivityTypeChart } from "@/components/tracking/ActivityTypeChart";
 
 export default async function TransportTrackingPage() {
   const user = await getCurrentUser();
   const category = "TRANSPORT" as const;
   const config = CATEGORIES[category];
 
-  const [activities, total, trendData, transportModes, weekTrend] = await Promise.all([
+  const [activities, total, trendData, transportModes, weekTrend, typeBreakdown] = await Promise.all([
     getUserActivities(user.id, category, { limit: 50 }),
     getUserCategoryTotal(user.id, category),
     getUserCategoryDailyTrend(user.id, category, 30),
     db.transportMode.findMany({ orderBy: { co2PerKm: "asc" } }),
     getUserCategoryTrend(user.id, category),
+    getUserActivityTypeBreakdown(user.id, category),
   ]);
 
   const humanMetric = toHumanReadable(category as MetricCategory, total);
@@ -57,8 +59,18 @@ export default async function TransportTrackingPage() {
           unitLabel={config.unitLabel}
           transportModes={transportModes.map((m) => ({ slug: m.slug, name: m.name, co2PerKm: m.co2PerKm }))}
         />
-        <CategoryChart data={trendData} color="#1B4965" label={config.label} />
+        <CategoryChart data={trendData} color="#1B4965" label={config.label} category={category} unitLabel={config.unitLabel} />
       </div>
+      {typeBreakdown.length > 0 && (
+        <ActivityTypeChart
+          data={typeBreakdown.map((t) => ({
+            ...t,
+            label: config.activityTypes.find((at) => at.value === t.type)?.label ?? t.type.replace(/_/g, " "),
+          }))}
+          color="#1B4965"
+          unitLabel={config.unitLabel}
+        />
+      )}
       <ActivityHistoryTable activities={serializedActivities} unitLabel={config.unitLabel} />
     </div>
   );

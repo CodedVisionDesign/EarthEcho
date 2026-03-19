@@ -24,8 +24,11 @@ import { TourTriggerButton } from "@/components/tour/TourTriggerButton";
 import { GettingStartedGuide } from "@/components/dashboard/GettingStartedGuide";
 import { PersonalStatsWidget } from "@/components/dashboard/PersonalStatsWidget";
 import { ImpactSummaryCard } from "@/components/charts/ImpactSummaryCard";
-import { WeeklyTrendChart } from "@/components/charts/WeeklyTrendChart";
+import { DashboardTrendChart } from "@/components/charts/DashboardTrendChart";
 import { TransportComparisonChart } from "@/components/charts/TransportComparisonChart";
+import { CategoryBreakdownChart } from "@/components/charts/CategoryBreakdownChart";
+import { ActivityHeatmap } from "@/components/charts/ActivityHeatmap";
+import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -36,13 +39,15 @@ import {
   getCurrentUser,
   getUserCategoryTotal,
   getUserCategoryTrend,
-  getUserWeeklyTrend,
+  getUserTrendByRange,
   getUserChallengeProgress,
   getRecentActivities,
   getUserBadgesWithProgress,
   getUserCategorySparkline,
   getUserActivityCount,
   getUserRank,
+  getUserDailyActivityCounts,
+  getChallengeLeaderboard,
 } from "@/lib/queries";
 import { toHumanReadable, type MetricCategory } from "@/lib/metrics/converters";
 import { CATEGORIES as TRACK_CATEGORIES, type ActivityCategory } from "@/lib/categories";
@@ -119,7 +124,7 @@ export default async function DashboardPage() {
 
   const categories: ActivityCategory[] = ["WATER", "CARBON", "PLASTIC", "RECYCLING", "TRANSPORT", "FASHION"];
 
-  const [totalsAndTrends, weeklyTrend, challengeProgress, recentActivities, allBadges, totalActivityCount, userRank] = await Promise.all([
+  const [totalsAndTrends, weeklyTrend, challengeProgress, recentActivities, allBadges, totalActivityCount, userRank, heatmapData] = await Promise.all([
     Promise.all(
       categories.map(async (cat) => {
         const [total, trend, sparkline] = await Promise.all([
@@ -130,12 +135,13 @@ export default async function DashboardPage() {
         return { category: cat, total, trend, sparkline };
       })
     ),
-    getUserWeeklyTrend(user.id),
+    getUserTrendByRange(user.id, 7),
     getUserChallengeProgress(user.id),
-    getRecentActivities(user.id, 5),
+    getRecentActivities(user.id, 10),
     getUserBadgesWithProgress(user.id),
     getUserActivityCount(user.id),
     getUserRank(user.id),
+    getUserDailyActivityCounts(user.id, 365),
   ]);
 
   // Build impact cards from real data
@@ -175,6 +181,25 @@ export default async function DashboardPage() {
   // Active challenges from real data (all joined + active)
   const activeChallenges = challengeProgress.filter(
     (cp) => cp.challenge.isActive && cp.progress < cp.challenge.targetValue
+  );
+
+  // Fetch top 3 leaderboard for each active challenge
+  const challengeLeaderboards = await Promise.all(
+    activeChallenges.map(async (cp) => {
+      const leaders = await getChallengeLeaderboard(cp.challenge.id);
+      const userRankIndex = leaders.findIndex((l) => l.userId === user.id);
+      return {
+        challengeId: cp.challenge.id,
+        top3: leaders.slice(0, 3).map((l) => ({
+          name: l.user.displayName || l.user.name || "Anonymous",
+          progress: l.progress,
+        })),
+        userRank: userRankIndex >= 0 ? userRankIndex + 1 : null,
+      };
+    })
+  );
+  const leaderboardMap = Object.fromEntries(
+    challengeLeaderboards.map((l) => [l.challengeId, l])
   );
 
   // Next badge to earn (closest to completion, not yet earned)
@@ -273,53 +298,60 @@ export default async function DashboardPage() {
       {/* Charts Row */}
       {!hasNoActivities && (
         <FadeIn className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2" delay={0.15} cinematic>
-          <WeeklyTrendChart data={weeklyTrend} />
+          <DashboardTrendChart initialData={weeklyTrend} />
+          <CategoryBreakdownChart
+            data={totalsAndTrends.map(({ category, total }) => {
+              const icons = CATEGORY_ICON_MAP[category];
+              const trackConfig = TRACK_CATEGORIES[category];
+              return {
+                category,
+                label: CATEGORY_LABELS[category],
+                total,
+                color: icons.accentColor,
+                href: trackConfig.trackingPath,
+              };
+            })}
+            totalPoints={user.totalPoints}
+          />
+        </FadeIn>
+      )}
+
+      {/* Transport Chart */}
+      {!hasNoActivities && (
+        <FadeIn className="mb-8" delay={0.18}>
           <TransportComparisonChart />
+        </FadeIn>
+      )}
+
+      {/* Activity Heatmap */}
+      {!hasNoActivities && (
+        <FadeIn className="mb-8" delay={0.19}>
+          <ActivityHeatmap data={heatmapData} />
         </FadeIn>
       )}
 
       {/* Recent Activity + Next Badge Row */}
       <FadeIn className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2" delay={0.2}>
-        {/* Recent Activity */}
-        <Card variant="default" className="p-6">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-leaf/10">
-              <FontAwesomeIcon icon={faLeaf} className="h-4 w-4 text-leaf" aria-hidden />
-            </div>
-            <h3 className="text-[15px] font-semibold text-charcoal">Recent Activity</h3>
-          </div>
-          {recentActivities.length > 0 ? (
-            <div className="space-y-2">
-              {recentActivities.map((activity) => {
-                const catIcons = CATEGORY_ICON_MAP[activity.category];
-                const catConfig = TRACK_CATEGORIES[activity.category as ActivityCategory];
-                return (
-                  <div key={activity.id} className="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-gray-50">
-                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${catIcons?.iconBg ?? "bg-gray-100"}`}>
-                      <FontAwesomeIcon
-                        icon={catIcons?.icon ?? faLeaf}
-                        className={`h-3 w-3 ${catIcons?.iconColor ?? "text-slate"}`}
-                        aria-hidden
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium text-charcoal">
-                        {catConfig?.activityTypes.find((t) => t.value === activity.type)?.label ?? activity.type}
-                      </div>
-                      <div className="text-[11px] text-slate">
-                        {activity.value} {catConfig?.unitLabel?.toLowerCase() ?? activity.unit} &middot; {timeAgo(activity.date)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="py-4 text-center text-sm text-slate">
-              No activities logged yet. Start tracking to see your history!
-            </p>
+        {/* Recent Activity Feed */}
+        <ActivityFeed
+          initialActivities={recentActivities.map((a) => ({
+            id: a.id,
+            category: a.category,
+            type: a.type,
+            value: a.value,
+            unit: a.unit,
+            date: a.date.toISOString(),
+            note: a.note,
+          }))}
+          activityTypeLabels={Object.fromEntries(
+            Object.values(TRACK_CATEGORIES).flatMap((c) =>
+              c.activityTypes.map((t) => [t.value, t.label])
+            )
           )}
-        </Card>
+          unitLabels={Object.fromEntries(
+            Object.entries(TRACK_CATEGORIES).map(([key, c]) => [key, c.unitLabel])
+          )}
+        />
 
         {/* Next Badge Progress */}
         <Card variant="default" className="p-6">
@@ -405,6 +437,10 @@ export default async function DashboardPage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {activeChallenges.map((cp) => {
                 const pct = Math.min(100, (cp.progress / cp.challenge.targetValue) * 100);
+                const endDate = new Date(cp.challenge.endDate);
+                const now = new Date();
+                const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+                const lb = leaderboardMap[cp.challenge.id];
                 return (
                   <Card
                     key={cp.id}
@@ -412,9 +448,20 @@ export default async function DashboardPage() {
                     gradient="linear-gradient(135deg, #2D6A4F 0%, #1B4965 100%)"
                     className="p-4"
                   >
-                    <span className="mb-2 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
-                      {cp.challenge.category}
-                    </span>
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+                        {cp.challenge.category}
+                      </span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        daysLeft <= 3
+                          ? "bg-red-500/30 text-red-100"
+                          : daysLeft <= 7
+                            ? "bg-sunshine/30 text-sunshine"
+                            : "bg-white/15 text-white/80"
+                      }`}>
+                        {daysLeft === 0 ? "Ends today" : `${daysLeft}d left`}
+                      </span>
+                    </div>
                     <div className="mb-1 text-sm font-bold text-white">
                       {cp.challenge.title}
                     </div>
@@ -428,10 +475,36 @@ export default async function DashboardPage() {
                       <span className="font-bold">{Math.round(pct)}%</span>
                     </div>
                     <ProgressBar value={pct} color="sunshine" size="sm" />
-                    <div className="mt-2 flex items-center gap-1 text-[10px] font-medium text-white/90">
-                      <FontAwesomeIcon icon={faUsers} className="h-2.5 w-2.5" aria-hidden />
-                      {cp.challenge._count.participants} participants
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1 text-[10px] font-medium text-white/90">
+                        <FontAwesomeIcon icon={faUsers} className="h-2.5 w-2.5" aria-hidden />
+                        {cp.challenge._count.participants} participants
+                      </div>
+                      {lb?.userRank && (
+                        <span className="text-[10px] font-semibold text-sunshine">
+                          #{lb.userRank} of {cp.challenge._count.participants}
+                        </span>
+                      )}
                     </div>
+                    {/* Mini leaderboard */}
+                    {lb && lb.top3.length > 0 && (
+                      <div className="mt-3 border-t border-white/15 pt-2">
+                        <div className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-white/50">
+                          Top 3
+                        </div>
+                        {lb.top3.map((leader, idx) => (
+                          <div key={idx} className="flex items-center justify-between py-0.5 text-[10px]">
+                            <span className="text-white/80">
+                              <span className="mr-1.5 font-bold text-white">{idx + 1}.</span>
+                              {leader.name}
+                            </span>
+                            <span className="font-semibold text-white/90">
+                              {Math.round(leader.progress)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </Card>
                 );
               })}

@@ -140,6 +140,55 @@ export async function getUserWeeklyTrend(userId: string) {
   return days.map((day) => ({ day, ...dayMap.get(day)! }));
 }
 
+export interface TrendDataPoint {
+  label: string;
+  water: number;
+  carbon: number;
+  plastic: number;
+  recycling: number;
+  transport: number;
+  fashion: number;
+}
+
+export async function getUserTrendByRange(
+  userId: string,
+  days: number = 7
+): Promise<TrendDataPoint[]> {
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+
+  const activities = await db.activity.findMany({
+    where: { userId, date: { gte: start } },
+    orderBy: { date: "asc" },
+  });
+
+  // Build day buckets
+  const buckets: Map<string, TrendDataPoint> = new Map();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().split("T")[0];
+    const label = days <= 7
+      ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()]
+      : `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+    buckets.set(key, { label, water: 0, carbon: 0, plastic: 0, recycling: 0, transport: 0, fashion: 0 });
+  }
+
+  for (const a of activities) {
+    const key = a.date.toISOString().split("T")[0];
+    const bucket = buckets.get(key);
+    if (!bucket) continue;
+    const cat = a.category.toLowerCase();
+    if (cat === "water" || cat === "carbon" || cat === "plastic" || cat === "recycling" || cat === "transport" || cat === "fashion") {
+      bucket[cat] += a.value;
+    }
+  }
+
+  return Array.from(buckets.values());
+}
+
 export async function getUserTransportBreakdown(userId: string) {
   const activities = await db.activity.findMany({
     where: { userId, category: "TRANSPORT", transportMode: { not: null } },
@@ -578,6 +627,29 @@ export async function getUserProfile(userId: string) {
 }
 
 // ==========================================
+// User Activity Type Breakdown (per category)
+// ==========================================
+
+export async function getUserActivityTypeBreakdown(
+  userId: string,
+  category: ActivityCategory,
+) {
+  const results = await db.activity.groupBy({
+    by: ["type"],
+    where: { userId, category },
+    _sum: { value: true },
+    _count: true,
+    orderBy: { _sum: { value: "desc" } },
+  });
+
+  return results.map((r) => ({
+    type: r.type,
+    count: r._count,
+    total: r._sum.value ?? 0,
+  }));
+}
+
+// ==========================================
 // Sparkline Data (7-day daily totals for a category)
 // ==========================================
 
@@ -606,6 +678,46 @@ export async function getUserCategorySparkline(
   }
 
   return dayValues;
+}
+
+// ==========================================
+// Daily Activity Counts (Heatmap)
+// ==========================================
+
+export interface DailyActivityCount {
+  date: string; // YYYY-MM-DD
+  count: number;
+  categories: string[];
+}
+
+export async function getUserDailyActivityCounts(
+  userId: string,
+  days: number = 365
+): Promise<DailyActivityCount[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  since.setHours(0, 0, 0, 0);
+
+  const activities = await db.activity.findMany({
+    where: { userId, date: { gte: since } },
+    select: { date: true, category: true },
+    orderBy: { date: "asc" },
+  });
+
+  const buckets: Record<string, { count: number; categories: Set<string> }> = {};
+
+  for (const a of activities) {
+    const key = a.date.toISOString().slice(0, 10);
+    if (!buckets[key]) buckets[key] = { count: 0, categories: new Set() };
+    buckets[key].count++;
+    buckets[key].categories.add(a.category);
+  }
+
+  return Object.entries(buckets).map(([date, { count, categories }]) => ({
+    date,
+    count,
+    categories: Array.from(categories),
+  }));
 }
 
 // ==========================================

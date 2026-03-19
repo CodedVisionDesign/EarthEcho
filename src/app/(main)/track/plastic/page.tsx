@@ -1,4 +1,4 @@
-import { getCurrentUser, getUserActivities, getUserCategoryTotal, getUserCategoryDailyTrend, getUserCategoryTrend } from "@/lib/queries";
+import { getCurrentUser, getUserActivities, getUserCategoryTotal, getUserCategoryDailyTrend, getUserCategoryTrend, getUserActivityTypeBreakdown } from "@/lib/queries";
 import { toHumanReadable, type MetricCategory } from "@/lib/metrics/converters";
 import { CATEGORIES } from "@/lib/categories";
 import { faBagShopping } from "@/lib/fontawesome";
@@ -6,17 +6,19 @@ import { RunningTotalBanner } from "@/components/tracking/RunningTotalBanner";
 import { ActivityLogForm } from "@/components/tracking/ActivityLogForm";
 import { ActivityHistoryTable } from "@/components/tracking/ActivityHistoryTable";
 import { CategoryChart } from "@/components/tracking/CategoryChart";
+import { ActivityTypeChart } from "@/components/tracking/ActivityTypeChart";
 
 export default async function PlasticTrackingPage() {
   const user = await getCurrentUser();
   const category = "PLASTIC" as const;
   const config = CATEGORIES[category];
 
-  const [activities, total, trendData, weekTrend] = await Promise.all([
+  const [activities, total, trendData, weekTrend, typeBreakdown] = await Promise.all([
     getUserActivities(user.id, category, { limit: 50 }),
     getUserCategoryTotal(user.id, category),
     getUserCategoryDailyTrend(user.id, category, 30),
     getUserCategoryTrend(user.id, category),
+    getUserActivityTypeBreakdown(user.id, category),
   ]);
 
   const humanMetric = toHumanReadable(category as MetricCategory, total);
@@ -54,8 +56,18 @@ export default async function PlasticTrackingPage() {
           unit={config.unit}
           unitLabel={config.unitLabel}
         />
-        <CategoryChart data={trendData} color="#FFB703" label={config.label} />
+        <CategoryChart data={trendData} color="#FFB703" label={config.label} category={category} unitLabel={config.unitLabel} />
       </div>
+      {typeBreakdown.length > 0 && (
+        <ActivityTypeChart
+          data={typeBreakdown.map((t) => ({
+            ...t,
+            label: config.activityTypes.find((at) => at.value === t.type)?.label ?? t.type.replace(/_/g, " "),
+          }))}
+          color="#FFB703"
+          unitLabel={config.unitLabel}
+        />
+      )}
       <ActivityHistoryTable activities={serializedActivities} unitLabel={config.unitLabel} />
     </div>
   );

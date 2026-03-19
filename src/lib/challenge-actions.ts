@@ -2,7 +2,7 @@
 
 import { db } from "./db";
 import { requireAdmin, requireSuperAdmin, createAuditLog } from "./admin";
-import { createNotification } from "./notifications";
+import { createNotification, notifyMany } from "./notifications";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -305,6 +305,19 @@ export async function activateChallenge(challengeId: string) {
     targetType: "challenge",
     details: { title: challenge.title },
   });
+
+  // Notify all users about the new challenge
+  const allUsers = await db.user.findMany({
+    select: { id: true },
+    where: { role: { not: "BANNED" } },
+  });
+  const allUserIds = allUsers.map((u) => u.id);
+  notifyMany(allUserIds, admin.id, {
+    type: "challenge",
+    title: "New Challenge Available!",
+    body: `"${challenge.title}" is now live. Join now and compete with others!`,
+    href: "/challenges",
+  }).catch(() => {});
 
   revalidatePath("/admin/challenges");
   revalidatePath(`/admin/challenges/${challengeId}`);

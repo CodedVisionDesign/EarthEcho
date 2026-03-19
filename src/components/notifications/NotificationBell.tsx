@@ -12,6 +12,7 @@ import {
   faBullseye,
   faMedal,
   faXmark,
+  faGlobe,
 } from "@/lib/fontawesome";
 import {
   getNotifications,
@@ -37,7 +38,18 @@ const TYPE_ICONS: Record<string, { icon: IconDefinition; color: string }> = {
   badge: { icon: faMedal, color: "bg-sunshine/15 text-amber-600" },
   challenge: { icon: faBullseye, color: "bg-forest/10 text-forest" },
   system: { icon: faTrophy, color: "bg-leaf/10 text-leaf" },
+  streak: { icon: faTrophy, color: "bg-coral/10 text-coral" },
+  milestone: { icon: faMedal, color: "bg-sunshine/15 text-amber-600" },
 };
+
+type TabKey = "all" | "badges" | "challenges" | "community";
+
+const TABS: { key: TabKey; label: string; types: string[] }[] = [
+  { key: "all", label: "All", types: [] },
+  { key: "badges", label: "Badges", types: ["badge", "streak", "milestone"] },
+  { key: "challenges", label: "Challenges", types: ["challenge"] },
+  { key: "community", label: "Community", types: ["reply", "thread_follow", "reaction"] },
+];
 
 function timeAgo(date: Date): string {
   const now = new Date();
@@ -53,30 +65,66 @@ function timeAgo(date: Date): string {
   return `${Math.floor(diffDays / 7)}w ago`;
 }
 
+function groupConsecutive(notifications: Notification[]): (Notification | { grouped: true; count: number; representative: Notification })[] {
+  const result: (Notification | { grouped: true; count: number; representative: Notification })[] = [];
+  let i = 0;
+
+  while (i < notifications.length) {
+    let j = i + 1;
+    // Group consecutive notifications of the same type with the same title
+    while (
+      j < notifications.length &&
+      notifications[j].type === notifications[i].type &&
+      notifications[j].title === notifications[i].title &&
+      j - i < 5
+    ) {
+      j++;
+    }
+
+    if (j - i >= 3) {
+      result.push({
+        grouped: true,
+        count: j - i,
+        representative: notifications[i],
+      });
+    } else {
+      for (let k = i; k < j; k++) {
+        result.push(notifications[k]);
+      }
+    }
+    i = j;
+  }
+
+  return result;
+}
+
+function isGrouped(item: Notification | { grouped: true; count: number; representative: Notification }): item is { grouped: true; count: number; representative: Notification } {
+  return "grouped" in item && item.grouped === true;
+}
+
 export function NotificationBell() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [isPending, startTransition] = useTransition();
   const bellRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const fetchNotifications = useCallback(() => {
-    getNotifications(20).then((data) => {
+    getNotifications(30).then((data) => {
       setNotifications(data.notifications as Notification[]);
       setUnreadCount(data.unreadCount);
     }).catch(() => {});
   }, []);
 
-  // Fetch on mount and poll every 30 seconds
   useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
-  // Close panel when clicking outside (check both bell and panel)
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       const target = e.target as Node;
@@ -117,14 +165,26 @@ export function NotificationBell() {
     });
   }
 
-  // Render the panel via a portal to document.body so it escapes any
-  // containing block created by backdrop-filter / transform on parent elements.
-  // This fixes the panel being clipped on iPhone where the bell lives inside
-  // glass-styled containers with backdrop-filter.
+  // Filter by active tab
+  const tabConfig = TABS.find((t) => t.key === activeTab)!;
+  const filteredNotifications = tabConfig.types.length > 0
+    ? notifications.filter((n) => tabConfig.types.includes(n.type))
+    : notifications;
+
+  // Group similar notifications
+  const displayItems = groupConsecutive(filteredNotifications);
+
+  // Count unread per tab
+  const tabUnreadCounts: Record<TabKey, number> = {
+    all: notifications.filter((n) => !n.read).length,
+    badges: notifications.filter((n) => !n.read && ["badge", "streak", "milestone"].includes(n.type)).length,
+    challenges: notifications.filter((n) => !n.read && n.type === "challenge").length,
+    community: notifications.filter((n) => !n.read && ["reply", "thread_follow", "reaction"].includes(n.type)).length,
+  };
+
   const panel = open
     ? createPortal(
         <>
-          {/* Backdrop — closes panel on tap (mobile) */}
           <div
             className="fixed inset-0 z-[60] md:hidden"
             onClick={() => setOpen(false)}
@@ -134,13 +194,10 @@ export function NotificationBell() {
             ref={panelRef}
             className="fixed inset-x-3 top-14 z-[70] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5 sm:inset-x-auto sm:top-auto sm:w-96 md:w-[28rem]"
             style={
-              // On sm+ screens, position the panel relative to the bell button
               typeof window !== "undefined" && window.innerWidth >= 640 && bellRef.current
                 ? (() => {
                     const rect = bellRef.current.getBoundingClientRect();
                     const top = rect.bottom + 8;
-                    // On desktop (md+), the bell is in the sidebar — anchor panel to the left
-                    // so it appears beside/overlapping the main content area, not clipped
                     const isDesktop = window.innerWidth >= 768;
                     return {
                       position: "fixed" as const,
@@ -178,16 +235,74 @@ export function NotificationBell() {
               </div>
             </div>
 
+            {/* Category tabs */}
+            <div className="flex border-b border-gray-100 px-2">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`relative flex-1 px-2 py-2 text-[11px] font-medium transition-colors ${
+                    activeTab === tab.key
+                      ? "text-forest"
+                      : "text-slate hover:text-charcoal"
+                  }`}
+                >
+                  {tab.label}
+                  {tabUnreadCounts[tab.key] > 0 && (
+                    <span className="ml-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-coral px-1 text-[8px] font-bold text-white">
+                      {tabUnreadCounts[tab.key]}
+                    </span>
+                  )}
+                  {activeTab === tab.key && (
+                    <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-forest" />
+                  )}
+                </button>
+              ))}
+            </div>
+
             {/* Notification list */}
             <div className="max-h-[70vh] overflow-y-auto sm:max-h-96">
-              {notifications.length === 0 ? (
+              {displayItems.length === 0 ? (
                 <div className="px-4 py-8 text-center">
                   <FontAwesomeIcon icon={faBell} className="mb-2 h-6 w-6 text-slate/20" />
-                  <p className="text-sm text-slate">No notifications yet</p>
+                  <p className="text-sm text-slate">
+                    {activeTab === "all" ? "No notifications yet" : `No ${tabConfig.label.toLowerCase()} notifications`}
+                  </p>
                 </div>
               ) : (
                 <div>
-                  {notifications.map((notif) => {
+                  {displayItems.map((item, idx) => {
+                    if (isGrouped(item)) {
+                      const typeStyle = TYPE_ICONS[item.representative.type] || TYPE_ICONS.system;
+                      return (
+                        <button
+                          key={`group-${idx}`}
+                          type="button"
+                          onClick={() => {
+                            if (item.representative.href) {
+                              router.push(item.representative.href);
+                              setOpen(false);
+                            }
+                          }}
+                          className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 bg-forest/[0.03]"
+                        >
+                          <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${typeStyle.color}`}>
+                            <FontAwesomeIcon icon={typeStyle.icon} className="h-3.5 w-3.5" aria-hidden />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold leading-relaxed text-charcoal">
+                              {item.count} {item.representative.title.toLowerCase().includes("reaction") ? "reactions" : "notifications"}
+                            </p>
+                            <p className="mt-0.5 text-[10px] text-slate">
+                              {item.representative.title} and {item.count - 1} more
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    }
+
+                    const notif = item;
                     const typeStyle = TYPE_ICONS[notif.type] || TYPE_ICONS.system;
                     return (
                       <button
@@ -244,7 +359,6 @@ export function NotificationBell() {
 
   return (
     <div className="relative">
-      {/* Bell button */}
       <button
         ref={bellRef}
         type="button"

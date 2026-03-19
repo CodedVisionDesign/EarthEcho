@@ -23,6 +23,7 @@ interface FormState {
   error?: string;
   success?: boolean;
   newBadge?: { name: string; icon: string };
+  pointsEarned?: number;
 }
 
 async function submitAction(
@@ -46,6 +47,7 @@ async function submitAction(
   return {
     success: true,
     newBadge: result.newBadge ?? undefined,
+    pointsEarned: result.pointsEarned ?? undefined,
   };
 }
 
@@ -60,6 +62,7 @@ export function ActivityLogForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, isPending] = useActionState(submitAction, {});
   const [showSuccess, setShowSuccess] = useState(false);
+  const [floatingPoints, setFloatingPoints] = useState<number | null>(null);
 
   // Controlled state for smart presets & live preview
   const [selectedType, setSelectedType] = useState("");
@@ -91,6 +94,12 @@ export function ActivityLogForm({
   useEffect(() => {
     if (state.success) {
       setShowSuccess(true);
+      if (state.pointsEarned) {
+        setFloatingPoints(state.pointsEarned);
+        const pointsTimer = setTimeout(() => setFloatingPoints(null), 2000);
+        // cleanup handled below
+        void pointsTimer;
+      }
       setSelectedType("");
       setInputValue("");
       setSelectedTransportMode("");
@@ -98,7 +107,10 @@ export function ActivityLogForm({
       formRef.current?.reset();
       router.refresh();
       const timer = setTimeout(() => setShowSuccess(false), state.newBadge ? 5000 : 3000);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        setFloatingPoints(null);
+      };
     }
   }, [state, router]);
 
@@ -125,7 +137,18 @@ export function ActivityLogForm({
   }
 
   return (
-    <Card variant="default" className="p-5">
+    <Card variant="default" className="relative overflow-hidden p-5">
+      {/* Floating points animation */}
+      {floatingPoints !== null && (
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center animate-points-float"
+          aria-hidden
+        >
+          <span className="rounded-full bg-sunshine/90 px-4 py-1.5 text-sm font-bold text-amber-900 shadow-lg">
+            +{floatingPoints} points
+          </span>
+        </div>
+      )}
       <h3 className="mb-1 text-[15px] font-semibold text-charcoal">
         Log Activity
       </h3>
@@ -384,6 +407,9 @@ export function ActivityLogForm({
           ) : (
             <div className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
               Activity logged successfully!
+              {state.pointsEarned ? (
+                <span className="ml-1 font-semibold text-forest">+{state.pointsEarned} points</span>
+              ) : null}
             </div>
           )
         )}

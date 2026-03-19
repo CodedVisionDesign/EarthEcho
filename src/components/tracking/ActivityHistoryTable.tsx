@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef, useCallback, useEffect } from "react";
+import { useState, useTransition, useRef, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -10,6 +10,10 @@ import {
   faSquareCheck,
   faSquare,
   faCircleCheck,
+  faArrowUp,
+  faArrowDown,
+  faSearch,
+  faFileExport,
 } from "@/lib/fontawesome";
 import { deleteActivity, bulkDeleteActivities } from "@/lib/actions";
 
@@ -28,6 +32,9 @@ interface ActivityHistoryTableProps {
   activities: Activity[];
   unitLabel: string;
 }
+
+type SortField = "date" | "type" | "value";
+type SortDir = "asc" | "desc";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -64,15 +71,11 @@ function ConfirmDeleteModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onCancel}
       />
-
-      {/* Dialog */}
       <div className="relative mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        {/* Close button */}
         <button
           type="button"
           onClick={onCancel}
@@ -81,20 +84,15 @@ function ConfirmDeleteModal({
         >
           <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
         </button>
-
-        {/* Icon */}
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
           <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5 text-red-600" />
         </div>
-
         <h3 className="mb-2 text-center text-lg font-semibold text-charcoal">
           Are you sure you want to delete {count} activit{count === 1 ? "y" : "ies"}?
         </h3>
-
         <p className="mb-4 text-center text-sm text-slate">
           This action cannot be undone. Your points will be recalculated.
         </p>
-
         {requireTyping && (
           <div className="mb-4">
             <label
@@ -114,7 +112,6 @@ function ConfirmDeleteModal({
             />
           </div>
         )}
-
         <div className="flex gap-3">
           <button
             type="button"
@@ -146,7 +143,7 @@ function ConfirmDeleteModal({
 }
 
 // -------------------------------------------------------------------
-// Single-row Delete Button (unchanged behaviour)
+// Single-row Delete Button
 // -------------------------------------------------------------------
 
 function DeleteButton({ activityId }: { activityId: string }) {
@@ -154,10 +151,7 @@ function DeleteButton({ activityId }: { activityId: string }) {
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
-    if (!window.confirm("Are you sure you want to delete this activity?")) {
-      return;
-    }
-
+    if (!window.confirm("Are you sure you want to delete this activity?")) return;
     startTransition(async () => {
       await deleteActivity(activityId);
       router.refresh();
@@ -209,21 +203,14 @@ function SwipeableRow({ children, onDelete, className = "" }: SwipeableRowProps)
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     const deltaX = e.touches[0].clientX - startX.current;
-
-    // Only allow swiping left (negative direction)
     if (deltaX > 0) {
       if (showDelete) {
-        // If delete is already showing, allow swiping back right to hide it
         const newOffset = Math.max(-SWIPE_THRESHOLD, deltaX - SWIPE_THRESHOLD);
         setOffset(newOffset);
       }
       return;
     }
-
-    if (Math.abs(deltaX) > 10) {
-      isSwiping.current = true;
-    }
-
+    if (Math.abs(deltaX) > 10) isSwiping.current = true;
     currentX.current = e.touches[0].clientX;
     const clampedOffset = Math.max(-SWIPE_THRESHOLD - 20, deltaX);
     setOffset(clampedOffset);
@@ -247,7 +234,6 @@ function SwipeableRow({ children, onDelete, className = "" }: SwipeableRowProps)
 
   return (
     <tr ref={rowRef} className={`relative ${className}`}>
-      {/* Delete button revealed behind the row on mobile */}
       <td
         colSpan={100}
         className="pointer-events-none absolute inset-0 p-0 md:hidden"
@@ -264,9 +250,6 @@ function SwipeableRow({ children, onDelete, className = "" }: SwipeableRowProps)
           </button>
         </div>
       </td>
-
-      {/* Actual row content that slides */}
-      {/* We render children inside a wrapper td to handle the transform */}
       <td
         colSpan={100}
         className="relative bg-inherit p-0 md:hidden"
@@ -288,7 +271,7 @@ function SwipeableRow({ children, onDelete, className = "" }: SwipeableRowProps)
 }
 
 // -------------------------------------------------------------------
-// Mobile Card Row (used inside SwipeableRow)
+// Mobile Card Row
 // -------------------------------------------------------------------
 
 interface MobileCardRowProps {
@@ -336,6 +319,70 @@ function MobileCardRow({ activity, unitLabel, isSelected, onToggle }: MobileCard
 }
 
 // -------------------------------------------------------------------
+// Sort Header
+// -------------------------------------------------------------------
+
+function SortHeader({
+  label,
+  field,
+  sortField,
+  sortDir,
+  onSort,
+}: {
+  label: string;
+  field: SortField;
+  sortField: SortField;
+  sortDir: SortDir;
+  onSort: (field: SortField) => void;
+}) {
+  const isActive = sortField === field;
+  return (
+    <th className="px-4 py-3">
+      <button
+        type="button"
+        onClick={() => onSort(field)}
+        className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-slate/70 transition-colors hover:text-charcoal"
+      >
+        {label}
+        {isActive && (
+          <FontAwesomeIcon
+            icon={sortDir === "asc" ? faArrowUp : faArrowDown}
+            className="h-2.5 w-2.5 text-forest"
+          />
+        )}
+      </button>
+    </th>
+  );
+}
+
+// -------------------------------------------------------------------
+// CSV Export
+// -------------------------------------------------------------------
+
+function exportCSV(activities: Activity[], unitLabel: string) {
+  const headers = ["Date", "Type", `Value (${unitLabel})`, "Note"];
+  const rows = activities.map((a) => [
+    formatDate(a.date),
+    a.type.replace(/_/g, " "),
+    String(a.value),
+    (a.note ?? "").replace(/"/g, '""'),
+  ]);
+
+  const csv = [
+    headers.join(","),
+    ...rows.map((r) => r.map((c) => `"${c}"`).join(",")),
+  ].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `activities-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// -------------------------------------------------------------------
 // Main Component
 // -------------------------------------------------------------------
 
@@ -349,7 +396,50 @@ export function ActivityHistoryTable({
   const [bulkDeletePending, startBulkDeleteTransition] = useTransition();
   const [flashSuccess, setFlashSuccess] = useState(false);
 
-  // Clear selection if activities change (e.g. after deletion)
+  // Sorting
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  // Filter
+  const [searchQuery, setSearchQuery] = useState("");
+
+  function handleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir(field === "date" ? "desc" : "asc");
+    }
+  }
+
+  // Filter and sort
+  const filtered = useMemo(() => {
+    let result = activities;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (a) =>
+          a.type.replace(/_/g, " ").toLowerCase().includes(q) ||
+          (a.note?.toLowerCase().includes(q) ?? false)
+      );
+    }
+    return [...result].sort((a, b) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+      if (sortField === "date") return dir * (new Date(a.date).getTime() - new Date(b.date).getTime());
+      if (sortField === "type") return dir * a.type.localeCompare(b.type);
+      if (sortField === "value") return dir * (a.value - b.value);
+      return 0;
+    });
+  }, [activities, searchQuery, sortField, sortDir]);
+
+  // Summary stats
+  const summary = useMemo(() => {
+    const total = filtered.reduce((sum, a) => sum + a.value, 0);
+    const avg = filtered.length > 0 ? Math.round((total / filtered.length) * 10) / 10 : 0;
+    return { total: Math.round(total * 100) / 100, avg, count: filtered.length };
+  }, [filtered]);
+
+  // Clear selection if activities change
   useEffect(() => {
     const activityIds = new Set(activities.map((a) => a.id));
     setSelectedIds((prev) => {
@@ -361,31 +451,26 @@ export function ActivityHistoryTable({
     });
   }, [activities]);
 
-  // Selection helpers
-  const allSelected = activities.length > 0 && selectedIds.size === activities.length;
+  const allSelected = filtered.length > 0 && selectedIds.size === filtered.length;
   const someSelected = selectedIds.size > 0;
 
   function toggleSelectAll() {
     if (allSelected) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(activities.map((a) => a.id)));
+      setSelectedIds(new Set(filtered.map((a) => a.id)));
     }
   }
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
 
-  // Bulk delete flow
   function handleBulkDeleteClick() {
     if (selectedIds.size > 5) {
       setShowConfirmModal(true);
@@ -408,7 +493,6 @@ export function ActivityHistoryTable({
     });
   }
 
-  // Single swipe-to-delete handler
   function handleSwipeDelete(id: string) {
     if (!window.confirm("Are you sure you want to delete this activity?")) return;
     deleteActivity(id).then(() => router.refresh());
@@ -426,13 +510,39 @@ export function ActivityHistoryTable({
 
   return (
     <>
-      {/* Success flash */}
       {flashSuccess && (
         <div className="mb-3 flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2.5 text-sm font-medium text-green-700">
           <FontAwesomeIcon icon={faCircleCheck} className="h-4 w-4" />
           Activities deleted successfully. Points recalculated.
         </div>
       )}
+
+      {/* Search and Export toolbar */}
+      <div className="mb-3 flex items-center gap-3">
+        <div className="relative flex-1">
+          <FontAwesomeIcon
+            icon={faSearch}
+            className="absolute left-3 top-1/2 h-3 w-3 -translate-y-1/2 text-slate/50"
+            aria-hidden
+          />
+          <input
+            type="text"
+            placeholder="Search by type or note..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-8 pr-3 text-sm text-charcoal placeholder:text-slate/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => exportCSV(filtered, unitLabel)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12px] font-medium text-slate transition-colors hover:bg-gray-50 hover:text-charcoal"
+          title="Export as CSV"
+        >
+          <FontAwesomeIcon icon={faFileExport} className="h-3 w-3" aria-hidden />
+          Export
+        </button>
+      </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         {/* =================== Desktop table =================== */}
@@ -453,15 +563,9 @@ export function ActivityHistoryTable({
                     />
                   </button>
                 </th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">
-                  Date
-                </th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">
-                  Type
-                </th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">
-                  Value
-                </th>
+                <SortHeader label="Date" field="date" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Type" field="type" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader label="Value" field="value" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate/70">
                   Note
                 </th>
@@ -471,7 +575,7 @@ export function ActivityHistoryTable({
               </tr>
             </thead>
             <tbody>
-              {activities.map((activity, i) => {
+              {filtered.map((activity, i) => {
                 const isSelected = selectedIds.has(activity.id);
                 return (
                   <tr
@@ -516,12 +620,28 @@ export function ActivityHistoryTable({
                 );
               })}
             </tbody>
+            {/* Summary row */}
+            <tfoot>
+              <tr className="border-t border-gray-200 bg-gray-50/50">
+                <td className="px-4 py-3" />
+                <td className="px-4 py-3 text-xs font-semibold text-slate">
+                  {summary.count} {summary.count === 1 ? "entry" : "entries"}
+                </td>
+                <td className="px-4 py-3" />
+                <td className="whitespace-nowrap px-4 py-3 text-xs font-semibold text-charcoal">
+                  Total: {summary.total} {unitLabel}
+                  <span className="ml-2 font-normal text-slate">
+                    (avg {summary.avg})
+                  </span>
+                </td>
+                <td colSpan={2} className="px-4 py-3" />
+              </tr>
+            </tfoot>
           </table>
         </div>
 
         {/* =================== Mobile list =================== */}
         <div className="md:hidden">
-          {/* Select-all header */}
           <div className="flex items-center gap-3 border-b border-gray-200 bg-gray-50/50 px-4 py-3">
             <button
               type="button"
@@ -541,10 +661,9 @@ export function ActivityHistoryTable({
             </span>
           </div>
 
-          {/* Swipeable rows rendered as a table for semantic consistency */}
           <table className="w-full">
             <tbody>
-              {activities.map((activity, i) => {
+              {filtered.map((activity, i) => {
                 const isSelected = selectedIds.has(activity.id);
                 return (
                   <SwipeableRow
@@ -569,6 +688,13 @@ export function ActivityHistoryTable({
               })}
             </tbody>
           </table>
+
+          {/* Mobile summary */}
+          <div className="border-t border-gray-200 bg-gray-50/50 px-4 py-3 text-xs text-slate">
+            <span className="font-semibold text-charcoal">{summary.count}</span> entries &middot;{" "}
+            Total: <span className="font-semibold text-charcoal">{summary.total} {unitLabel}</span> &middot;{" "}
+            Avg: <span className="font-semibold text-charcoal">{summary.avg}</span>
+          </div>
         </div>
       </div>
 
@@ -579,7 +705,6 @@ export function ActivityHistoryTable({
             <span className="text-sm font-medium text-charcoal">
               {selectedIds.size} selected
             </span>
-
             <button
               type="button"
               onClick={() => setSelectedIds(new Set())}
@@ -587,7 +712,6 @@ export function ActivityHistoryTable({
             >
               Clear Selection
             </button>
-
             <button
               type="button"
               onClick={handleBulkDeleteClick}
@@ -610,7 +734,6 @@ export function ActivityHistoryTable({
         </div>
       )}
 
-      {/* =================== Confirmation modal =================== */}
       {showConfirmModal && (
         <ConfirmDeleteModal
           count={selectedIds.size}
