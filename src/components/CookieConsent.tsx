@@ -1,13 +1,20 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { saveCookieConsent } from "@/lib/actions";
 
 type ConsentState = "pending" | "accepted" | "rejected";
 
 const CONSENT_KEY = "ee_cookie_consent";
+const CONSENT_TS_KEY = "ee_cookie_consent_ts";
 const GA_ID = "G-DDX1YNQB4Q";
+const CONSENT_EXPIRY_MS = 365 * 24 * 60 * 60 * 1000; // 12 months
+
+/** Legal pages where the cookie modal should not interrupt the user. */
+const LEGAL_PATHS = ["/cookies", "/privacy", "/terms", "/data-deletion"];
 
 function loadGoogleAnalytics() {
   if (document.getElementById("gtag-script")) return;
@@ -42,6 +49,22 @@ function revokeGoogleAnalytics() {
   }
 }
 
+/** Check if consent has expired (older than 12 months). */
+function isConsentExpired(): boolean {
+  const ts = localStorage.getItem(CONSENT_TS_KEY);
+  if (!ts) return true;
+  return Date.now() - Number(ts) > CONSENT_EXPIRY_MS;
+}
+
+/** Reset cookie consent — used by the "Manage Cookies" button in settings/footer. */
+export function resetCookieConsent() {
+  localStorage.removeItem(CONSENT_KEY);
+  localStorage.removeItem(CONSENT_TS_KEY);
+  revokeGoogleAnalytics();
+  // Dispatch a custom event so the CookieConsent component re-shows
+  window.dispatchEvent(new Event("cookie-consent-reset"));
+}
+
 declare global {
   interface Window {
     dataLayer?: unknown[];
@@ -51,40 +74,66 @@ declare global {
 export function CookieConsent() {
   const [consent, setConsent] = useState<ConsentState>("pending");
   const [visible, setVisible] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     // Don't show in Capacitor native app
     if ((window as unknown as Record<string, unknown>).Capacitor) return;
 
     const stored = localStorage.getItem(CONSENT_KEY);
-    if (stored === "accepted") {
-      setConsent("accepted");
-      loadGoogleAnalytics();
-    } else if (stored === "rejected") {
-      setConsent("rejected");
+
+    if (stored && !isConsentExpired()) {
+      if (stored === "accepted") {
+        setConsent("accepted");
+        loadGoogleAnalytics();
+      } else if (stored === "rejected") {
+        setConsent("rejected");
+      }
     } else {
+      // Expired or no stored value — clear stale data and re-ask
+      localStorage.removeItem(CONSENT_KEY);
+      localStorage.removeItem(CONSENT_TS_KEY);
+
       // Small delay so it doesn't flash on page load
       const timer = setTimeout(() => setVisible(true), 800);
       return () => clearTimeout(timer);
     }
   }, []);
 
+  // Listen for "cookie-consent-reset" events (from Manage Cookies button)
+  useEffect(() => {
+    function handleReset() {
+      setConsent("pending");
+      // Small delay before re-showing
+      setTimeout(() => setVisible(true), 300);
+    }
+    window.addEventListener("cookie-consent-reset", handleReset);
+    return () => window.removeEventListener("cookie-consent-reset", handleReset);
+  }, []);
+
   const handleAccept = useCallback(() => {
     localStorage.setItem(CONSENT_KEY, "accepted");
+    localStorage.setItem(CONSENT_TS_KEY, String(Date.now()));
     setConsent("accepted");
     setVisible(false);
     loadGoogleAnalytics();
+    // Persist to server for audit trail (non-blocking)
+    saveCookieConsent({ analytics: true }).catch(() => {});
   }, []);
 
   const handleReject = useCallback(() => {
     localStorage.setItem(CONSENT_KEY, "rejected");
+    localStorage.setItem(CONSENT_TS_KEY, String(Date.now()));
     setConsent("rejected");
     setVisible(false);
     revokeGoogleAnalytics();
+    // Persist to server for audit trail (non-blocking)
+    saveCookieConsent({ analytics: false }).catch(() => {});
   }, []);
 
-  // Already decided or native app
+  // Already decided, native app, or on a legal page
   if (consent !== "pending" || !visible) return null;
+  if (LEGAL_PATHS.includes(pathname)) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
